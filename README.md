@@ -4,6 +4,6 @@ materials, lamps, actions, text, lattices, armatures, empties, speakers or force
 fields. You can create your own models or download fully modelled, cycles-ready
 models from the model library.
 
-- [Tutorials/Documentation](www.emptygraphics.com/tutorials)
-- [Model Library](www.emptygraphics.com/modelle)
+- [Tutorials/Documentation](http://www.emptygraphics.com/tutorials)
+- [Model Library](http://www.emptygraphics.com/modelle)
 
