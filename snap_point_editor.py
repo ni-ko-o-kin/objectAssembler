@@ -560,9 +560,10 @@ class OBJECT_OT_oa_show_snap_point(bpy.types.Operator):
 ###################################
 
 class OBJECT_PT_oa_snap_point_editor(bpy.types.Panel):
-    bl_label = "Object Assembler - Snap Points Editor"
+    bl_label = "Snap Points Editor"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
+    bl_category = "Object Assembler"
     
     def draw(self, context):
         obj = context.object

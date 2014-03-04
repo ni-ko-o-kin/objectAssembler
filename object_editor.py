@@ -74,9 +74,10 @@ class OAObjectParameters(bpy.types.PropertyGroup):
 ###################################
 
 class OBJECT_PT_oa_object_editor(bpy.types.Panel):
-    bl_label = "Object Assembler - Object Editor"
+    bl_label = "Object Editor"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
+    bl_category = "Object Assembler"
     
     def draw(self, context):
         obj = context.object

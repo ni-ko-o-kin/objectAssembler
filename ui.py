@@ -120,6 +120,7 @@ class OAPanel(bpy.types.Panel):
     bl_idname = "OBJECT_PT_OA"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
+    bl_category = "Object Assembler"
     #bl_context = "scene"
 
     def draw(self, context):
