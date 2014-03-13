@@ -109,3 +109,11 @@ def ray(self, context, obj_name_black_list = [], ray_max=10000.0):
     
     return best_obj
 
+def get_tool_shelf_width(context):
+    tool_shelf_width = 0
+    if bpy.context.user_preferences.system.use_region_overlap:
+        for region in bpy.context.area.regions:
+            if region.type == 'TOOLS':
+                tool_shelf_width = region.width
+    
+    return tool_shelf_width if tool_shelf_width else 0

@@ -1,5 +1,8 @@
 import bpy, bgl, blf
 
+from .common import get_tool_shelf_width
+
+
 def mode_title(beginning=False, title="title"):
     font_id = 0 # default font
     
@@ -10,7 +13,7 @@ def mode_title(beginning=False, title="title"):
 
     title_width        = 240
     else_width         = 46
-    x_title_start      = 20
+    x_title_start      = get_tool_shelf_width(bpy.context) + 20
     x_title_end        = x_title_start + title_width
     x_title_font_start = x_title_start + 5
     x_else_start       = x_title_end + 4

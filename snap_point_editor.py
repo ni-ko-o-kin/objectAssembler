@@ -3,7 +3,7 @@ from bpy_extras import view3d_utils
 from bpy.props import IntProperty, StringProperty, FloatProperty, IntVectorProperty, CollectionProperty, BoolProperty, EnumProperty
 from mathutils import Matrix
 from math import pi, ceil
-from .common_functions import toggle, double_toggle
+from .common import toggle, double_toggle
 from .debug import *
 
 ###################################

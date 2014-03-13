@@ -14,7 +14,7 @@ bl_info = {
 
 if "bpy" in locals():
     import imp
-    imp.reload(common_functions)
+    imp.reload(common)
     imp.reload(debug)
     imp.reload(snap_point_editor)
     imp.reload(object_editor)
@@ -26,7 +26,7 @@ if "bpy" in locals():
     imp.reload(align)
 
 else:
-    from . import snap_point_editor, object_editor, ui, menu, mode, add, mode_title, align, common_functions, debug
+    from . import snap_point_editor, object_editor, ui, menu, mode, add, mode_title, align, common, debug
 
 import bpy
 

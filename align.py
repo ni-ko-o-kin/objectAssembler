@@ -1,6 +1,6 @@
 import bpy
 from math import pi
-from .common_functions import select_and_active, get_cursor_info, set_cursor_info
+from .common import select_and_active, get_cursor_info, set_cursor_info
 from .debug import *
 
 def get_snap_points(context, group, snap_point_nr):

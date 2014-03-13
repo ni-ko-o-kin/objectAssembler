@@ -1,5 +1,6 @@
 import bpy
 from .debug import *
+from .common import get_tool_shelf_width
 
 def construct_menu(settings):
     # groups = CollectionProperty
@@ -54,12 +55,15 @@ def construct_menu(settings):
     PAD_TOP = 65      # distance between region-height-top and frame
     PAD_LEFT = 22     # distance between region-width-left and frame
     HOVER = 0         # border around icons for hover-effect
-    
+
     img = bpy.data.images["oa_icons.png", settings.oa_file]
     subdivisions = img.size[0] / ICON_PIXEL
 
+    # get the tool shelf width
+    tool_shelf_width = get_tool_shelf_width(bpy.context)
+            
     # calculate all x-positions: at COL_MAX==3 these would be 3 values
-    pos_x = [PAD_LEFT + i * (ICON_DISPLAY + PAD) for i in range(COL_MAX)]
+    pos_x = [tool_shelf_width + PAD_LEFT + i * (ICON_DISPLAY + PAD) for i in range(COL_MAX)]
 
     # calculate startvalues for y-positions
     pos_y = bpy.context.region.height - PAD_TOP - ICON_DISPLAY

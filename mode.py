@@ -1,7 +1,7 @@
 import bpy, bgl
 from .menu import construct_menu
 from .mode_title import mode_title
-from .common_functions import ray
+from .common import ray
 from .debug import *
 
 def mouse_hover_icon(icon, mouse):
