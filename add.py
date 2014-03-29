@@ -67,7 +67,7 @@ def draw_callback_add(self, context):
 
             # bgl.glEnd()
 
-            # outter border
+            # outer border
             bgl.glLineWidth(3)
             bgl.glBegin(bgl.GL_LINE_LOOP)
             for x,y in snaps[4]:
