@@ -1,5 +1,6 @@
 import bpy, bgl
 from bpy_extras import view3d_utils
+from mathutils import Vector
 
 def select_and_active(obj):
     # deselect everything
@@ -117,3 +118,31 @@ def get_tool_shelf_width(context):
                 tool_shelf_width = region.width
     
     return tool_shelf_width if tool_shelf_width else 0
+
+def get_center_from_geometry(obj):
+    vector_sum = Vector((0,0,0))
+    vector_count = 0
+    for v in obj.data.vertices:
+        vector_sum += obj.matrix_world * v.co
+        vector_count += 1
+        return vector_sum / vector_count
+
+def move_origin_to_geometry(obj):
+    if not len(obj.data.vertices): return
+    old_origin = obj.location.copy()
+    new_origin = get_center_from_geometry(obj)
+    obj.location = new_origin
+    offset = old_origin - new_origin
+    for v in obj.data.vertices: v.co += offset
+
+def get_sp_obj(obj):
+    ''' get excatly one snap point object or return None '''
+    sp_obj = None
+    for group in obj.users_group:
+        for obj_in_group in group.objects:
+            if obj_in_group.type == 'MESH' and obj_in_group.OASnapPointsParameters.marked:
+                if sp_obj is not None:
+                    return None
+                else:
+                    sp_obj = obj_in_group
+    return sp_obj

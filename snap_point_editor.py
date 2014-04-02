@@ -4,7 +4,7 @@ from bpy.props import (IntProperty, StringProperty, FloatProperty, IntVectorProp
                        CollectionProperty, BoolProperty, EnumProperty)
 from mathutils import Matrix, Vector, Euler
 from math import pi, ceil
-from .common import toggle, double_toggle, select_and_active
+from .common import toggle, double_toggle, select_and_active, move_origin_to_geometry, get_sp_obj
 from .debug import *
 
 ###################################
@@ -56,6 +56,32 @@ class OBJECT_UL_oa_snap_points_list(bpy.types.UIList):
 # Operators 
 ###################################
 
+class OBJECT_OT_oa_add_sp_obj(bpy.types.Operator):
+    bl_label = "Add Snap Point Object"
+    bl_idname = "oa.add_sp_obj"
+    
+    @classmethod
+    def poll(cls, context):
+        return context.object
+
+    def invoke(self, context, event):
+        obj = context.object
+        if get_sp_obj(obj):
+            self.report({'ERROR'}, "There is already a snap point object assigned to this object.")
+
+        sp_mesh = bpy.data.meshes.new(name='oa_mesh')
+        
+        sp_obj = bpy.data.objects.new(name='oa_object', object_data=sp_mesh)
+        sp_obj.OASnapPointsParameters.marked = True
+        context.scene.objects.link(sp_obj)
+        
+        group = bpy.data.groups.new(name='oa_group')
+        group.objects.link(sp_obj)
+        group.objects.link(obj)
+        
+        return {'FINISHED'}
+
+
 class OBJECT_OT_oa_apply_id(bpy.types.Operator):
     bl_label = "Apply ID and Quality on group"
     bl_idname = "oa.apply_id"
@@ -84,34 +110,34 @@ class OBJECT_OT_oa_apply_id(bpy.types.Operator):
             obj.name = name
             
         else:
-            self.report({'ERROR'}, "Error: Only one group is allowed for each object")
+            self.report({'ERROR'}, "Only one group is allowed for each object")
         
         return {'FINISHED'}
 
     
-class OBJECT_OT_oa_add_snap_point(bpy.types.Operator):
-    bl_label = "Add Snap Point"
-    bl_idname = "oa.add_snap_point"
+# class OBJECT_OT_oa_add_snap_point(bpy.types.Operator):
+#     bl_label = "Add Snap Point"
+#     bl_idname = "oa.add_snap_point"
     
-    @classmethod
-    def poll(cls, context):
-        obj = context.object
-        return False # obj.OASnapPointsParameters.marked
+#     @classmethod
+#     def poll(cls, context):
+#         obj = context.object
+#         return False # obj.OASnapPointsParameters.marked
 
-    def invoke(self, context, event):
-        obj = context.object
-        snap_points = obj.OASnapPointsParameters.snap_points
+#     def invoke(self, context, event):
+#         obj = context.object
+#         snap_points = obj.OASnapPointsParameters.snap_points
         
-        highest_index = -1
+#         highest_index = -1
 
-        if len(snap_points):
-            highest_index = max([i.index for i in snap_points])
+#         if len(snap_points):
+#             highest_index = max([i.index for i in snap_points])
  
-        new_item = snap_points.add()
-        new_item.name = str(highest_index + 1)
-        new_item.index = highest_index + 1
+#         new_item = snap_points.add()
+#         new_item.name = str(highest_index + 1)
+#         new_item.index = highest_index + 1
 
-        return {'FINISHED'}
+#         return {'FINISHED'}
 
 
 class OBJECT_OT_oa_remove_snap_point(bpy.types.Operator):
@@ -120,25 +146,28 @@ class OBJECT_OT_oa_remove_snap_point(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        obj = context.object
-        return obj.OASnapPointsParameters.marked and context.mode == 'OBJECT'
-
-    def invoke(self, context, event):
-        obj = context.object
-        snap_points = obj.OASnapPointsParameters.snap_points
-        index = obj.OASnapPointsParameters.snap_points_index
+        sp_obj = get_sp_obj(context.object)
+        if not sp_obj: return sp_obj
         
-        select_and_active(obj)
+        snap_points = sp_obj.OASnapPointsParameters.snap_points
+        return sp_obj.OASnapPointsParameters.marked and context.mode == 'OBJECT' and len(sp_obj.OASnapPointsParameters.snap_points) > sp_obj.OASnapPointsParameters.snap_points_index
+    
+    def invoke(self, context, event):
+        sp_obj = get_sp_obj(context.object)
+        snap_points = sp_obj.OASnapPointsParameters.snap_points
+        index = sp_obj.OASnapPointsParameters.snap_points_index
+        
+        select_and_active(sp_obj)
 
         toggle()
-        bm = bmesh.from_edit_mesh(obj.data)
+        bm = bmesh.from_edit_mesh(sp_obj.data)
         verts = [bm.verts[snap_points[index].a], bm.verts[snap_points[index].b], bm.verts[snap_points[index].c]]
         bmesh.ops.delete(bm, geom=verts, context=1) # context 1: del_verts
         bm.free()
         toggle()
 
         for sp in snap_points:
-            if sp.a > snap_points[index].a + 1 and sp.a < snap_points[-1].c + 1:
+            if sp.a > snap_points[index].c:
                 sp.a -= 3
                 sp.b -= 3
                 sp.c -= 3
@@ -147,6 +176,8 @@ class OBJECT_OT_oa_remove_snap_point(bpy.types.Operator):
             snap_points[sp].index -= 1
         
         snap_points.remove(index)
+
+        move_origin_to_geometry(sp_obj)
 
         return {'FINISHED'}
 
@@ -157,19 +188,19 @@ class OBJECT_OT_oa_move_snap_point_down(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        obj = context.object
-        return obj and obj.OASnapPointsParameters.marked
+        sp_obj = get_sp_obj(context.object)
+        return sp_obj and sp_obj.OASnapPointsParameters.marked and len(sp_obj.OASnapPointsParameters.snap_points)
  
     def invoke(self, context, event):
-        obj = context.object
-        snap_points = obj.OASnapPointsParameters.snap_points
-        index = obj.OASnapPointsParameters.snap_points_index
+        sp_obj = get_sp_obj(context.object)
+        snap_points = sp_obj.OASnapPointsParameters.snap_points
+        index = sp_obj.OASnapPointsParameters.snap_points_index
         
         if index != len(snap_points) - 1:
             snap_points[index].index += 1
             snap_points[index + 1].index -= 1
             snap_points.move(index, index + 1)
-            obj.OASnapPointsParameters.snap_points_index += 1
+            sp_obj.OASnapPointsParameters.snap_points_index += 1
 
         return {'FINISHED'}
 
@@ -180,193 +211,191 @@ class OBJECT_OT_oa_move_snap_point_up(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        obj = context.object
-        if obj is not None:
-            return obj.OASnapPointsParameters.marked
-        return False
+        sp_obj = get_sp_obj(context.object)
+        return sp_obj and sp_obj.OASnapPointsParameters.marked and len(sp_obj.OASnapPointsParameters.snap_points)
  
     def invoke(self, context, event):
-        obj = context.object
-        snap_points = obj.OASnapPointsParameters.snap_points
-        index = obj.OASnapPointsParameters.snap_points_index
+        sp_obj = get_sp_obj(context.object)
+        snap_points = sp_obj.OASnapPointsParameters.snap_points
+        index = sp_obj.OASnapPointsParameters.snap_points_index
 
         if index != 0:
             snap_points[index].index -= 1
             snap_points[index - 1].index += 1
             snap_points.move(index, index - 1)
-            obj.OASnapPointsParameters.snap_points_index -= 1
+            sp_obj.OASnapPointsParameters.snap_points_index -= 1
 
         return {'FINISHED'}
 
 
-##############################
-# Assign-Operators for abc's #
+# ##############################
+# # Assign-Operators for abc's #
 
-for abc in ("a", "b", "c"):
-    idname = "oa.assign_snap_point_%s" % abc
-    label =  "Assign %s" % abc
-    self_abc = abc
+# for abc in ("a", "b", "c"):
+#     idname = "oa.assign_snap_point_%s" % abc
+#     label =  "Assign %s" % abc
+#     self_abc = abc
     
-    @classmethod
-    def poll(cls, context):
-        obj = context.object
+#     @classmethod
+#     def poll(cls, context):
+#         obj = context.object
         
-        if obj is not None:
-            snap_points = obj.OASnapPointsParameters.snap_points
-            index = obj.OASnapPointsParameters.snap_points_index
+#         if obj is not None:
+#             snap_points = obj.OASnapPointsParameters.snap_points
+#             index = obj.OASnapPointsParameters.snap_points_index
             
-            return (
-                context.mode == 'EDIT_MESH' and
-                index < len(snap_points)
-                )
-        return False
+#             return (
+#                 context.mode == 'EDIT_MESH' and
+#                 index < len(snap_points)
+#                 )
+#         return False
 
            
-    def invoke(self, context, event):
-        obj = context.object
-        snap_points = obj.OASnapPointsParameters.snap_points
-        index = obj.OASnapPointsParameters.snap_points_index
+#     def invoke(self, context, event):
+#         obj = context.object
+#         snap_points = obj.OASnapPointsParameters.snap_points
+#         index = obj.OASnapPointsParameters.snap_points_index
         
-        double_toggle()
+#         double_toggle()
         
-        vertex_index = -1
+#         vertex_index = -1
         
-        for i in obj.data.vertices:
-            if i.select == True:
-                vertex_index = i.index
-                # only the first found - ignore all others
-                break
+#         for i in obj.data.vertices:
+#             if i.select == True:
+#                 vertex_index = i.index
+#                 # only the first found - ignore all others
+#                 break
 
-        if vertex_index >= 0:
-            if self.abc == "a":
-                snap_points[index].a = vertex_index
-            elif self.abc == "b":
-                snap_points[index].b = vertex_index
-            else:
-                snap_points[index].c = vertex_index
+#         if vertex_index >= 0:
+#             if self.abc == "a":
+#                 snap_points[index].a = vertex_index
+#             elif self.abc == "b":
+#                 snap_points[index].b = vertex_index
+#             else:
+#                 snap_points[index].c = vertex_index
         
-        return {'FINISHED'}
+#         return {'FINISHED'}
         
 
 
-    opclass = type("OBJECT_OT_oa_assign_snap_point_%s" % abc,
-                   (bpy.types.Operator,),
-                   {"bl_idname": idname,"bl_label": label, "abc": self_abc,
-                    "poll": poll, "invoke": invoke},
-                   )
+#     opclass = type("OBJECT_OT_oa_assign_snap_point_%s" % abc,
+#                    (bpy.types.Operator,),
+#                    {"bl_idname": idname,"bl_label": label, "abc": self_abc,
+#                     "poll": poll, "invoke": invoke},
+#                    )
                    
-    bpy.utils.register_class(opclass)
+#     bpy.utils.register_class(opclass)
 
-##############################
-# Select-Operators for Abc's #
+# ##############################
+# # Select-Operators for Abc's #
 
-for abc in ("a", "b", "c"):
-    idname = "oa.select_snap_point_%s" % abc
-    label =  "Select %s" % abc
-    self_abc = abc
+# for abc in ("a", "b", "c"):
+#     idname = "oa.select_snap_point_%s" % abc
+#     label =  "Select %s" % abc
+#     self_abc = abc
     
-    @classmethod
-    def poll(cls, context):
-        obj = context.object
-        if obj is not None:
-            snap_points = obj.OASnapPointsParameters.snap_points
-            index = obj.OASnapPointsParameters.snap_points_index
+#     @classmethod
+#     def poll(cls, context):
+#         obj = context.object
+#         if obj is not None:
+#             snap_points = obj.OASnapPointsParameters.snap_points
+#             index = obj.OASnapPointsParameters.snap_points_index
         
-            return (
-                context.mode == 'EDIT_MESH' and
-                index < len(snap_points)
-                )
-        return False
+#             return (
+#                 context.mode == 'EDIT_MESH' and
+#                 index < len(snap_points)
+#                 )
+#         return False
            
-    def invoke(self, context, event):
-        obj = context.object
-        param = obj.OASnapPointsParameters
-        snap_points = param.snap_points
-        index = param.snap_points_index
+#     def invoke(self, context, event):
+#         obj = context.object
+#         param = obj.OASnapPointsParameters
+#         snap_points = param.snap_points
+#         index = param.snap_points_index
 
-        toggle()
+#         toggle()
         
-        if self.abc == "a":
-            obj.data.vertices[snap_points[index].a].select = True
-        elif self.abc == "b":
-            obj.data.vertices[snap_points[index].b].select = True
-        else:
-            obj.data.vertices[snap_points[index].c].select = True
+#         if self.abc == "a":
+#             obj.data.vertices[snap_points[index].a].select = True
+#         elif self.abc == "b":
+#             obj.data.vertices[snap_points[index].b].select = True
+#         else:
+#             obj.data.vertices[snap_points[index].c].select = True
 
-        toggle()
+#         toggle()
 
-        return {'FINISHED'}
+#         return {'FINISHED'}
         
 
 
-    opclass = type("OBJECT_OT_oa_assign_snap_point_%s" % abc,
-                   (bpy.types.Operator,),
-                   {"bl_idname": idname,"bl_label": label, "abc": self_abc,
-                    "poll": poll, "invoke": invoke},
-                   )
+#     opclass = type("OBJECT_OT_oa_assign_snap_point_%s" % abc,
+#                    (bpy.types.Operator,),
+#                    {"bl_idname": idname,"bl_label": label, "abc": self_abc,
+#                     "poll": poll, "invoke": invoke},
+#                    )
                    
-    bpy.utils.register_class(opclass)
+#     bpy.utils.register_class(opclass)
 
 
-class OBJECT_OT_oa_assign_snap_point(bpy.types.Operator):
-    bl_label = "Assign abc"
-    bl_idname = "oa.assign_snap_point"
+# class OBJECT_OT_oa_assign_snap_point(bpy.types.Operator):
+#     bl_label = "Assign abc"
+#     bl_idname = "oa.assign_snap_point"
 
-    @classmethod
-    def poll(cls, context):
-        obj = context.object
+#     @classmethod
+#     def poll(cls, context):
+#         obj = context.object
 
-        if obj is not None:
-            snap_points = obj.OASnapPointsParameters.snap_points
-            index = obj.OASnapPointsParameters.snap_points_index
+#         if obj is not None:
+#             snap_points = obj.OASnapPointsParameters.snap_points
+#             index = obj.OASnapPointsParameters.snap_points_index
 
-            return (
-                context.mode == 'EDIT_MESH' and
-                index < len(snap_points)
-                )
-        return False
+#             return (
+#                 context.mode == 'EDIT_MESH' and
+#                 index < len(snap_points)
+#                 )
+#         return False
 
-    def invoke(self, context, event):
-        obj = context.object
-        snap_points = obj.OASnapPointsParameters.snap_points
-        index = obj.OASnapPointsParameters.snap_points_index
+#     def invoke(self, context, event):
+#         obj = context.object
+#         snap_points = obj.OASnapPointsParameters.snap_points
+#         index = obj.OASnapPointsParameters.snap_points_index
         
-        scene = context.scene
-        region = context.region
-        rv3d = context.region_data
+#         scene = context.scene
+#         region = context.region
+#         rv3d = context.region_data
         
-        double_toggle()
+#         double_toggle()
         
-        s = [i for i in obj.data.vertices if i.select]
+#         s = [i for i in obj.data.vertices if i.select]
         
-        if len(s) == 3:
-            if (s[0].co - s[1].co).length > (s[1].co - s[2].co).length and (s[0].co - s[1].co).length > (s[0].co - s[2].co).length:
-                c = s[2]
-            elif (s[1].co - s[2].co).length > (s[0].co - s[2].co).length:
-                c = s[0]
-            else:
-                c = s[1]
+#         if len(s) == 3:
+#             if (s[0].co - s[1].co).length > (s[1].co - s[2].co).length and (s[0].co - s[1].co).length > (s[0].co - s[2].co).length:
+#                 c = s[2]
+#             elif (s[1].co - s[2].co).length > (s[0].co - s[2].co).length:
+#                 c = s[0]
+#             else:
+#                 c = s[1]
     
-            s_without_c = [i for i in s if i is not c]
+#             s_without_c = [i for i in s if i is not c]
             
-            first_on_2d = view3d_utils.location_3d_to_region_2d(region, rv3d, obj.matrix_world * s_without_c[0].co)
-            second_on_2d = view3d_utils.location_3d_to_region_2d(region, rv3d, obj.matrix_world * s_without_c[1].co)
+#             first_on_2d = view3d_utils.location_3d_to_region_2d(region, rv3d, obj.matrix_world * s_without_c[0].co)
+#             second_on_2d = view3d_utils.location_3d_to_region_2d(region, rv3d, obj.matrix_world * s_without_c[1].co)
             
-            if first_on_2d[0] < second_on_2d[0]:
-                a = s_without_c[0]
-                b = s_without_c[1]
-            else:
-                a = s_without_c[1]
-                b = s_without_c[0]
+#             if first_on_2d[0] < second_on_2d[0]:
+#                 a = s_without_c[0]
+#                 b = s_without_c[1]
+#             else:
+#                 a = s_without_c[1]
+#                 b = s_without_c[0]
             
-            snap_points[index].a = a.index
-            snap_points[index].b = b.index
-            snap_points[index].c = c.index
+#             snap_points[index].a = a.index
+#             snap_points[index].b = b.index
+#             snap_points[index].c = c.index
             
-        else:
-            self.report({'ERROR'}, "Wrong number of vertices selected!")
+#         else:
+#             self.report({'ERROR'}, "Wrong number of vertices selected!")
             
-        return {'FINISHED'}
+#         return {'FINISHED'}
 
 
 class OBJECT_OT_oa_select_snap_point(bpy.types.Operator):
@@ -421,14 +450,6 @@ class OBJECT_OT_oa_ConstructAbc(bpy.types.Operator):
             self.report({'ERROR'}, "Select exactly two vertices!")
             return {'CANCELLED'}
 
-        def get_origin_from_geometry(obj):
-            vector_sum = Vector((0,0,0))
-            vector_count = 0
-            for v in obj.data.vertices:
-                vector_sum += obj.matrix_world * v.co
-                vector_count += 1
-            return vector_sum / vector_count
-
         def construct_vertices(sp_obj=None):
             # check for unapplied snap point object transformations
             if sp_obj:
@@ -479,12 +500,8 @@ class OBJECT_OT_oa_ConstructAbc(bpy.types.Operator):
                 sp_obj = bpy.data.objects.new(name='oa_object', object_data=sp_mesh)
                 context.scene.objects.link(sp_obj)
                 
-            # move origin to geometry
-            old_origin = sp_obj.location.copy()
-            new_origin = get_origin_from_geometry(sp_obj)
-            sp_obj.location = new_origin
-            offset = old_origin - new_origin
-            for v in sp_obj.data.vertices: v.co += offset
+
+            move_origin_to_geometry(sp_obj)
             
             # add snap points
             snap_points = sp_obj.OASnapPointsParameters.snap_points
@@ -545,16 +562,18 @@ class OBJECT_OT_oa_switch_ab(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        obj = context.object
-        snap_points = obj.OASnapPointsParameters.snap_points
-        index = obj.OASnapPointsParameters.snap_points_index
-
+        sp_obj = get_sp_obj(context.object)
+        if not sp_obj: return sp_obj
+        
+        snap_points = sp_obj.OASnapPointsParameters.snap_points
+        index = sp_obj.OASnapPointsParameters.snap_points_index
+        
         return index < len(snap_points)
 
     def invoke(self, context, event):
-        obj = context.object
-        snap_points = obj.OASnapPointsParameters.snap_points
-        index = obj.OASnapPointsParameters.snap_points_index
+        sp_obj = get_sp_obj(context.object)
+        snap_points = sp_obj.OASnapPointsParameters.snap_points
+        index = sp_obj.OASnapPointsParameters.snap_points_index
         
         tmp = snap_points[index].a
         snap_points[index].a = snap_points[index].b
@@ -569,10 +588,12 @@ class OBJECT_OT_oa_show_snap_point(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        obj = context.object
-        snap_points = obj.OASnapPointsParameters.snap_points
-        index = obj.OASnapPointsParameters.snap_points_index
-
+        sp_obj = get_sp_obj(context.object)
+        if not sp_obj: return sp_obj
+        
+        snap_points = sp_obj.OASnapPointsParameters.snap_points
+        index = sp_obj.OASnapPointsParameters.snap_points_index
+        
         return index < len(snap_points)
 
     def draw_callback_abc(self, context):
@@ -582,34 +603,51 @@ class OBJECT_OT_oa_show_snap_point(bpy.types.Operator):
         region = context.region
         rv3d = context.region_data
 
-        obj_matrix_world = self.obj.matrix_world
+        sp_obj_matrix_world = self.sp_obj.matrix_world
 
-        a = self.obj.data.vertices[self.snap_points[self.index].a].co
-        b = self.obj.data.vertices[self.snap_points[self.index].b].co
-        c = self.obj.data.vertices[self.snap_points[self.index].c].co
+        a = self.sp_obj.data.vertices[self.snap_points[self.index].a].co
+        b = self.sp_obj.data.vertices[self.snap_points[self.index].b].co
+        c = self.sp_obj.data.vertices[self.snap_points[self.index].c].co
 
-        a_norm = c - (c - a).normalized()
-        b_norm = c - (c - b).normalized()
+        factor = 1.5
+        a_norm = c - (c - a).normalized() / factor
+        b_norm = c - (c - b).normalized() / factor
         c_norm = c
 
-        a_3d = obj_matrix_world * a_norm
-        b_3d = obj_matrix_world * b_norm
-        c_3d = obj_matrix_world * c_norm
+        a_3d = (sp_obj_matrix_world * a_norm)
+        b_3d = (sp_obj_matrix_world * b_norm)
+        c_3d = (sp_obj_matrix_world * c_norm)
 
         a_2d = tuple(map(ceil, view3d_utils.location_3d_to_region_2d(region, rv3d, a_3d)))
         b_2d = tuple(map(ceil, view3d_utils.location_3d_to_region_2d(region, rv3d, b_3d)))
         c_2d = tuple(map(ceil, view3d_utils.location_3d_to_region_2d(region, rv3d, c_3d)))
 
+        def draw_letter(x=10, y=10, letter="-"):
+            bgl.glColor3f(0.1,0.1,0.1)
+            blf.position(0, x-7 , y-7, 0)
+            blf.size(0, 18, 72)
+            blf.draw(0, letter)
+
+        def draw_point(x=10, y=10, size=4, color=(0.5,0.5,0.5)):
+            bgl.glPointSize(size)
+            bgl.glColor3f(color[0], color[1], color[2])
+            bgl.glBegin(bgl.GL_POINTS)
+            bgl.glVertex2i(x, y)
+            bgl.glEnd()
+
+
         # draw triangle
-        # # filled
-        # bgl.glBegin(bgl.GL_POLYGON)
-        # bgl.glColor3f(0.8,0.5,0.5)
-        # for x, y in (a_2d, b_2d, c_2d):
-        #     bgl.glVertex2i(x, y)
-        # bgl.glEnd()
-        
-        # bgl.glEnable(bgl.GL_LINE_SMOOTH)
-        # bgl.glHint(bgl.GL_POLYGON_SMOOTH_HINT, bgl.GL_NICEST)
+        # filled
+        bgl.glEnable(bgl.GL_BLEND)
+        bgl.glBegin(bgl.GL_POLYGON)
+        bgl.glColor4f(0.8,0.5,0.5, 0.2)
+        for x, y in (a_2d, b_2d, c_2d):
+            bgl.glVertex2i(x, y)
+        bgl.glEnd()
+        bgl.glDisable(bgl.GL_BLEND)
+                
+        bgl.glEnable(bgl.GL_LINE_SMOOTH)
+        bgl.glHint(bgl.GL_POLYGON_SMOOTH_HINT, bgl.GL_NICEST)
         
         # outer
         bgl.glLineWidth(3)
@@ -628,43 +666,33 @@ class OBJECT_OT_oa_show_snap_point(bpy.types.Operator):
 
         bgl.glDisable(bgl.GL_LINE_SMOOTH)
 
-        # abc-points
-        # outer; a, b and c
-        bgl.glColor3f(0.0, 0.0, 0.0)
-        bgl.glPointSize(8)
-        bgl.glBegin(bgl.GL_POINTS)
+        # abc-points/letters
+        # black background
         for x, y in (a_2d, b_2d, c_2d):
-            bgl.glVertex2i(x, y)
-        bgl.glEnd()
+            draw_point(x, y, 20, (0,0,0))
 
-        # inner, a 
-        bgl.glPointSize(4)
-        bgl.glColor3f(0.9, 0.1, 0.1)
-        bgl.glBegin(bgl.GL_POINTS)
-        bgl.glVertex2i(a_2d[0], a_2d[1])
-        bgl.glEnd()
+        # white background
+        for x, y in (a_2d, b_2d, c_2d):
+            draw_point(x, y, 18, (1,1,1))
 
-        # inner, b
-        bgl.glColor3f(0.1, 0.9, 0.1)
-        bgl.glBegin(bgl.GL_POINTS)
-        bgl.glVertex2i(b_2d[0], b_2d[1])
-        bgl.glEnd()
+        #draw_point(a_2d[0], a_2d[1], 4, (0.9, 0.1, 0.1))
+        draw_letter(a_2d[0], a_2d[1], 'A')
 
-        # inner, c
-        bgl.glColor3f(0.3, 0.3, 0.9)
-        bgl.glBegin(bgl.GL_POINTS)
-        bgl.glVertex2i(c_2d[0], c_2d[1])
-        bgl.glEnd()
-
+        # draw_point(b_2d[0], b_2d[1], 4, (0.1, 0.9, 0.1))
+        draw_letter(b_2d[0], b_2d[1], 'B')
+        
+        # draw_point(c_2d[0], c_2d[1], 4, (0.3, 0.3, 0.9))
+        draw_letter(c_2d[0], c_2d[1], 'C')
+        
         # normal-line
         start_3d = (a_3d + b_3d + c_3d)/3
-        end_3d = start_3d + (c_3d - a_3d).cross(c_3d - b_3d) / 2 
+        end_3d = start_3d + (c_3d - a_3d).cross(c_3d - b_3d) # /1.5 # scale normal
         
         start_2d = tuple(map(ceil, view3d_utils.location_3d_to_region_2d(region, rv3d, start_3d )))
         end_2d = tuple(map(ceil, view3d_utils.location_3d_to_region_2d(region, rv3d, end_3d )))
-
+        
         # outer
-        bgl.glLineWidth(3)
+        bgl.glLineWidth(4)
         bgl.glBegin(bgl.GL_LINES)
         bgl.glColor3f(0.1,0.1,0.1)
         bgl.glVertex2i(end_2d[0], end_2d[1])
@@ -672,13 +700,12 @@ class OBJECT_OT_oa_show_snap_point(bpy.types.Operator):
         bgl.glEnd()
         
         # inner
-        bgl.glLineWidth(1)
+        bgl.glLineWidth(2)
         bgl.glBegin(bgl.GL_LINES)
         bgl.glColor3f(0.9,0.9,0.9)
         bgl.glVertex2i(end_2d[0], end_2d[1])
         bgl.glVertex2i(start_2d[0], start_2d[1])
         bgl.glEnd()
-
 
         # restore opengl defaults
         bgl.glPointSize(1)
@@ -686,9 +713,6 @@ class OBJECT_OT_oa_show_snap_point(bpy.types.Operator):
         bgl.glColor4f(0.0, 0.0, 0.0, 1.0)
 
 
-
-
-    
     def modal(self, context, event):
         context.area.tag_redraw()
 
@@ -709,9 +733,9 @@ class OBJECT_OT_oa_show_snap_point(bpy.types.Operator):
 
             self._handle = bpy.types.SpaceView3D.draw_handler_add(self.draw_callback_abc, (context,), 'WINDOW', 'POST_PIXEL')
 
-            self.obj = context.object
-            self.snap_points = self.obj.OASnapPointsParameters.snap_points
-            self.index = self.obj.OASnapPointsParameters.snap_points_index
+            self.sp_obj = get_sp_obj(context.object)
+            self.snap_points = self.sp_obj.OASnapPointsParameters.snap_points
+            self.index = self.sp_obj.OASnapPointsParameters.snap_points_index
 
             return {'RUNNING_MODAL'}
 
@@ -733,37 +757,38 @@ class OBJECT_PT_oa_snap_point_editor(bpy.types.Panel):
     def draw(self, context):
         obj = context.object
         layout = self.layout
+        sp_obj = None
         
-        if obj is not None and obj.type == 'MESH':
-
-            layout.prop(obj.OASnapPointsParameters, "marked", text="Mark %s as snap point object" % obj.name )
-
-
-            if (obj is not None and obj.type == 'MESH'):
+        if obj is not None:
+            # layout.prop(obj.OASnapPointsParameters, "marked", text="Mark %s as snap point object" % obj.name )
+            
+            sp_obj = get_sp_obj(obj)
+            
+            if sp_obj:
                 layout = layout.box()
                 row = layout.row()
-                layout.enabled = obj.OASnapPointsParameters.marked
-                row.prop(obj.OASnapPointsParameters, "group_id", text="ID")
-                layout.prop(obj.OASnapPointsParameters, "quality")
+                layout.enabled = sp_obj.OASnapPointsParameters.marked
+                row.prop(sp_obj.OASnapPointsParameters, "group_id", text="ID")
+                layout.prop(sp_obj.OASnapPointsParameters, "quality")
                 layout.operator("oa.apply_id")
-
-
+                
                 layout = self.layout
                 layout.label("Snap Points:")
-
+                
                 row = layout.row()
                 row.template_list(
                     "OBJECT_UL_oa_snap_points_list",
                     'OA_SNAP_POINT_EDITOR_TEMPLATE_LIST', #unique id
-                    obj.OASnapPointsParameters,
+                    sp_obj.OASnapPointsParameters,
                     "snap_points",
-                    obj.OASnapPointsParameters,
+                    sp_obj.OASnapPointsParameters,
                     "snap_points_index", 
                     )
                 
                 col = row.column(align=True)
-                col.operator("oa.add_snap_point", icon="ZOOMIN", text="")
-                col.operator("oa.remove_snap_point", icon="ZOOMOUT", text="")
+                col.operator("oa.construct_abc", icon="EDITMODE_VEC_DEHLT", text="")
+                col.operator("view3d.snap_cursor_to_selected", icon='CURSOR', text="")
+
                 
                 col.separator()
                 
@@ -771,29 +796,32 @@ class OBJECT_PT_oa_snap_point_editor(bpy.types.Panel):
                 col.operator("oa.move_snap_point_down", icon="TRIA_DOWN", text="")
                 
                 col.separator()
-
-                col.operator("view3d.snap_cursor_to_selected", icon='CURSOR', text="")
-                col.operator("oa.construct_abc", icon="EDITMODE_VEC_DEHLT", text="")
-            
-                row = layout.row(align=True)
-                row.label(text="Assign:")
-                row.operator("oa.assign_snap_point_a",text="a")
-                row.operator("oa.assign_snap_point_b",text="b")
-                row.operator("oa.assign_snap_point_c",text="c")
-                row.operator("oa.assign_snap_point",text="abc")
+                #col.operator("oa.add_snap_point", icon="ZOOMIN", text="")
+                col.operator("oa.remove_snap_point", icon="X", text="")
                 
-                row = layout.row(align=True)
-                row.label(text="Select:")
-                row.operator("oa.select_snap_point_a",text="a")
-                row.operator("oa.select_snap_point_b",text="b")
-                row.operator("oa.select_snap_point_c",text="c")
-                row.operator("oa.select_snap_point",text="abc")
-
+                
+                # row = layout.row(align=True)
+                # row.label(text="Assign:")
+                # row.operator("oa.assign_snap_point_a",text="a")
+                # row.operator("oa.assign_snap_point_b",text="b")
+                # row.operator("oa.assign_snap_point_c",text="c")
+                # row.operator("oa.assign_snap_point",text="abc")
+                
+                # row = layout.row(align=True)
+                # row.label(text="Select:")
+                # row.operator("oa.select_snap_point_a",text="a")
+                # row.operator("oa.select_snap_point_b",text="b")
+                # row.operator("oa.select_snap_point_c",text="c")
+                # row.operator("oa.select_snap_point",text="abc")
+                
                 row = layout.row()
                 row.operator("oa.show_snap_point")
                 row.operator("oa.switch_ab")
-        else:
-            self.layout.label("No mesh selected")
+                
+            elif sp_obj is None and obj.type == 'MESH':
+                layout.operator("oa.add_sp_obj")
+                # layout.operator("view3d.snap_cursor_to_selected", icon='CURSOR', text="")
+                # layout.operator("oa.construct_abc", icon="EDITMODE_VEC_DEHLT", text="")
 
               
 
@@ -811,13 +839,14 @@ def register():
     bpy.utils.register_class(OBJECT_UL_oa_snap_points_list)
     
     # Operators
-    bpy.utils.register_class(OBJECT_OT_oa_add_snap_point)
+    bpy.utils.register_class(OBJECT_OT_oa_add_sp_obj)
+    # bpy.utils.register_class(OBJECT_OT_oa_add_snap_point)
     bpy.utils.register_class(OBJECT_OT_oa_remove_snap_point)
     bpy.utils.register_class(OBJECT_OT_oa_move_snap_point_down)
     bpy.utils.register_class(OBJECT_OT_oa_move_snap_point_up)
     bpy.utils.register_class(OBJECT_OT_oa_apply_id)
-    bpy.utils.register_class(OBJECT_OT_oa_assign_snap_point)
-    bpy.utils.register_class(OBJECT_OT_oa_select_snap_point)
+    # bpy.utils.register_class(OBJECT_OT_oa_assign_snap_point)
+    # bpy.utils.register_class(OBJECT_OT_oa_select_snap_point)
     bpy.utils.register_class(OBJECT_OT_oa_ConstructAbc)
     bpy.utils.register_class(OBJECT_OT_oa_switch_ab)
     bpy.utils.register_class(OBJECT_OT_oa_show_snap_point)
@@ -830,16 +859,17 @@ def unregister():
     bpy.utils.unregister_class(OBJECT_PT_oa_snap_point_editor)
 
     # Operators
-    bpy.utils.unregister_class(OBJECT_OT_oa_add_snap_point)
+    # bpy.utils.unregister_class(OBJECT_OT_oa_add_snap_point)
     bpy.utils.unregister_class(OBJECT_OT_oa_remove_snap_point)
     bpy.utils.unregister_class(OBJECT_OT_oa_move_snap_point_down)
     bpy.utils.unregister_class(OBJECT_OT_oa_move_snap_point_up)
     bpy.utils.unregister_class(OBJECT_OT_oa_apply_id)
-    bpy.utils.unregister_class(OBJECT_OT_oa_assign_snap_point)
-    bpy.utils.unregister_class(OBJECT_OT_oa_select_snap_point)
+    # bpy.utils.unregister_class(OBJECT_OT_oa_assign_snap_point)
+    # bpy.utils.unregister_class(OBJECT_OT_oa_select_snap_point)
     bpy.utils.unregister_class(OBJECT_OT_oa_ConstructAbc)
     bpy.utils.unregister_class(OBJECT_OT_oa_switch_ab)
     bpy.utils.unregister_class(OBJECT_OT_oa_show_snap_point)
+    bpy.utils.unregister_class(OBJECT_OT_oa_add_sp_obj)
 
     # UILists
     bpy.utils.unregister_class(OBJECT_UL_oa_snap_points_list)
