@@ -1,7 +1,7 @@
 import bpy, bmesh, blf, bgl
 from bpy_extras import view3d_utils
 from bpy.props import (IntProperty, StringProperty, FloatProperty, IntVectorProperty,
-                       CollectionProperty, BoolProperty, EnumProperty)
+                       CollectionProperty, BoolProperty, EnumProperty, FloatVectorProperty)
 from mathutils import Matrix, Vector, Euler
 from math import pi, ceil
 from .common import toggle, double_toggle, select_and_active, move_origin_to_geometry, get_sp_obj
@@ -18,6 +18,8 @@ class OASnapPointsItem(bpy.types.PropertyGroup):
     b = IntProperty(name="", default=0, min=0)
     c = IntProperty(name="", default=0, min=0)
 
+    # selected = BoolProperty(default=False, name="")
+    
     snap_size = FloatProperty(name="", default=1, min=0.01, max=10, step=0.1, subtype='FACTOR')
     index = IntProperty(name="", default=0, min=0)
     
@@ -25,10 +27,20 @@ class OASnapPointsItem(bpy.types.PropertyGroup):
 class OASnapPointsParameters(bpy.types.PropertyGroup):
     marked = BoolProperty(name="", default=False)
     group_id = IntVectorProperty(name="", default=(0,0,0), size=3, min=0)
-
+    
     snap_points_index = bpy.props.IntProperty(default=0, min=0)
     snap_points = CollectionProperty(type=OASnapPointsItem)
-
+    
+    upside = FloatVectorProperty(default=(0,0,0))
+    downside = FloatVectorProperty(default=(0,0,0))
+    outside = FloatVectorProperty(default=(0,0,0))
+    inside = FloatVectorProperty(default=(0,0,0))
+    
+    upside_set = BoolProperty(default=False)
+    downside_set = BoolProperty(default=False)
+    outside_set = BoolProperty(default=False)
+    inside_set = BoolProperty(default=False)
+    
     quality = EnumProperty(
         items=[
             ("low","Low", ""),
@@ -45,19 +57,125 @@ class OASnapPointsParameters(bpy.types.PropertyGroup):
 
 class OBJECT_UL_oa_snap_points_list(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
-        if DEBUG: layout.label(str(item.index))
+        layout.label(str(item.index))
         layout.prop(item, 'name')
-        layout.prop(item, 'a')
-        layout.prop(item, 'b')
-        layout.prop(item, 'c')
+        # layout.prop(item, 'a')
+        # layout.prop(item, 'b')
+        # layout.prop(item, 'c')
         layout.prop(item, 'snap_size')
+        #layout.prop(item, 'selected')
 
 ###################################
 # Operators 
 ###################################
 
+# class OBJECT_OT_oa_select_all_snap_points(bpy.types.Operator):
+#     bl_description = bl_label = "(De)select all Snap Points"
+#     bl_idname = "oa.select_all_snap_points"
+    
+#     @classmethod
+#     def poll(cls, context):
+#         sp_obj = get_sp_obj(context.object)
+#         if not sp_obj: return sp_obj
+        
+#         snap_points = sp_obj.OASnapPointsParameters.snap_points
+#         return (sp_obj.OASnapPointsParameters.marked and
+#                 context.mode == 'OBJECT' and
+#                 len(sp_obj.OASnapPointsParameters.snap_points) > sp_obj.OASnapPointsParameters.snap_points_index)
+    
+#     def invoke(self, context, event):
+#         obj = context.object
+#         sp_obj = get_sp_obj(obj)
+#         params = sp_obj.OASnapPointsParameters
+        
+#         selected = False
+#         for sp in params.snap_points:
+#             if sp.selected:
+#                 selected = True
+#                 break
+            
+#         for sp in params.snap_points:
+#             sp.selected = not selected
+                
+#         return {'FINISHED'}
+
+
+class OBJECT_OT_oa_set_outside(bpy.types.Operator):
+    bl_description = bl_label = "Set Outside"
+    bl_idname = "oa.set_outside"
+    
+    @classmethod
+    def poll(cls, context):
+        return get_sp_obj(context.object)
+
+    def invoke(self, context, event):
+        obj = context.object
+        sp_obj = get_sp_obj(obj)
+        params = sp_obj.OASnapPointsParameters
+        
+        params.outside = context.scene.cursor_location.copy()
+        params.outside_set = True
+
+        return {'FINISHED'}
+
+class OBJECT_OT_oa_set_inside(bpy.types.Operator):
+    bl_description = bl_label = "Set Inside"
+    bl_idname = "oa.set_inside"
+    
+    @classmethod
+    def poll(cls, context):
+        return get_sp_obj(context.object)
+
+    def invoke(self, context, event):
+        obj = context.object
+        sp_obj = get_sp_obj(obj)
+        params = sp_obj.OASnapPointsParameters
+        
+        params.inside = context.scene.cursor_location.copy()
+        params.inside_set = True
+        
+        return {'FINISHED'}
+
+
+class OBJECT_OT_oa_set_upside(bpy.types.Operator):
+    bl_description = bl_label = "Set Upside"
+    bl_idname = "oa.set_upside"
+    
+    @classmethod
+    def poll(cls, context):
+        return get_sp_obj(context.object)
+
+    def invoke(self, context, event):
+        obj = context.object
+        sp_obj = get_sp_obj(obj)
+        params = sp_obj.OASnapPointsParameters
+        
+        params.upside = context.scene.cursor_location.copy()
+        params.upside_set = True
+        
+        return {'FINISHED'}
+
+class OBJECT_OT_oa_set_downside(bpy.types.Operator):
+    bl_description = bl_label = "Set Downside"
+    bl_idname = "oa.set_downside"
+    
+    @classmethod
+    def poll(cls, context):
+        return get_sp_obj(context.object)
+
+    def invoke(self, context, event):
+        obj = context.object
+        sp_obj = get_sp_obj(obj)
+        params = sp_obj.OASnapPointsParameters
+        
+        params.downside = context.scene.cursor_location.copy()
+        params.downside_set = True
+                
+        return {'FINISHED'}
+
+
 class OBJECT_OT_oa_add_sp_obj(bpy.types.Operator):
-    bl_label = "Add Snap Point Object"
+    bl_description = bl_label = "Add Snap Point Object"
     bl_idname = "oa.add_sp_obj"
     
     @classmethod
@@ -83,7 +201,7 @@ class OBJECT_OT_oa_add_sp_obj(bpy.types.Operator):
 
 
 class OBJECT_OT_oa_apply_id(bpy.types.Operator):
-    bl_label = "Apply ID and Quality on group"
+    bl_description = bl_label = "Apply ID and Quality on Group"
     bl_idname = "oa.apply_id"
  
     @classmethod
@@ -141,7 +259,7 @@ class OBJECT_OT_oa_apply_id(bpy.types.Operator):
 
 
 class OBJECT_OT_oa_remove_snap_point(bpy.types.Operator):
-    bl_label = "Remove Snap Point"
+    bl_description = bl_label = "Remove Snap Point"
     bl_idname = "oa.remove_snap_point"
 
     @classmethod
@@ -183,7 +301,7 @@ class OBJECT_OT_oa_remove_snap_point(bpy.types.Operator):
 
 
 class OBJECT_OT_oa_move_snap_point_down(bpy.types.Operator):
-    bl_label = "Move Snap Point Down"
+    bl_description = bl_label = "Move Snap Point Down"
     bl_idname = "oa.move_snap_point_down"
 
     @classmethod
@@ -206,7 +324,7 @@ class OBJECT_OT_oa_move_snap_point_down(bpy.types.Operator):
 
 
 class OBJECT_OT_oa_move_snap_point_up(bpy.types.Operator):
-    bl_label = "Move Snap Point Up"
+    bl_description = bl_label = "Move Snap Point Up"
     bl_idname = "oa.move_snap_point_up"
 
     @classmethod
@@ -430,7 +548,7 @@ class OBJECT_OT_oa_select_snap_point(bpy.types.Operator):
 
 class OBJECT_OT_oa_ConstructAbc(bpy.types.Operator):
     """c = Cursor; a,b = Two selected vertices"""
-    bl_label = "Construct Abc-Triangle"
+    bl_description = bl_label = "Construct Abc-Triangle"
     bl_idname = "oa.construct_abc"
     
     @classmethod
@@ -443,7 +561,6 @@ class OBJECT_OT_oa_ConstructAbc(bpy.types.Operator):
         cursor = context.scene.cursor_location
 
         double_toggle()
-
         selected = [obj.matrix_world * i.co for i in mesh.vertices if i.select]
         
         if len(selected) != 2:
@@ -462,7 +579,6 @@ class OBJECT_OT_oa_ConstructAbc(bpy.types.Operator):
 
             # construct the abc-vertices
             c = cursor
-            # set c as new point of origin(nullpunkt)
             p1 = selected[0] - c
             p2 = selected[1] - c
             
@@ -473,7 +589,7 @@ class OBJECT_OT_oa_ConstructAbc(bpy.types.Operator):
             
             a = p_90_norm/factor - p_norm/factor + c
             b = p_90_norm/factor + p_norm/factor + c
-            
+
             if sp_obj:
                 toggle()
                 select_and_active(sp_obj)
@@ -524,15 +640,15 @@ class OBJECT_OT_oa_ConstructAbc(bpy.types.Operator):
             bpy.ops.mesh.select_all(action='DESELECT')
             
             return sp_obj
-        
+
         # search for a exactly one marked object in all groups of the obj
         found = 0
         sp_obj = None
         for group in obj.users_group:
-            for obj in group.objects:
-                if obj.OASnapPointsParameters.marked:
+            for obj_in_group in group.objects:
+                if obj_in_group.OASnapPointsParameters.marked:
                     found += 1
-                    sp_obj = obj
+                    sp_obj = obj_in_group
                 if found > 1: break
             if found > 1: break
 
@@ -547,17 +663,13 @@ class OBJECT_OT_oa_ConstructAbc(bpy.types.Operator):
             return {'CANCELLED'}
         else:
             new_sp_obj = construct_vertices(sp_obj)
-        
 
         self.report({'INFO'}, "Info: New Abc-Triangle constructed.")
         return {'FINISHED'}
 
 
-
-
-
 class OBJECT_OT_oa_switch_ab(bpy.types.Operator):
-    bl_label = "Switch a with b"
+    bl_description = bl_label = "Flip Normal"
     bl_idname = "oa.switch_ab"
 
     @classmethod
@@ -583,8 +695,8 @@ class OBJECT_OT_oa_switch_ab(bpy.types.Operator):
 
 
 class OBJECT_OT_oa_show_snap_point(bpy.types.Operator):
+    bl_description = bl_label = "Show Snap Point"
     bl_idname = "oa.show_snap_point"
-    bl_label = "Show Snap Point"
 
     @classmethod
     def poll(cls, context):
@@ -635,6 +747,23 @@ class OBJECT_OT_oa_show_snap_point(bpy.types.Operator):
             bgl.glVertex2i(x, y)
             bgl.glEnd()
 
+        def draw_line(start, end, color=(0.9,0.9,0.9)):
+            # outer
+            bgl.glLineWidth(4)
+            bgl.glBegin(bgl.GL_LINES)
+            bgl.glColor3f(0.1,0.1,0.1)
+            bgl.glVertex2i(start[0], start[1])
+            bgl.glVertex2i(end[0], end[1])
+            bgl.glEnd()
+            
+            # inner
+            bgl.glLineWidth(2)
+            bgl.glBegin(bgl.GL_LINES)
+            bgl.glColor3f(color[0], color[1], color[2])
+            bgl.glVertex2i(start[0], start[1])
+            bgl.glVertex2i(end[0], end[1])
+            bgl.glEnd()
+            
 
         # draw triangle
         # filled
@@ -683,30 +812,16 @@ class OBJECT_OT_oa_show_snap_point(bpy.types.Operator):
         
         # draw_point(c_2d[0], c_2d[1], 4, (0.3, 0.3, 0.9))
         draw_letter(c_2d[0], c_2d[1], 'C')
-        
-        # normal-line
-        start_3d = (a_3d + b_3d + c_3d)/3
-        end_3d = start_3d + (c_3d - a_3d).cross(c_3d - b_3d) # /1.5 # scale normal
-        
-        start_2d = tuple(map(ceil, view3d_utils.location_3d_to_region_2d(region, rv3d, start_3d )))
-        end_2d = tuple(map(ceil, view3d_utils.location_3d_to_region_2d(region, rv3d, end_3d )))
-        
-        # outer
-        bgl.glLineWidth(4)
-        bgl.glBegin(bgl.GL_LINES)
-        bgl.glColor3f(0.1,0.1,0.1)
-        bgl.glVertex2i(end_2d[0], end_2d[1])
-        bgl.glVertex2i(start_2d[0], start_2d[1])
-        bgl.glEnd()
-        
-        # inner
-        bgl.glLineWidth(2)
-        bgl.glBegin(bgl.GL_LINES)
-        bgl.glColor3f(0.9,0.9,0.9)
-        bgl.glVertex2i(end_2d[0], end_2d[1])
-        bgl.glVertex2i(start_2d[0], start_2d[1])
-        bgl.glEnd()
 
+        # normal-line
+        normal_start_3d = (a_3d + b_3d + c_3d)/3
+        normal_end_3d = normal_start_3d + (c_3d - a_3d).cross(c_3d - b_3d) # /1.5 # scale normal
+        
+        normal_start_2d = tuple(map(ceil, view3d_utils.location_3d_to_region_2d(region, rv3d, normal_start_3d )))
+        normal_end_2d = tuple(map(ceil, view3d_utils.location_3d_to_region_2d(region, rv3d, normal_end_3d )))
+        
+        draw_line(normal_start_2d, normal_end_2d)
+        
         # restore opengl defaults
         bgl.glPointSize(1)
         bgl.glLineWidth(1)
@@ -765,11 +880,12 @@ class OBJECT_PT_oa_snap_point_editor(bpy.types.Panel):
             sp_obj = get_sp_obj(obj)
             
             if sp_obj:
+                params = sp_obj.OASnapPointsParameters
                 layout = layout.box()
                 row = layout.row()
-                layout.enabled = sp_obj.OASnapPointsParameters.marked
-                row.prop(sp_obj.OASnapPointsParameters, "group_id", text="ID")
-                layout.prop(sp_obj.OASnapPointsParameters, "quality")
+                layout.enabled = params.marked
+                row.prop(params, "group_id", text="ID")
+                layout.prop(params, "quality")
                 layout.operator("oa.apply_id")
                 
                 layout = self.layout
@@ -779,10 +895,11 @@ class OBJECT_PT_oa_snap_point_editor(bpy.types.Panel):
                 row.template_list(
                     "OBJECT_UL_oa_snap_points_list",
                     'OA_SNAP_POINT_EDITOR_TEMPLATE_LIST', #unique id
-                    sp_obj.OASnapPointsParameters,
+                    params,
                     "snap_points",
-                    sp_obj.OASnapPointsParameters,
-                    "snap_points_index", 
+                    params,
+                    "snap_points_index",
+                    6,
                     )
                 
                 col = row.column(align=True)
@@ -798,7 +915,9 @@ class OBJECT_PT_oa_snap_point_editor(bpy.types.Panel):
                 col.separator()
                 #col.operator("oa.add_snap_point", icon="ZOOMIN", text="")
                 col.operator("oa.remove_snap_point", icon="X", text="")
-                
+
+                col.separator()
+                # col.operator("oa.select_all_snap_points", icon="CHECKBOX_HLT", text="")
                 
                 # row = layout.row(align=True)
                 # row.label(text="Assign:")
@@ -817,13 +936,28 @@ class OBJECT_PT_oa_snap_point_editor(bpy.types.Panel):
                 row = layout.row()
                 row.operator("oa.show_snap_point")
                 row.operator("oa.switch_ab")
-                
+
+
+                col = layout.column_flow(columns=2, align=True)
+                col.label("Orientiation:")
+                if params.upside_set and params.downside_set and params.outside_set and params.inside_set:
+                    col.label("", icon="FILE_TICK")
+                else:
+                    col.label("", icon="PANEL_CLOSE")
+
+                col = layout.column_flow(columns=2, align=True)
+                col.operator("oa.set_upside", text="Set Upside")
+                col.operator("oa.set_downside", text="Set Downside")
+                col.operator("oa.set_outside", text="Set Outside")
+                col.operator("oa.set_inside", text="Set Inside")
+                col.label("", icon="FILE_TICK") if params.upside_set else col.label("", icon="PANEL_CLOSE")
+                col.label("", icon="FILE_TICK") if params.downside_set else col.label("", icon="PANEL_CLOSE")
+                col.label("", icon="FILE_TICK") if params.outside_set else col.label("", icon="PANEL_CLOSE")
+                col.label("", icon="FILE_TICK") if params.inside_set else col.label("", icon="PANEL_CLOSE")
+
             elif sp_obj is None and obj.type == 'MESH':
                 layout.operator("oa.add_sp_obj")
-                # layout.operator("view3d.snap_cursor_to_selected", icon='CURSOR', text="")
-                # layout.operator("oa.construct_abc", icon="EDITMODE_VEC_DEHLT", text="")
-
-              
+                
 
 ################
 # Register
@@ -839,6 +973,11 @@ def register():
     bpy.utils.register_class(OBJECT_UL_oa_snap_points_list)
     
     # Operators
+    # bpy.utils.register_class(OBJECT_OT_oa_select_all_snap_points)
+    bpy.utils.register_class(OBJECT_OT_oa_set_downside)
+    bpy.utils.register_class(OBJECT_OT_oa_set_upside)
+    bpy.utils.register_class(OBJECT_OT_oa_set_inside)
+    bpy.utils.register_class(OBJECT_OT_oa_set_outside)
     bpy.utils.register_class(OBJECT_OT_oa_add_sp_obj)
     # bpy.utils.register_class(OBJECT_OT_oa_add_snap_point)
     bpy.utils.register_class(OBJECT_OT_oa_remove_snap_point)
@@ -870,7 +1009,12 @@ def unregister():
     bpy.utils.unregister_class(OBJECT_OT_oa_switch_ab)
     bpy.utils.unregister_class(OBJECT_OT_oa_show_snap_point)
     bpy.utils.unregister_class(OBJECT_OT_oa_add_sp_obj)
-
+    bpy.utils.unregister_class(OBJECT_OT_oa_set_outside)
+    bpy.utils.unregister_class(OBJECT_OT_oa_set_inside)
+    bpy.utils.unregister_class(OBJECT_OT_oa_set_upside)
+    bpy.utils.unregister_class(OBJECT_OT_oa_set_downside)
+    # bpy.utils.unregister_class(OBJECT_OT_oa_select_all_snap_points)
+    
     # UILists
     bpy.utils.unregister_class(OBJECT_UL_oa_snap_points_list)
         
