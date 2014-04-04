@@ -165,31 +165,25 @@ class OAEnterOAMode(bpy.types.Operator):
         if context.area.type == 'VIEW_3D':
             settings = bpy.context.scene.OASettings
 
-            # check for valid icon-file; whole file_valid_update() should be called (todo 0.2)
-            if not [img for img in bpy.data.images if (img.name == "oa_icons.png") and (img.library is not None) and (img.library.filepath == settings.oa_file)]:
-                self.report({'ERROR'}, "No valid OA-File loaded")
-                return {'CANCELLED'}
-
             context.window_manager.modal_handler_add(self)
             
             self._handle = bpy.types.SpaceView3D.draw_handler_add(draw_callback_mode, (self, context), 'WINDOW', 'POST_PIXEL')
-
-            self.mouse = () # (event.mouse_region_x, event.mouse_region_y)
+            
+            self.mouse = ()      # (event.mouse_region_x, event.mouse_region_y)
             self.value_last = "" # last event.value
-            self.icon_last = [] # icon on event.value==press
-
-            # imgs = [i for i in bpy.data.images if i.name == "oa_icons.png" and i.library and i.library.filepath == self.oa_file]
+            self.icon_last = []  # icon on event.value==press
+            
             self.img = bpy.data.images["oa_icons.png", settings.oa_file]
             
-            ### generate menu-positions ###
+            # generate menu-positions
             self.menu = construct_menu(settings)
-
-            ### opengl ###
+            
+            # opengl
             self.img.gl_load()
 
             return {'RUNNING_MODAL'}
         else:
-            self.report({'WARNING'}, "View3D not found, cannot run operator")
+            self.report({'ERROR'}, "View3D not found, cannot run operator")
             return {'CANCELLED'}
 
         

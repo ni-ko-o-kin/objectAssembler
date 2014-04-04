@@ -85,8 +85,6 @@ def draw_callback_add(self, context):
             
             # color_current += color_range
 
-            
-    
     # restore opengl defaults
     bgl.glDisable(bgl.GL_LINE_SMOOTH)
     bgl.glLineWidth(1)
@@ -107,7 +105,7 @@ class OAAdd(bpy.types.Operator):
                 obj_under_cursor = ray(self, context, [self.obj.name,])
                 
                 # if object is under cursor
-                if obj_under_cursor is not None and obj_under_cursor.dupli_type == 'GROUP':
+                if obj_under_cursor is not None and obj_under_cursor.dupli_type == 'GROUP' and obj_under_cursor.dupli_group:
                     # if object is in an oa-group
                     if [i for i in obj_under_cursor.dupli_group.objects if i.OASnapPointsParameters.marked]:
                         self.snap_to_obj = obj_under_cursor
@@ -242,81 +240,77 @@ class OAAdd(bpy.types.Operator):
         return {'RUNNING_MODAL'}
 
     def invoke(self, context, event):
-        if context.space_data.type == 'VIEW_3D':
-            settings = context.scene.OASettings
-
-            context.window_manager.modal_handler_add(self)
-
-            self._handle = bpy.types.SpaceView3D.draw_handler_add(draw_callback_add, (self, context), 'WINDOW', 'POST_PIXEL')
-
-            self.mouse = (event.mouse_region_x, event.mouse_region_y)
-            self.snap_list = []
-
-            icon_id = settings.icon_clicked
-
-            ### create list of all oa-groups in scene, to test if any oa-objects exist
-            # add all oa-groups to list
-            self.oa_objects = [i for i in bpy.context.scene.objects if i.dupli_type == 'GROUP' and bool([j for j in i.dupli_group.objects if j.OASnapPointsParameters.marked])]
-
-            # search for available qualities; if none -> error
-            available_qualities = [i.quality for i in settings.valid_groups if list(i.group_id) == list(icon_id)]
-            if not available_qualities:
-                self.report({'ERROR'}, "No qualities available")
-                return {'CANCELLED'}
-            
-            # if the quality set in settings exists, use it, else use next one
-            group_id_without_quality = "oa_" + str(icon_id[0]) + "_" + str(icon_id[1]) + "_" + str(icon_id[2]) + "_"
-            if settings.quality in available_qualities:
-                next_quality = settings.quality
-            else:
-                for q in ("high", "medium", "low"):
-                    if q in available_qualities:
-                        next_quality = q
-                        break
-
-            group_id_and_quality = group_id_without_quality + next_quality
-
-
-            # add new group-instance
-            bpy.ops.object.empty_add()
-            self.obj = bpy.context.scene.objects.active
-            self.obj.name = group_id_and_quality
-            self.obj.dupli_type = 'GROUP'
-            self.obj.dupli_group = [g for g in bpy.data.groups if g.name == group_id_and_quality and g.library and g.library.filepath == settings.oa_file][0]
-            
-            self.current_group_id = [i.OASnapPointsParameters.group_id for i in self.obj.dupli_group.objects if i.OASnapPointsParameters.marked][0]
-
-            # add qualities, quality and marked from self.obj.OAObjectParameters
-            self.obj.OAObjectParameters.marked = True
-            for i in available_qualities:
-                new_quality = self.obj.OAObjectParameters.qualities.add()
-                new_quality.quality = i
-            self.obj.OAObjectParameters.quality = next_quality
-            self.obj.OAObjectParameters.group_id = self.current_group_id
-            self.obj.OAObjectParameters.update = True
-            
-            # make empty very small
-            self.obj.empty_draw_size = 0.001            
-
-            # hide new object if there are already other oa-objects present
-            if len(self.oa_objects) != 0:
-                self.obj.hide = True
-            
-            # set temporary position to cursor position
-            self.obj.location = context.scene.cursor_location
-               
-            # current snap point which the new object should use
-            self.current_snap_point = 0
-
-            bpy.context.scene.objects.active = None
-            
-            return {'RUNNING_MODAL'}
-
-        else:
+        if context.space_data.type != 'VIEW_3D':
             self.report({'WARNING'}, "Active space must be a View3d")
             return {'CANCELLED'}
 
+        settings = context.scene.OASettings
 
+        context.window_manager.modal_handler_add(self)
+
+        self._handle = bpy.types.SpaceView3D.draw_handler_add(draw_callback_add, (self, context), 'WINDOW', 'POST_PIXEL')
+
+        self.mouse = (event.mouse_region_x, event.mouse_region_y)
+        self.snap_list = []
+
+        icon_id = settings.icon_clicked
+
+        ### create list of all oa-groups in scene, to test if any oa-objects exist
+        # add all oa-groups to list
+        self.oa_objects = [i for i in bpy.context.scene.objects if i.dupli_type == 'GROUP' and i.dupli_group and bool([j for j in i.dupli_group.objects if j.OASnapPointsParameters.marked])]
+
+        # search for available qualities; if none -> error
+        available_qualities = [i.quality for i in settings.valid_groups if list(i.group_id) == list(icon_id)]
+        if not available_qualities:
+            self.report({'ERROR'}, "No qualities available")
+            return {'CANCELLED'}
+        
+        # if the quality set in settings exists, use it, else use next one
+        group_id_without_quality = "oa_" + str(icon_id[0]) + "_" + str(icon_id[1]) + "_" + str(icon_id[2]) + "_"
+        if settings.quality in available_qualities:
+            next_quality = settings.quality
+        else:
+            for q in ("high", "medium", "low"):
+                if q in available_qualities:
+                    next_quality = q
+                    break
+
+        group_id_and_quality = group_id_without_quality + next_quality
+
+        # add new group-instance
+        bpy.ops.object.empty_add()
+        self.obj = bpy.context.scene.objects.active
+        self.obj.name = group_id_and_quality
+        self.obj.dupli_type = 'GROUP'
+        self.obj.dupli_group = [g for g in bpy.data.groups if g.name == group_id_and_quality and g.library and g.library.filepath == settings.oa_file][0]
+        
+        self.current_group_id = [i.OASnapPointsParameters.group_id for i in self.obj.dupli_group.objects if i.OASnapPointsParameters.marked][0]
+
+        # add qualities, quality and marked from self.obj.OAObjectParameters
+        self.obj.OAObjectParameters.marked = True
+        for i in available_qualities:
+            new_quality = self.obj.OAObjectParameters.qualities.add()
+            new_quality.quality = i
+        self.obj.OAObjectParameters.quality = next_quality
+        self.obj.OAObjectParameters.group_id = self.current_group_id
+        self.obj.OAObjectParameters.update = True
+        
+        # make empty very small
+        self.obj.empty_draw_size = 0.001            
+
+        # hide new object if there are already other oa-objects present
+        if len(self.oa_objects) != 0:
+            self.obj.hide = True
+        
+        # set temporary position to cursor position
+        self.obj.location = context.scene.cursor_location.copy()
+           
+        # current snap point which the new object should use
+        self.current_snap_point = 0
+
+        bpy.context.scene.objects.active = None
+        
+        return {'RUNNING_MODAL'}
 
 
 ################

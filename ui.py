@@ -27,15 +27,19 @@ class OASettings(bpy.types.PropertyGroup):
         
         if DEBUG: line()
 
+        print()
+        print("Loading Object Assembler File:")
+        print("==============================")
+
         # link groups in current file 
         with bpy.data.libraries.load(self.oa_file, link=True) as (data_from, data_to):
             data_to.groups = data_from.groups
-
+            
         # add oa-valid groups from current file to valid_groups
-        for group in [i for i in bpy.data.groups if i.library and i.library.filepath == self.oa_file]:
+        for group in [g for g in bpy.data.groups if g.library and g.library.filepath == self.oa_file]:
             for obj in group.objects:
                 if obj.OASnapPointsParameters.marked:
-                    if DEBUG: print("found oa-group:", group.name)
+                    # if DEBUG: print("  Found oa-group:", group.name)
                     new_valid_group = self.valid_groups.add()
                     new_valid_group.group_id = obj.OASnapPointsParameters.group_id
                     new_valid_group.quality = obj.OASnapPointsParameters.quality
@@ -43,36 +47,39 @@ class OASettings(bpy.types.PropertyGroup):
                     break
     
         if self.file_valid:
-            if DEBUG:
-                print("\nID of imported OA-Groups:")
-                for oa_group, quality in [(list(i.group_id), i.quality) for i in self.valid_groups]:
-                    print(oa_group, quality)
+            print("  IDs of imported OA-Groups:")
+            for oa_group, quality in [(list(i.group_id), i.quality) for i in self.valid_groups]:
+                print("    ", oa_group, quality)
 
             # load oa_icons.png
             with bpy.data.libraries.load(self.oa_file, link=True) as (data_from, data_to):
                 data_to.images = [name for name in data_from.images if name == "oa_icons.png"]
         
-            imgs = [i for i in bpy.data.images if i.name == "oa_icons.png" and i.library and i.library.filepath == self.oa_file]
-        
-            if not imgs:
+            imgs = [img for img in bpy.data.images if img.name == "oa_icons.png" and img.library and img.library.filepath == self.oa_file]
+
+            if len(imgs) > 1:
                 self.valid_icon_file = False
-                print("No oa_icons.png-File found!")
+                print("  Error: Multiple oa_icons.png-Files found!")
+
+            elif len(imgs) == 0:
+                self.valid_icon_file = False
+                print("  Error: No oa_icons.png-File found!")
 
             else:
-                print("Found oa_icons.png-File")
+                print("  OK: Found oa_icons.png-File")
                 size = bpy.data.images["oa_icons.png", self.oa_file].size
                 if size[0] != size[1]: 
                     self.valid_icon_file = False
-                    print("Wrong dimensions of oa_icons.png-File: width(%s) != height(%s)" % (
+                    print("  Error: Wrong dimensions of oa_icons.png-File: width(%s) != height(%s)" % (
                             size[0], size[1]))
                     
                 else:
-                    print("oa_icons.png-File OK!")
+                    print("  OK: oa_icons.png-File is valid")
                     self.valid_icon_file = True
     
         else:
-            print("No valid OA-Group found")
-    
+            print("  Error: No valid OA-Group found")
+
     oa_file = bpy.props.StringProperty(
         name = "",
         default = "", 
