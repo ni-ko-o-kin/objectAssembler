@@ -6,60 +6,93 @@ from bpy_extras import view3d_utils
 from . import mode_title
 from .align import rotate, align_groups
 from .common import ray, point_in_polygon, get_cursor_info, set_cursor_info
-from .debug import *
 
+DEBUG = False
+
+def create_snap_list(self, context):
+    # create list of all sp's and their snap point objects
+    for oa_obj in self.oa_objects:
+        oa_obj.dupli_list_create(context.scene)
+        
+        for dupli_obj in oa_obj.dupli_list:
+            if dupli_obj.object.OASnapPointsParameters.marked:
+                sp_obj = dupli_obj.object
+                #sp_obj_matrix = dupli_obj.matrix
+                #sp_obj_snap_points = sp_obj.OASnapPointsParameters.snap_points
+                
+                for snap_point_nr, snap_point in enumerate(sp_obj.OASnapPointsParameters.snap_points):
+                    self.snap_list.append(
+                        (oa_obj,
+                         snap_point_nr,
+                         dupli_obj.matrix * sp_obj.data.vertices[snap_point.c].co,
+                         snap_point.snap_size
+                         ))
+                    # snap_list:  0: oa-object
+                    #             1: snap_point-number
+                    #             2: c-coordinate
+                    #             3: snap point size
+                
+        oa_obj.dupli_list_clear()
+    if DEBUG: print("Snap list created")
+
+def order_snap_list(self, context):
+    region = context.region
+    rv3d = context.space_data.region_3d
+    coord = self.mouse
+    ray_max = 10000
+    
+    # get the ray from the viewport and mouse
+    if (rv3d.view_perspective == 'ORTHO') or (rv3d.view_perspective == 'CAMERA' and context.scene.camera.data.type == 'ORTHO'):
+        view_vector = -1 * view3d_utils.region_2d_to_vector_3d(region, rv3d, coord)
+        ray_origin = view3d_utils.region_2d_to_origin_3d(region, rv3d, coord) + view_vector * - ray_max / 2
+    else:
+        view_vector = view3d_utils.region_2d_to_vector_3d(region, rv3d, coord)
+        ray_origin = view3d_utils.region_2d_to_origin_3d(region, rv3d, coord)
+        
+    self.snap_list_unordered = []
+    self.snap_list_ordered = [] # nearest sp first
+    
+    for sp in self.snap_list:
+        center_x, center_y = view3d_utils.location_3d_to_region_2d(region, rv3d, sp[2])
+        if (rv3d.view_perspective == 'ORTHO') or (rv3d.view_perspective == 'CAMERA' and context.scene.camera.data.type == 'ORTHO'):
+            radius = 1000 / rv3d.view_distance
+        else:
+            radius = 1000 / (sp[2] - ray_origin).length
+        
+        radius = radius * sp[3] / 10
+        
+        points = 24
+        polygon = []
+        
+        for i in range(0,points):
+            x = center_x + radius * sin(2.0*pi*i/points)
+            y = center_y + radius * cos(2.0*pi*i/points)
+            polygon.append((x,y))
+            
+        dist_squared = round((sp[2] - ray_origin).length_squared)
+        
+        self.snap_list_unordered.append(sp + (dist_squared, polygon))
+        # same as snap_list but aditional keys:
+        #             4: distance to viewport
+        #             5: polygon around snap point
+    
+    self.snap_list_ordered = sorted(self.snap_list_unordered, key=lambda k: k[4], reverse=False)
+    if DEBUG: print("Snap list ordered")
 
 def draw_callback_add(self, context):
     bgl.glLineWidth(1)
     bgl.glColor3f(0.1, 0.1, 0.1)
     bgl.glEnable(bgl.GL_LINE_SMOOTH)
-
+    
     # draw add-mode-title
     mode_title.mode_title(False, "Add")
-
-    if self.snap_list and self.viewport_changed:
-        region = context.region
-        rv3d = context.space_data.region_3d
-        coord = self.mouse
-        #ray_max = 10000
-
-        # get the ray from the viewport and mouse
-        if (rv3d.view_perspective == 'ORTHO') or (rv3d.view_perspective == 'CAMERA' and context.scene.camera.data.type == 'ORTHO'):
-            view_vector = -1 * view3d_utils.region_2d_to_vector_3d(region, rv3d, coord)
-            ray_origin = view3d_utils.region_2d_to_origin_3d(region, rv3d, coord) + view_vector * - ray_max / 2
-        else:
-            view_vector = view3d_utils.region_2d_to_vector_3d(region, rv3d, coord)
-            ray_origin = view3d_utils.region_2d_to_origin_3d(region, rv3d, coord)
-            
-        self.snap_list_unordered = []
-        self.snap_list_ordered = [] # nearest sp first
+    
+    if self.snap_list_ordered:
         
-        for sp in self.snap_list:
-            center_x, center_y = view3d_utils.location_3d_to_region_2d(region, rv3d, sp[2])
-            if (rv3d.view_perspective == 'ORTHO') or (rv3d.view_perspective == 'CAMERA' and context.scene.camera.data.type == 'ORTHO'):
-                radius = 1000 / rv3d.view_distance
-            else:
-                radius = 1000 / (sp[2] - ray_origin).length
-            
-            radius = radius * sp[3] / 10
-            
-            points = 24
-            polygon = []
-            
-            for i in range(0,points):
-                x = center_x + radius * sin(2.0*pi*i/points)
-                y = center_y + radius * cos(2.0*pi*i/points)
-                polygon.append((x,y))
-                
-            dist_squared = round((sp[2] - ray_origin).length_squared)
-            
-            self.snap_list_unordered.append(sp + (dist_squared, polygon))
-   
-        self.snap_list_ordered = sorted(self.snap_list_unordered, key=lambda k: k[4])
-
         hue = 0
-        l = len(self.snap_list_ordered)
-        for sp in reversed(self.snap_list_ordered):
+        snap_to_obj_snap_points = [sp for sp in self.snap_list_ordered if sp[0] == self.snap_to_obj]
+        l = len(snap_to_obj_snap_points) - 1
+        for sp in reversed(snap_to_obj_snap_points):
             
             # filled
             # bgl.glBegin(bgl.GL_POLYGON)
@@ -92,7 +125,6 @@ def draw_callback_add(self, context):
     bgl.glLineWidth(1)
     bgl.glColor4f(0.0, 0.0, 0.0, 1.0)
 
-    self.viewport_changed = False
 
     
 class OAAdd(bpy.types.Operator):
@@ -103,6 +135,32 @@ class OAAdd(bpy.types.Operator):
     def modal(self, context, event):
         context.area.tag_redraw()
         settings = context.scene.OASettings
+        
+        # if cursor is over a snap point -> snap
+        some_point_in_polygon = False
+        for sp in self.snap_list_ordered:
+            if point_in_polygon(self.mouse[0], self.mouse[1], sp[5]):
+                some_point_in_polygon = True
+                self.snap_to_obj = sp[0]
+                # show and align
+                self.obj.hide = False
+
+                last_active_snap_point = [i.last_active_snap_point for i in settings.valid_groups if \
+                                          list(i.group_id) == list(self.current_group_id)][0]
+
+                align_groups(
+                    sp[0], sp[1],
+                    self.obj, last_active_snap_point,
+                    context
+                    )
+
+                # use only the first (nearest)
+                break
+
+        # # if no snap point is under the cursor
+        # if not some_point_in_polygon:
+        #     # is an object under the cursor
+        #     under_cursor()
 
         
         # def snap():
@@ -177,10 +235,16 @@ class OAAdd(bpy.types.Operator):
         #     return {'FINISHED'}
 
         # allow navigation
-        if event.type in {'MIDDLEMOUSE', 'WHEELUPMOUSE', 'WHEELDOWNMOUSE', 'NUMPAD_1',
-                          'NUMPAD_3', 'NUMPAD_7', 'NUMPAD_5', 'NUMPAD_PERIOD',
-                          'NUMPAD_2', 'NUMPAD_4', 'NUMPAD_8', 'NUMPAD_6'}:
+        navigation = {'MIDDLEMOUSE', 'WHEELUPMOUSE', 'WHEELDOWNMOUSE', 'NUMPAD_1',
+                      'NUMPAD_3', 'NUMPAD_7', 'NUMPAD_5', 'NUMPAD_PERIOD',
+                      'NUMPAD_2', 'NUMPAD_4', 'NUMPAD_8', 'NUMPAD_6'}
+        #print("\n", "="*40, "\n", event.type, event.value)
+        if event.type in navigation and event.value == 'PRESS':
             self.viewport_changed = True
+            return {'PASS_THROUGH'}
+        elif self.viewport_changed and event.type == 'MOUSEMOVE' and event.value == 'RELEASE':
+            order_snap_list(self, context)
+            self.viewport_changed = False
             return {'PASS_THROUGH'}
 
         elif event.type == 'MOUSEMOVE':
@@ -256,37 +320,21 @@ class OAAdd(bpy.types.Operator):
 
         self.mouse = (event.mouse_region_x, event.mouse_region_y)
         self.snap_list = []
-
+        self.viewport_changed = True
+        self.snap_to_obj = None
+        
         icon_id = settings.icon_clicked
 
         ### create list of all oa-groups in scene, to test if any oa-objects exist
         # add all oa-groups to list
-        self.oa_objects = [i for i in bpy.context.scene.objects if i.dupli_type == 'GROUP' and i.dupli_group and bool([j for j in i.dupli_group.objects if j.OASnapPointsParameters.marked])]
-
-        # build list of all sp's and their snap point objects
-        for oa_obj in self.oa_objects:
-            oa_obj.dupli_list_create(context.scene)
-            
-            for dupli_obj in oa_obj.dupli_list:
-                if dupli_obj.object.OASnapPointsParameters.marked:
-                    sp_obj = dupli_obj.object
-                    #sp_obj_matrix = dupli_obj.matrix
-                    #sp_obj_snap_points = sp_obj.OASnapPointsParameters.snap_points
-                    
-                    for snap_point_nr, snap_point in enumerate(sp_obj.OASnapPointsParameters.snap_points):
-                        self.snap_list.append(
-                            (oa_obj,
-                             snap_point_nr, # snap_point nummer
-                             dupli_obj.matrix * sp_obj.data.vertices[snap_point.c].co, # c-coordinate
-                             snap_point.snap_size
-                             ))
-                    
-            oa_obj.dupli_list_clear()
+        self.oa_objects = [i for i in context.scene.objects if \
+                               i.dupli_type == 'GROUP' and \
+                               i.dupli_group and \
+                               bool([j for j in i.dupli_group.objects if j.OASnapPointsParameters.marked])]
         
-        # for oa_obj, nr, co, size in self.snap_list:
-        #     print(oa_obj, nr, co, size)
-        
-        
+        # create and order list with all snap points for all oa-objects in the scene
+        create_snap_list(self, context)
+        order_snap_list(self, context)
         
         # search for available qualities; if none -> error
         available_qualities = [i.quality for i in settings.valid_groups if list(i.group_id) == list(icon_id)]
@@ -338,8 +386,6 @@ class OAAdd(bpy.types.Operator):
         self.current_snap_point = 0
 
         bpy.context.scene.objects.active = None
-
-        self.viewport_changed = True
 
         return {'RUNNING_MODAL'}
 

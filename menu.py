@@ -1,6 +1,7 @@
 import bpy
-from .debug import *
 from .common import get_tool_shelf_width
+
+DEBUG = False
 
 def construct_menu(settings):
     # groups = CollectionProperty

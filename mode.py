@@ -2,7 +2,8 @@ import bpy, bgl
 from .menu import construct_menu
 from .mode_title import mode_title
 from .common import ray
-from .debug import *
+
+DEBUG = False
 
 def mouse_hover_icon(icon, mouse):
     if mouse[0] <= icon[2] and mouse[0] >= icon[0]:

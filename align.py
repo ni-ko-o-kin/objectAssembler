@@ -1,7 +1,8 @@
 import bpy
 from math import pi
 from .common import select_and_active, get_cursor_info, set_cursor_info
-from .debug import *
+
+DEBUG = False
 
 def get_snap_points(context, group, snap_point_nr):
     ''' get global pos of group-objs SnapPoints '''

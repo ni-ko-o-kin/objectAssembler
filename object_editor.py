@@ -1,6 +1,7 @@
 import bpy
 from bpy.props import BoolProperty, EnumProperty, StringProperty, CollectionProperty, IntVectorProperty
-from .debug import *
+
+DEBUG = False
 
 ###################################
 # Properties 

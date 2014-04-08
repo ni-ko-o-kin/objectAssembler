@@ -5,7 +5,8 @@ from bpy.props import (IntProperty, StringProperty, FloatProperty, IntVectorProp
 from mathutils import Matrix, Vector, Euler
 from math import pi, ceil
 from .common import toggle, double_toggle, select_and_active, move_origin_to_geometry, get_sp_obj
-from .debug import *
+
+DEBUG = False
 
 ###################################
 # Properties 

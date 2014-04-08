@@ -4,8 +4,9 @@ import bpy
 from bpy.props import StringProperty, IntVectorProperty, BoolProperty, CollectionProperty, FloatProperty, IntProperty, EnumProperty
 from bpy.app.handlers import persistent
 
-from .debug import *
+from .debug import line
 
+DEBUG = False
 
 class OAValidGroupsItem(bpy.types.PropertyGroup):
     group_id = IntVectorProperty(name="", default=(0,0,0), size=3, min=0)
