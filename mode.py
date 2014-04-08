@@ -1,7 +1,7 @@
 import bpy, bgl
 from .menu import construct_menu
 from .mode_title import mode_title
-from .common import ray
+from .common import ray, ALLOWED_NAVIGATION
 
 DEBUG = False
 
@@ -106,11 +106,7 @@ class OAEnterOAMode(bpy.types.Operator):
             self.mouse = (event.mouse_region_x, event.mouse_region_y)
             self.value = event.value
 
-        elif event.type in {'MIDDLEMOUSE', 'WHEELUPMOUSE', 'WHEELDOWNMOUSE',
-                            'NUMPAD_1', 'NUMPAD_3', 'NUMPAD_7', 'NUMPAD_5' ,
-                            'NUMPAD_PERIOD', "Z",
-                            'NUMPAD_2', 'NUMPAD_4', 'NUMPAD_8', 'NUMPAD_6'}:
-            # allow navigation
+        elif event.type in ALLOWED_NAVIGATION:
             return {'PASS_THROUGH'}
 
         elif event.type == 'LEFTMOUSE' and event.value == 'PRESS':
@@ -146,17 +142,17 @@ class OAEnterOAMode(bpy.types.Operator):
 
             return {'RUNNING_MODAL'}
 
-        elif event.type == 'D' and event.value == 'RELEASE':
-            obj_to_unlink = ray(self, context)
+        # elif event.type == 'D' and event.value == 'RELEASE':
+        #     obj_to_unlink = ray(self, context)
             
-            if obj_to_unlink:
-                context.scene.objects.unlink(obj_to_unlink)
+        #     if obj_to_unlink:
+        #         context.scene.objects.unlink(obj_to_unlink)
                 
-            return {'RUNNING_MODAL'}
+        #     return {'RUNNING_MODAL'}
 
         elif (event.type == 'RIGHTMOUSE' and event.value == 'PRESS') or event.type == 'ESC':
             bpy.types.SpaceView3D.draw_handler_remove(self._handle, 'WINDOW')
-            
+
             if DEBUG: print("CANCELLED")
             return {'CANCELLED'}
 
@@ -165,7 +161,10 @@ class OAEnterOAMode(bpy.types.Operator):
     def invoke(self, context, event):
         if context.area.type == 'VIEW_3D':
             settings = bpy.context.scene.OASettings
-
+            
+            settings.more_objects = False
+            settings.shift = False
+            
             context.window_manager.modal_handler_add(self)
             
             self._handle = bpy.types.SpaceView3D.draw_handler_add(draw_callback_mode, (self, context), 'WINDOW', 'POST_PIXEL')

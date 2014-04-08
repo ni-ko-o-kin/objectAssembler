@@ -4,7 +4,7 @@ from bpy.props import (IntProperty, StringProperty, FloatProperty, IntVectorProp
                        CollectionProperty, BoolProperty, EnumProperty, FloatVectorProperty)
 from mathutils import Matrix, Vector, Euler
 from math import pi, ceil
-from .common import toggle, double_toggle, select_and_active, move_origin_to_geometry, get_sp_obj
+from .common import toggle, double_toggle, select_and_active, move_origin_to_geometry, get_sp_obj, ALLOWED_NAVIGATION
 
 DEBUG = False
 
@@ -832,9 +832,7 @@ class OBJECT_OT_oa_show_snap_point(bpy.types.Operator):
     def modal(self, context, event):
         context.area.tag_redraw()
 
-        # allow navigation
-        if event.type in {'MIDDLEMOUSE', 'WHEELUPMOUSE', 'WHEELDOWNMOUSE', 'NUMPAD_1',
-                          'NUMPAD_3', 'NUMPAD_7', 'NUMPAD_5', 'NUMPAD_PERIOD'}:
+        if event.type in ALLOWED_NAVIGATION:
             return {'PASS_THROUGH'}
 
         elif event.type in {'RIGHTMOUSE', 'ESC', 'LEFTMOUSE'}:

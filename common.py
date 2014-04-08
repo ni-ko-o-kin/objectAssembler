@@ -2,6 +2,11 @@ import bpy, bgl
 from bpy_extras import view3d_utils
 from mathutils import Vector
 
+ALLOWED_NAVIGATION = {'MIDDLEMOUSE', 'WHEELUPMOUSE', 'WHEELDOWNMOUSE',
+                      'NUMPAD_1', 'NUMPAD_3', 'NUMPAD_7', 'NUMPAD_5' ,
+                      'NUMPAD_2', 'NUMPAD_4', 'NUMPAD_6', 'NUMPAD_8',
+                      'NUMPAD_PERIOD', "Z"}
+
 def select_and_active(obj):
     # deselect everything
     bpy.ops.object.select_all(action='DESELECT')

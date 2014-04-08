@@ -5,7 +5,7 @@ from bpy_extras import view3d_utils
 
 from . import mode_title
 from .align import rotate, align_groups
-from .common import ray, point_in_polygon, get_cursor_info, set_cursor_info
+from .common import ray, point_in_polygon, get_cursor_info, set_cursor_info, ALLOWED_NAVIGATION
 
 DEBUG = False
 
@@ -53,7 +53,13 @@ def order_snap_list(self, context):
     self.snap_list_ordered = [] # nearest sp first
     
     for sp in self.snap_list:
-        center_x, center_y = view3d_utils.location_3d_to_region_2d(region, rv3d, sp[2])
+        # try to get center_x and center_y; if None move on to next snap point
+        center_x_center_y = view3d_utils.location_3d_to_region_2d(region, rv3d, sp[2])
+        if not center_x_center_y:
+            continue
+        else:
+            center_x, center_y = center_x_center_y
+
         if (rv3d.view_perspective == 'ORTHO') or (rv3d.view_perspective == 'CAMERA' and context.scene.camera.data.type == 'ORTHO'):
             radius = 1000 / rv3d.view_distance
         else:
@@ -94,10 +100,10 @@ def draw_callback_add(self, context):
         l = len(snap_to_obj_snap_points) - 1
         for sp in reversed(snap_to_obj_snap_points):
             
-            # filled
+            # # filled
             # bgl.glBegin(bgl.GL_POLYGON)
-            # for x,y in snaps[4]:
-            #     bgl.glColor3f(color_current, color_current, color_current)
+            # for x,y in sp[5]:
+            #     bgl.glColor3f(hue,hue,hue)
             #     bgl.glVertex2f(x, y)
 
             # bgl.glEnd()
@@ -142,17 +148,17 @@ class OAAdd(bpy.types.Operator):
             if point_in_polygon(self.mouse[0], self.mouse[1], sp[5]):
                 some_point_in_polygon = True
                 self.snap_to_obj = sp[0]
-                # show and align
                 self.obj.hide = False
 
                 last_active_snap_point = [i.last_active_snap_point for i in settings.valid_groups if \
                                           list(i.group_id) == list(self.current_group_id)][0]
-
+                
                 align_groups(
                     sp[0], sp[1],
                     self.obj, last_active_snap_point,
                     context
                     )
+                self.snapped = True
 
                 # use only the first (nearest)
                 break
@@ -229,19 +235,15 @@ class OAAdd(bpy.types.Operator):
         #         under_cursor()
 
 
-        # # if there are no oa-objects, quit op
-        # if not self.oa_objects:
-        #     bpy.types.SpaceView3D.draw_handler_remove(self._handle, 'WINDOW')
-        #     return {'FINISHED'}
+        # if there are no oa-objects, quit op
+        if not self.oa_objects:
+            bpy.types.SpaceView3D.draw_handler_remove(self._handle, 'WINDOW')
+            return {'FINISHED'}
 
-        # allow navigation
-        navigation = {'MIDDLEMOUSE', 'WHEELUPMOUSE', 'WHEELDOWNMOUSE', 'NUMPAD_1',
-                      'NUMPAD_3', 'NUMPAD_7', 'NUMPAD_5', 'NUMPAD_PERIOD',
-                      'NUMPAD_2', 'NUMPAD_4', 'NUMPAD_8', 'NUMPAD_6'}
-        #print("\n", "="*40, "\n", event.type, event.value)
-        if event.type in navigation and event.value == 'PRESS':
+        if event.type in ALLOWED_NAVIGATION and event.value == 'PRESS':
             self.viewport_changed = True
             return {'PASS_THROUGH'}
+        
         elif self.viewport_changed and event.type == 'MOUSEMOVE' and event.value == 'RELEASE':
             order_snap_list(self, context)
             self.viewport_changed = False
@@ -249,20 +251,23 @@ class OAAdd(bpy.types.Operator):
 
         elif event.type == 'MOUSEMOVE':
             self.mouse = (event.mouse_region_x, event.mouse_region_y)
-        #     snap()
 
-        # elif event.type == 'LEFTMOUSE':
-        #     self.obj.hide = False
-        #     bpy.types.SpaceView3D.draw_handler_remove(self._handle, 'WINDOW')
+        elif event.type == 'LEFTMOUSE':
+            if self.snapped:
+                self.obj.hide = False
+            else:
+                context.scene.objects.unlink(self.obj)
 
-        #     # create same object again
-        #     if settings.shift == True:
-        #         settings.more_objects = True
-        #     else:
-        #         settings.more_objects = False
-
-        #     return {'FINISHED'}
-
+            bpy.types.SpaceView3D.draw_handler_remove(self._handle, 'WINDOW')
+            
+            # create same object again
+            if settings.shift == True:
+                settings.more_objects = True
+            else:
+                settings.more_objects = False
+            
+            return {'FINISHED'}
+        
         # elif event.type == 'S' and event.value == 'RELEASE':
         #     if self.obj is not None:
         #         snap_points = [i.OASnapPointsParameters.snap_points for i in self.obj.dupli_group.objects if i.OASnapPointsParameters.marked][0]
@@ -293,17 +298,14 @@ class OAAdd(bpy.types.Operator):
 
         elif event.type in {'RIGHTMOUSE', 'ESC'}:
             bpy.types.SpaceView3D.draw_handler_remove(self._handle, 'WINDOW')
+            context.scene.objects.unlink(self.obj)
+            
+            # don't create same object again
+            settings.more_objects = False
+            settings.shift = False
+            
             return {'CANCELLED'}
 
-        #     # unlink object
-        #     context.scene.objects.unlink(self.obj)
-            
-        #     # don't create same object again
-        #     settings.more_objects = False
-        #     settings.shift = False
-
-        #     return {'CANCELLED'}
-            
 
         return {'RUNNING_MODAL'}
 
@@ -313,7 +315,7 @@ class OAAdd(bpy.types.Operator):
             return {'CANCELLED'}
 
         settings = context.scene.OASettings
-
+        
         context.window_manager.modal_handler_add(self)
 
         self._handle = bpy.types.SpaceView3D.draw_handler_add(draw_callback_add, (self, context), 'WINDOW', 'POST_PIXEL')
@@ -322,6 +324,7 @@ class OAAdd(bpy.types.Operator):
         self.snap_list = []
         self.viewport_changed = True
         self.snap_to_obj = None
+        self.snapped = False
         
         icon_id = settings.icon_clicked
 
