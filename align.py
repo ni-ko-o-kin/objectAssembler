@@ -1,23 +1,31 @@
 import bpy
 from math import pi
-from .common import select_and_active, get_cursor_info, set_cursor_info
+from .common import select_and_active, get_cursor_info, set_cursor_info, MAX_ERROR_EQL, MAX_ERROR_DIST
 
 DEBUG = False
 
 def get_snap_points(context, group, snap_point_nr):
     ''' get global pos of group-objs SnapPoints '''
-
+    
     group.dupli_list_create(context.scene)
     
+    #sp_obj, dupli_matrix = [(dupli.object, dupli.matrix) for dupli in group.dupli_list if dupli.object.OASnapPointsParameters.marked][0]
+    
     for i in group.dupli_list:
-        if i.object.OASnapPointsParameters.marked:
-            snap_obj = i.object
-            snap_point_active = snap_obj.OASnapPointsParameters.snap_points[snap_point_nr]
-            matrix = i.matrix
+       if i.object.OASnapPointsParameters.marked:
+           snap_obj = i.object
+           matrix = i.matrix
+    
+    # snap_point_active = sp_obj.OASnapPointsParameters.snap_points[snap_point_nr]
+           snap_point_active = snap_obj.OASnapPointsParameters.snap_points[snap_point_nr]
+    
+    # a = dupli_matrix * sp_obj.data.vertices[snap_point_active.a].co
+    # b = dupli_matrix * sp_obj.data.vertices[snap_point_active.b].co
+    # c = dupli_matrix * sp_obj.data.vertices[snap_point_active.c].co
 
-            a = matrix * snap_obj.data.vertices[snap_point_active.a].co
-            b = matrix * snap_obj.data.vertices[snap_point_active.b].co
-            c = matrix * snap_obj.data.vertices[snap_point_active.c].co
+           a = matrix * snap_obj.data.vertices[snap_point_active.a].co
+           b = matrix * snap_obj.data.vertices[snap_point_active.b].co
+           c = matrix * snap_obj.data.vertices[snap_point_active.c].co
     
     group.dupli_list_clear()
     
@@ -51,10 +59,7 @@ def get_adjusted_snap_points(A, B):
 
 def align_groups(group_a, group_a_snap_point_nr, group_b, group_b_snap_point_nr, context):
     #import pdb; pdb.set_trace()
-    MAX_ERROR_DIST = 1e-6
-    MAX_ERROR_EQL = 2e-4
-    MAX_ERROR_FINE = 1e-9
-    
+   
     cursor_info = get_cursor_info(context)
     context.space_data.pivot_point = 'CURSOR'
     

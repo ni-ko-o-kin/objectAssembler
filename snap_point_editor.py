@@ -41,6 +41,9 @@ class OASnapPointsParameters(bpy.types.PropertyGroup):
     downside_set = BoolProperty(default=False)
     outside_set = BoolProperty(default=False)
     inside_set = BoolProperty(default=False)
+
+    valid_horizontal = BoolProperty(default=False)
+    valid_vertical = BoolProperty(default=False)
     
     quality = EnumProperty(
         items=[
@@ -116,6 +119,7 @@ class OBJECT_OT_oa_set_outside(bpy.types.Operator):
         
         params.outside = context.scene.cursor_location.copy()
         params.outside_set = True
+        params.valid_horizontal = params.inside_set and params.outside_set and Vector(params.inside) != Vector(params.outside)
 
         return {'FINISHED'}
 
@@ -134,6 +138,7 @@ class OBJECT_OT_oa_set_inside(bpy.types.Operator):
         
         params.inside = context.scene.cursor_location.copy()
         params.inside_set = True
+        params.valid_horizontal = params.inside_set and params.outside_set and Vector(params.inside) != Vector(params.outside)
         
         return {'FINISHED'}
 
@@ -153,6 +158,7 @@ class OBJECT_OT_oa_set_upside(bpy.types.Operator):
         
         params.upside = context.scene.cursor_location.copy()
         params.upside_set = True
+        params.valid_vertical = params.upside_set and params.downside_set and Vector(params.upside) != Vector(params.downside)
         
         return {'FINISHED'}
 
@@ -171,7 +177,8 @@ class OBJECT_OT_oa_set_downside(bpy.types.Operator):
         
         params.downside = context.scene.cursor_location.copy()
         params.downside_set = True
-                
+        params.valid_vertical = params.upside_set and params.downside_set and Vector(params.upside) != Vector(params.downside)
+        
         return {'FINISHED'}
 
 
@@ -939,7 +946,7 @@ class OBJECT_PT_oa_snap_point_editor(bpy.types.Panel):
 
                 col = layout.column_flow(columns=2, align=True)
                 col.label("Orientiation:")
-                if params.upside_set and params.downside_set and params.outside_set and params.inside_set:
+                if params.valid_horizontal and params.valid_vertical:
                     col.label("", icon="FILE_TICK")
                 else:
                     col.label("", icon="PANEL_CLOSE")

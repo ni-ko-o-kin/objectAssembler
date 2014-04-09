@@ -7,6 +7,10 @@ ALLOWED_NAVIGATION = {'MIDDLEMOUSE', 'WHEELUPMOUSE', 'WHEELDOWNMOUSE',
                       'NUMPAD_2', 'NUMPAD_4', 'NUMPAD_6', 'NUMPAD_8',
                       'NUMPAD_PERIOD', "Z"}
 
+MAX_ERROR_DIST = 1e-6
+MAX_ERROR_EQL = 2e-4
+MAX_ERROR_FINE = 1e-9
+
 def select_and_active(obj):
     # deselect everything
     bpy.ops.object.select_all(action='DESELECT')

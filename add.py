@@ -1,13 +1,39 @@
 from math import pi, sin, cos
 
 import bpy, bgl
+from mathutils import Vector
 from bpy_extras import view3d_utils
 
 from . import mode_title
 from .align import rotate, align_groups
-from .common import ray, point_in_polygon, get_cursor_info, set_cursor_info, ALLOWED_NAVIGATION
+from .common import ray, point_in_polygon, get_cursor_info, set_cursor_info, ALLOWED_NAVIGATION, MAX_ERROR_EQL
 
 DEBUG = False
+
+def check_horizontal_alignment(self, context):
+    pass
+
+def check_vertical_alignment(self, context):
+    new_sp_obj = [obj for obj in self.new_obj.dupli_group.objects if obj.OASnapPointsParameters.marked][0]
+    old_sp_obj = [obj for obj in self.old_obj.dupli_group.objects if obj.OASnapPointsParameters.marked][0]
+    
+    new_sp_obj_params = new_sp_obj.OASnapPointsParameters
+    old_sp_obj_params = old_sp_obj.OASnapPointsParameters
+
+    if new_sp_obj_params.valid_vertical and old_sp_obj_params.valid_vertical:
+        new_v = self.new_obj.rotation_euler.to_matrix() * (Vector(new_sp_obj_params.upside) - Vector(new_sp_obj_params.downside)).normalized()
+        old_v = self.old_obj.rotation_euler.to_matrix() * (Vector(old_sp_obj_params.upside) - Vector(old_sp_obj_params.downside)).normalized()
+        
+        if (new_v - old_v).length < MAX_ERROR_EQL: # same or almost same
+            return True
+        elif (new_v + old_v).length < MAX_ERROR_EQL: # opposite or almost opposite
+            return False
+        elif new_v.angle(old_v) < pi/2 - pi*2/180: # less then 89 degree difference
+            return True
+        else:
+            return False
+    else:
+        return False
 
 def create_snap_list(self, context):
     # create list of all sp's and their snap point objects
@@ -96,9 +122,9 @@ def draw_callback_add(self, context):
     if self.snap_list_ordered:
         
         hue = 0
-        snap_to_obj_snap_points = [sp for sp in self.snap_list_ordered if sp[0] == self.snap_to_obj]
-        l = len(snap_to_obj_snap_points) - 1
-        for sp in reversed(snap_to_obj_snap_points):
+        old_obj_snap_points = [sp for sp in self.snap_list_ordered if sp[0] == self.old_obj]
+        l = len(old_obj_snap_points) - 1
+        for sp in reversed(old_obj_snap_points):
             
             # # filled
             # bgl.glBegin(bgl.GL_POLYGON)
@@ -142,26 +168,43 @@ class OAAdd(bpy.types.Operator):
         context.area.tag_redraw()
         settings = context.scene.OASettings
         
-        # if cursor is over a snap point -> snap
         some_point_in_polygon = False
         for sp in self.snap_list_ordered:
+            # if cursor is over a snap point -> snap
             if point_in_polygon(self.mouse[0], self.mouse[1], sp[5]):
                 some_point_in_polygon = True
-                self.snap_to_obj = sp[0]
-                self.obj.hide = False
+                self.old_obj = sp[0]
 
+                # new_sp_obj = [obj for obj in self.new_obj.dupli_group.objects if obj.OASnapPointsParameters.marked][0]
+                # old_sp_obj = [obj for obj in self.old_obj.dupli_group.objects if obj.OASnapPointsParameters.marked][0]
+                
+                # new_sp_obj_params = new_sp_obj.OASnapPointsParameters
+                # old_sp_obj_params = old_sp_obj.OASnapPointsParameters
+                
                 last_active_snap_point = [i.last_active_snap_point for i in settings.valid_groups if \
                                           list(i.group_id) == list(self.current_group_id)][0]
                 
+                # for new_sp in new_sp_obj_params.snap_points:
+                #     align_groups(
+                #         sp[0], sp[1],
+                #         self.new_obj, new_sp.index, # last_active_snap_point,
+                #         context
+                #         )
+                #     if check_vertical_alignment(self, context): break
+                print(self.old_obj, self.new_obj)
                 align_groups(
-                    sp[0], sp[1],
-                    self.obj, last_active_snap_point,
+                    self.old_obj, sp[1],
+                    self.new_obj, last_active_snap_point,
                     context
                     )
-                self.snapped = True
 
-                # use only the first (nearest)
-                break
+
+
+                self.snapped = True
+                
+                self.new_obj.hide = False
+                break # use only the first (nearest)
+
 
         # # if no snap point is under the cursor
         # if not some_point_in_polygon:
@@ -171,13 +214,13 @@ class OAAdd(bpy.types.Operator):
         
         # def snap():
         #     def under_cursor():
-        #         obj_under_cursor = ray(self, context, [self.obj.name,])
+        #         obj_under_cursor = ray(self, context, [self.new_obj.name,])
                 
         #         # if object is under cursor
         #         if obj_under_cursor is not None and obj_under_cursor.dupli_type == 'GROUP' and obj_under_cursor.dupli_group:
         #             # if object is in an oa-group
         #             if [i for i in obj_under_cursor.dupli_group.objects if i.OASnapPointsParameters.marked]:
-        #                 self.snap_to_obj = obj_under_cursor
+        #                 self.old_obj = obj_under_cursor
         #                 self.snap_list = []
 
         #                 obj_under_cursor.dupli_list_create(context.scene)
@@ -212,13 +255,13 @@ class OAAdd(bpy.types.Operator):
         #                 some_point_in_polygon = True
                         
         #                 # show and align
-        #                 self.obj.hide = False
+        #                 self.new_obj.hide = False
 
         #                 last_active_snap_point = [i.last_active_snap_point for i in settings.valid_groups if list(i.group_id) == list(self.current_group_id)][0]
 
         #                 align_groups(
-        #                     self.snap_to_obj, snaps[0],
-        #                     self.obj, last_active_snap_point,
+        #                     self.old_obj, snaps[0],
+        #                     self.new_obj, last_active_snap_point,
         #                     context
         #                     )
 
@@ -254,9 +297,9 @@ class OAAdd(bpy.types.Operator):
 
         elif event.type == 'LEFTMOUSE':
             if self.snapped:
-                self.obj.hide = False
+                self.new_obj.hide = False
             else:
-                context.scene.objects.unlink(self.obj)
+                context.scene.objects.unlink(self.new_obj)
 
             bpy.types.SpaceView3D.draw_handler_remove(self._handle, 'WINDOW')
             
@@ -269,9 +312,9 @@ class OAAdd(bpy.types.Operator):
             return {'FINISHED'}
         
         # elif event.type == 'S' and event.value == 'RELEASE':
-        #     if self.obj is not None:
-        #         snap_points = [i.OASnapPointsParameters.snap_points for i in self.obj.dupli_group.objects if i.OASnapPointsParameters.marked][0]
-        #         self.current_group_id = [i.OASnapPointsParameters.group_id for i in self.obj.dupli_group.objects if i.OASnapPointsParameters.marked][0]
+        #     if self.new_obj is not None:
+        #         snap_points = [i.OASnapPointsParameters.snap_points for i in self.new_obj.dupli_group.objects if i.OASnapPointsParameters.marked][0]
+        #         self.current_group_id = [i.OASnapPointsParameters.group_id for i in self.new_obj.dupli_group.objects if i.OASnapPointsParameters.marked][0]
 
         #         last_active_snap_point = [i.last_active_snap_point for i in settings.valid_groups if list(i.group_id) == list(self.current_group_id)][0]
 
@@ -288,17 +331,17 @@ class OAAdd(bpy.types.Operator):
         #     for i in settings.valid_groups:
         #         if list(i.group_id) == list(self.current_group_id):
         #             # if event.shift:
-        #             #     rotate(self.obj, i.last_active_snap_point, None, context)
+        #             #     rotate(self.new_obj, i.last_active_snap_point, None, context)
         #             # else:
-        #             #     rotate(self.obj, i.last_active_snap_point, settings.rotation_angle, context)
-        #             rotate(self.obj, i.last_active_snap_point, settings.rotation_angle, context)              
+        #             #     rotate(self.new_obj, i.last_active_snap_point, settings.rotation_angle, context)
+        #             rotate(self.new_obj, i.last_active_snap_point, settings.rotation_angle, context)              
                         
                         
         #     return {'RUNNING_MODAL'}
 
         elif event.type in {'RIGHTMOUSE', 'ESC'}:
             bpy.types.SpaceView3D.draw_handler_remove(self._handle, 'WINDOW')
-            context.scene.objects.unlink(self.obj)
+            context.scene.objects.unlink(self.new_obj)
             
             # don't create same object again
             settings.more_objects = False
@@ -323,7 +366,7 @@ class OAAdd(bpy.types.Operator):
         self.mouse = (event.mouse_region_x, event.mouse_region_y)
         self.snap_list = []
         self.viewport_changed = True
-        self.snap_to_obj = None
+        self.old_obj = None
         self.snapped = False
         
         icon_id = settings.icon_clicked
@@ -359,31 +402,31 @@ class OAAdd(bpy.types.Operator):
 
         # add new group-instance
         bpy.ops.object.empty_add()
-        self.obj = bpy.context.scene.objects.active
-        self.obj.name = group_id_and_quality
-        self.obj.dupli_type = 'GROUP'
-        self.obj.dupli_group = [g for g in bpy.data.groups if g.name == group_id_and_quality and g.library and g.library.filepath == settings.oa_file][0]
+        self.new_obj = bpy.context.scene.objects.active
+        self.new_obj.name = group_id_and_quality
+        self.new_obj.dupli_type = 'GROUP'
+        self.new_obj.dupli_group = [g for g in bpy.data.groups if g.name == group_id_and_quality and g.library and g.library.filepath == settings.oa_file][0]
         
-        self.current_group_id = [i.OASnapPointsParameters.group_id for i in self.obj.dupli_group.objects if i.OASnapPointsParameters.marked][0]
+        self.current_group_id = [i.OASnapPointsParameters.group_id for i in self.new_obj.dupli_group.objects if i.OASnapPointsParameters.marked][0]
 
-        # add qualities, quality and marked from self.obj.OAObjectParameters
-        self.obj.OAObjectParameters.marked = True
+        # add qualities, quality and marked from self.new_obj.OAObjectParameters
+        self.new_obj.OAObjectParameters.marked = True
         for i in available_qualities:
-            new_quality = self.obj.OAObjectParameters.qualities.add()
+            new_quality = self.new_obj.OAObjectParameters.qualities.add()
             new_quality.quality = i
-        self.obj.OAObjectParameters.quality = next_quality
-        self.obj.OAObjectParameters.group_id = self.current_group_id
-        self.obj.OAObjectParameters.update = True
+        self.new_obj.OAObjectParameters.quality = next_quality
+        self.new_obj.OAObjectParameters.group_id = self.current_group_id
+        self.new_obj.OAObjectParameters.update = True
         
         # make empty very small
-        self.obj.empty_draw_size = 0.001            
+        self.new_obj.empty_draw_size = 0.001            
 
         # hide new object if there are already other oa-objects present
         if len(self.oa_objects) != 0:
-            self.obj.hide = True
+            self.new_obj.hide = True
         
         # set temporary position to cursor position
-        self.obj.location = context.scene.cursor_location.copy()
+        self.new_obj.location = context.scene.cursor_location.copy()
            
         # current snap point which the new object should use
         self.current_snap_point = 0
