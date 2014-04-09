@@ -942,11 +942,20 @@ class OBJECT_PT_oa_snap_point_editor(bpy.types.Panel):
                 row = layout.row()
                 row.operator("oa.show_snap_point")
                 row.operator("oa.switch_ab")
-
-
+                
+                row = layout.row()
+                row.label("Orientation:")
+                
                 col = layout.column_flow(columns=2, align=True)
-                col.label("Orientiation:")
-                if params.valid_horizontal and params.valid_vertical:
+                col.label("Vertical")
+                col.label("Horizontal")
+
+                if params.valid_vertical:
+                    col.label("", icon="FILE_TICK")
+                else:
+                    col.label("", icon="PANEL_CLOSE")
+
+                if params.valid_horizontal:
                     col.label("", icon="FILE_TICK")
                 else:
                     col.label("", icon="PANEL_CLOSE")

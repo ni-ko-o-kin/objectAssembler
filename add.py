@@ -10,30 +10,49 @@ from .common import ray, point_in_polygon, get_cursor_info, set_cursor_info, ALL
 
 DEBUG = True
 
-def check_horizontal_alignment(self, context):
-    pass
 
-def check_vertical_alignment(self, context):
+def check_alignment(self, context):
+    aligned_h = False
+    aligned_v = False
+
     new_sp_obj = [obj for obj in self.new_obj.dupli_group.objects if obj.OASnapPointsParameters.marked][0]
     old_sp_obj = [obj for obj in self.old_obj.dupli_group.objects if obj.OASnapPointsParameters.marked][0]
     
     new_sp_obj_params = new_sp_obj.OASnapPointsParameters
     old_sp_obj_params = old_sp_obj.OASnapPointsParameters
-
+    
     if new_sp_obj_params.valid_vertical and old_sp_obj_params.valid_vertical:
         new_v = self.new_obj.rotation_euler.to_matrix() * (Vector(new_sp_obj_params.upside) - Vector(new_sp_obj_params.downside)).normalized()
         old_v = self.old_obj.rotation_euler.to_matrix() * (Vector(old_sp_obj_params.upside) - Vector(old_sp_obj_params.downside)).normalized()
         
         if (new_v - old_v).length < MAX_ERROR_EQL: # same or almost same
-            return True
+            aligned_v = True
         elif (new_v + old_v).length < MAX_ERROR_EQL: # opposite or almost opposite
-            return False
+            aligned_v = False
         elif new_v.angle(old_v) < pi/2 - pi*2/180: # less then 89 degree difference
-            return True
+            aligned_v = True
         else:
-            return False
+            aligned_v = False
     else:
-        return False
+        aligned_v = False
+    
+    if new_sp_obj_params.valid_horizontal and old_sp_obj_params.valid_horizontal:
+        new_h = self.new_obj.rotation_euler.to_matrix() * (Vector(new_sp_obj_params.outside) - Vector(new_sp_obj_params.inside)).normalized()
+        old_h = self.old_obj.rotation_euler.to_matrix() * (Vector(old_sp_obj_params.outside) - Vector(old_sp_obj_params.inside)).normalized()
+        
+        if (new_h - old_h).length < MAX_ERROR_EQL: # same or almost same
+            aligned_h = True
+        elif (new_h + old_h).length < MAX_ERROR_EQL: # opposite or almost opposite
+            aligned_h = False
+        elif new_h.angle(old_h) < pi/2 - pi*2/180: # less then 89 degree difference
+            aligned_h = True
+        else:
+            aligned_h = False
+    else:
+        aligned_h = False
+        
+    return aligned_v and aligned_h
+
 
 def create_snap_list(self, context):
     # create list of all sp's and their snap point objects
@@ -177,21 +196,30 @@ class OAAdd(bpy.types.Operator):
                 self.new_obj.hide = False
                 
                 new_sp_obj = [obj for obj in self.new_obj.dupli_group.objects if obj.OASnapPointsParameters.marked][0]
-                # old_sp_obj = [obj for obj in self.old_obj.dupli_group.objects if obj.OASnapPointsParameters.marked][0]
+                old_sp_obj = [obj for obj in self.old_obj.dupli_group.objects if obj.OASnapPointsParameters.marked][0]
                 
                 new_sp_obj_params = new_sp_obj.OASnapPointsParameters
-                # old_sp_obj_params = old_sp_obj.OASnapPointsParameters
-                
-                if DEBUG: print("===========")
-                if DEBUG: print("aligning...")
-                for new_sp in new_sp_obj_params.snap_points:
+                old_sp_obj_params = old_sp_obj.OASnapPointsParameters
+
+                if new_sp_obj_params.valid_vertical and old_sp_obj_params.valid_vertical:
+                    # try sp without rotation first, then same sp with 180 degree rotation, then next sp
+                    for new_sp in new_sp_obj_params.snap_points:
+                        align_groups(
+                            self.old_obj, sp[1],
+                            self.new_obj, new_sp.index,
+                            context)
+                        
+                        if check_alignment(self, context):
+                            break
+                        else:
+                            rotate(self.new_obj, new_sp.index, pi, context)
+                            if check_alignment(self, context):
+                                break
+                else:
                     align_groups(
                         self.old_obj, sp[1],
-                        self.new_obj, new_sp.index,
-                        context
-                        )
-                    if DEBUG: print(check_vertical_alignment(self, context), new_sp.index)
-                    if check_vertical_alignment(self, context): break
+                        self.new_obj, 0,
+                        context)
 
                 # last_active_snap_point = [i.last_active_snap_point for i in settings.valid_groups if \
                 #                               list(i.group_id) == list(self.current_group_id)][0]
