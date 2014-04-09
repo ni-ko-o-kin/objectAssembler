@@ -29,7 +29,7 @@ def check_alignment(self, context):
             aligned_v = True
         elif (new_v + old_v).length < MAX_ERROR_EQL: # opposite or almost opposite
             aligned_v = False
-        elif new_v.angle(old_v) < pi/2 - pi*2/180: # less then 89 degree difference
+        elif new_v.angle(old_v) < pi/2 - pi*2/180: # less then 88 degree difference
             aligned_v = True
         else:
             aligned_v = False
@@ -44,7 +44,7 @@ def check_alignment(self, context):
             aligned_h = True
         elif (new_h + old_h).length < MAX_ERROR_EQL: # opposite or almost opposite
             aligned_h = False
-        elif new_h.angle(old_h) < pi/2 - pi*2/180: # less then 89 degree difference
+        elif new_h.angle(old_h) < pi/2 - pi*2/180: # less then 88 degree difference
             aligned_h = True
         else:
             aligned_h = False
@@ -187,51 +187,56 @@ class OAAdd(bpy.types.Operator):
         context.area.tag_redraw()
         settings = context.scene.OASettings
         
+        last_index = -1
         some_point_in_polygon = False
         for sp in self.snap_list_ordered:
-            # if cursor is over a snap point -> snap
-            if point_in_polygon(self.mouse[0], self.mouse[1], sp[5]):
-                some_point_in_polygon = True
-                self.old_obj = sp[0]
-                self.new_obj.hide = False
-                
-                new_sp_obj = [obj for obj in self.new_obj.dupli_group.objects if obj.OASnapPointsParameters.marked][0]
-                old_sp_obj = [obj for obj in self.old_obj.dupli_group.objects if obj.OASnapPointsParameters.marked][0]
-                
-                new_sp_obj_params = new_sp_obj.OASnapPointsParameters
-                old_sp_obj_params = old_sp_obj.OASnapPointsParameters
+            # if cursor is not over a snap point -> next sp
+            if not point_in_polygon(self.mouse[0], self.mouse[1], sp[5]):
+                continue
 
-                if new_sp_obj_params.valid_vertical and old_sp_obj_params.valid_vertical:
-                    # try sp without rotation first, then same sp with 180 degree rotation, then next sp
-                    for new_sp in new_sp_obj_params.snap_points:
-                        align_groups(
-                            self.old_obj, sp[1],
-                            self.new_obj, new_sp.index,
-                            context)
-                        
-                        if check_alignment(self, context):
-                            break
-                        else:
-                            rotate(self.new_obj, new_sp.index, pi, context)
-                            if check_alignment(self, context):
-                                break
-                else:
+            if self.last_snapped_to == (sp[0], sp[1]):
+                break
+            
+            some_point_in_polygon = True
+            self.old_obj = sp[0]
+            self.new_obj.hide = False
+
+            new_sp_obj = [obj for obj in self.new_obj.dupli_group.objects if obj.OASnapPointsParameters.marked][0]
+            old_sp_obj = [obj for obj in self.old_obj.dupli_group.objects if obj.OASnapPointsParameters.marked][0]
+             
+            new_sp_obj_params = new_sp_obj.OASnapPointsParameters
+            old_sp_obj_params = old_sp_obj.OASnapPointsParameters
+ 
+            if new_sp_obj_params.valid_vertical and old_sp_obj_params.valid_vertical:
+                # try sp without rotation first, then same sp with 180 degree rotation, then next sp
+                for new_sp in new_sp_obj_params.snap_points:
                     align_groups(
                         self.old_obj, sp[1],
-                        self.new_obj, 0,
+                        self.new_obj, new_sp.index,
                         context)
-
-                # last_active_snap_point = [i.last_active_snap_point for i in settings.valid_groups if \
-                #                               list(i.group_id) == list(self.current_group_id)][0]
-
-                # align_groups(
-                #     self.old_obj, sp[1],
-                #     self.new_obj, last_active_snap_point,
-                #     context
-                #     )
-
-                self.snapped = True
-                break # use only the first (nearest)
+                    
+                    if check_alignment(self, context):
+                        break
+                    else:
+                        rotate(self.new_obj, new_sp.index, pi, context)
+                        if check_alignment(self, context):
+                            break
+            else:
+                align_groups(
+                    self.old_obj, sp[1],
+                    self.new_obj, 0,
+                    context)
+ 
+            # last_active_snap_point = [i.last_active_snap_point for i in settings.valid_groups if \
+            #                               list(i.group_id) == list(self.current_group_id)][0]
+ 
+            # align_groups(
+            #     self.old_obj, sp[1],
+            #     self.new_obj, last_active_snap_point,
+            #     context
+            #     )
+            self.last_snapped_to = (self.old_obj, sp[1])
+            break # use only the first (nearest)
 
 
         # # if no snap point is under the cursor
@@ -324,7 +329,7 @@ class OAAdd(bpy.types.Operator):
             self.mouse = (event.mouse_region_x, event.mouse_region_y)
 
         elif event.type == 'LEFTMOUSE':
-            if self.snapped:
+            if self.last_snapped_to != (None, None):
                 self.new_obj.hide = False
             else:
                 context.scene.objects.unlink(self.new_obj)
@@ -395,7 +400,7 @@ class OAAdd(bpy.types.Operator):
         self.snap_list = []
         self.viewport_changed = True
         self.old_obj = None
-        self.snapped = False
+        self.last_snapped_to = (None, None)
         
         icon_id = settings.icon_clicked
 
