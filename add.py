@@ -8,7 +8,7 @@ from . import mode_title
 from .align import rotate, align_groups
 from .common import ray, point_in_polygon, get_cursor_info, set_cursor_info, ALLOWED_NAVIGATION, MAX_ERROR_EQL
 
-DEBUG = False
+DEBUG = True
 
 def check_horizontal_alignment(self, context):
     pass
@@ -174,35 +174,35 @@ class OAAdd(bpy.types.Operator):
             if point_in_polygon(self.mouse[0], self.mouse[1], sp[5]):
                 some_point_in_polygon = True
                 self.old_obj = sp[0]
-
-                # new_sp_obj = [obj for obj in self.new_obj.dupli_group.objects if obj.OASnapPointsParameters.marked][0]
+                self.new_obj.hide = False
+                
+                new_sp_obj = [obj for obj in self.new_obj.dupli_group.objects if obj.OASnapPointsParameters.marked][0]
                 # old_sp_obj = [obj for obj in self.old_obj.dupli_group.objects if obj.OASnapPointsParameters.marked][0]
                 
-                # new_sp_obj_params = new_sp_obj.OASnapPointsParameters
+                new_sp_obj_params = new_sp_obj.OASnapPointsParameters
                 # old_sp_obj_params = old_sp_obj.OASnapPointsParameters
                 
-                last_active_snap_point = [i.last_active_snap_point for i in settings.valid_groups if \
-                                          list(i.group_id) == list(self.current_group_id)][0]
-                
-                # for new_sp in new_sp_obj_params.snap_points:
-                #     align_groups(
-                #         sp[0], sp[1],
-                #         self.new_obj, new_sp.index, # last_active_snap_point,
-                #         context
-                #         )
-                #     if check_vertical_alignment(self, context): break
-                print(self.old_obj, self.new_obj)
-                align_groups(
-                    self.old_obj, sp[1],
-                    self.new_obj, last_active_snap_point,
-                    context
-                    )
+                if DEBUG: print("===========")
+                if DEBUG: print("aligning...")
+                for new_sp in new_sp_obj_params.snap_points:
+                    align_groups(
+                        self.old_obj, sp[1],
+                        self.new_obj, new_sp.index,
+                        context
+                        )
+                    if DEBUG: print(check_vertical_alignment(self, context), new_sp.index)
+                    if check_vertical_alignment(self, context): break
 
+                # last_active_snap_point = [i.last_active_snap_point for i in settings.valid_groups if \
+                #                               list(i.group_id) == list(self.current_group_id)][0]
 
+                # align_groups(
+                #     self.old_obj, sp[1],
+                #     self.new_obj, last_active_snap_point,
+                #     context
+                #     )
 
                 self.snapped = True
-                
-                self.new_obj.hide = False
                 break # use only the first (nearest)
 
 
