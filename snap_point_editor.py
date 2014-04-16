@@ -112,8 +112,7 @@ class OBJECT_OT_oa_editor_next_unused_model_id(bpy.types.Operator):
                      if obj.OAModelParameters.oa_type in oa_type and \
                          obj.OAModelParameters.oa_id[0] == params.oa_id[0] and \
                          obj.OAModelParameters.oa_id[1] == params.oa_id[1]]
-        print(model_ids)
-        print(max(model_ids))
+
         max_model_id = max(model_ids)
         if model_ids.count(params.oa_id[2]) != 1:
             params.oa_id[2] = 1 + max_model_id
@@ -1091,8 +1090,8 @@ class OBJECT_PT_oa_snap_point_editor(bpy.types.Panel):
 
 def register():
     # Properties
-    bpy.utils.register_class(OAModelParameters)
     bpy.utils.register_class(OASnapPointsItem)
+    bpy.utils.register_class(OAModelParameters)
     #bpy.utils.register_class(OASnapPointsParameters)
     bpy.types.Object.OAModelParameters = bpy.props.PointerProperty(type=OAModelParameters)
     #bpy.types.Object.OASnapPointsParameters = bpy.props.PointerProperty(type=OASnapPointsParameters)
@@ -1155,10 +1154,11 @@ def unregister():
     bpy.utils.unregister_class(OBJECT_UL_oa_snap_points_list)
         
     # Properties
+
     #del bpy.types.Object.OASnapPointsParameters
     del bpy.types.Object.OAModelParameters
-    bpy.utils.unregister_class(OASnapPointsItem)
     #bpy.utils.unregister_class(OASnapPointsParameters)
     bpy.utils.unregister_class(OAModelParameters)
+    bpy.utils.unregister_class(OASnapPointsItem)
 
    
