@@ -134,7 +134,7 @@ def get_center_from_geometry(obj):
     for v in obj.data.vertices:
         vector_sum += obj.matrix_world * v.co
         vector_count += 1
-        return vector_sum / vector_count
+    return vector_sum / vector_count
 
 def move_origin_to_geometry(obj):
     if not len(obj.data.vertices): return

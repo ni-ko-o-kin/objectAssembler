@@ -6,7 +6,7 @@ from mathutils import Matrix, Vector, Euler
 from math import pi, ceil
 from .common import toggle, double_toggle, select_and_active, move_origin_to_geometry, get_sp_obj, ALLOWED_NAVIGATION
 
-DEBUG = False
+DEBUG = True
 
 ###################################
 # Properties 
@@ -18,17 +18,33 @@ class OASnapPointsItem(bpy.types.PropertyGroup):
     a = IntProperty(name="", default=0, min=0)
     b = IntProperty(name="", default=0, min=0)
     c = IntProperty(name="", default=0, min=0)
-
-    # selected = BoolProperty(default=False, name="")
     
     snap_size = FloatProperty(name="", default=1, min=0.01, max=10, step=0.1, subtype='FACTOR')
     index = IntProperty(name="", default=0, min=0)
-    
 
-class OASnapPointsParameters(bpy.types.PropertyGroup):
-    marked = BoolProperty(name="", default=False)
-    group_id = IntVectorProperty(name="", default=(0,0,0), size=3, min=0)
+class OAModelParameters(bpy.types.PropertyGroup):
+    def get_base_ids(self, context):
+        ret = []
+        for obj in bpy.data.objects:
+            params = obj.OAModelParameters
+            if obj.library == None and obj.OAModelParameters.oa_type == 'BASE':
+                ret.append((
+                        str(tuple(params.oa_id)),
+                        str(tuple(params.oa_id)) + " " + obj.name,
+                        ""
+                        ))
+        return ret
+
+    oa_type = EnumProperty(items=[
+            ("NONE", "None", "None", "icon", 0),
+            ("SIMP", "Simple", "Simple", "icon", 1),
+            ("BASE", "Base", "Base", "icon", 2),
+            ("IMPL", "Implementation", "Implementation", "icon", 3)],
+                           default="NONE", name="Type")
     
+    oa_id = IntVectorProperty(name="Id", default=(0,0,0), size=3, min=0) # former group_id
+    base_id = EnumProperty(items=get_base_ids, name="Base") # reference to a oa_id from an obj with oa_type==BASE
+
     snap_points_index = bpy.props.IntProperty(default=0, min=0)
     snap_points = CollectionProperty(type=OASnapPointsItem)
     
@@ -44,16 +60,16 @@ class OASnapPointsParameters(bpy.types.PropertyGroup):
 
     valid_horizontal = BoolProperty(default=False)
     valid_vertical = BoolProperty(default=False)
-    
-    quality = EnumProperty(
-        items=[
-            ("low","Low", ""),
-            ("medium","Medium", ""),
-            ("high","High", "")
-            ],
-        default="medium",
-        name="Quality"
-        )
+
+    # quality = EnumProperty(
+    #     items=[
+    #         ("low","Low", ""),
+    #         ("medium","Medium", ""),
+    #         ("high","High", "")
+    #         ],
+    #     default="medium",
+    #     name="Quality"
+    #     )
 
 ###################################
 # UILists 
@@ -72,6 +88,66 @@ class OBJECT_UL_oa_snap_points_list(bpy.types.UIList):
 ###################################
 # Operators 
 ###################################
+
+class OBJECT_OT_oa_editor_next_unused_model_id(bpy.types.Operator):
+    bl_description = bl_label = "Apply next unused model Id, unless it is already unique."
+    bl_idname = "oa.editor_next_unused_model_id"
+    
+    @classmethod
+    def poll(cls, context):
+        return context.object.OAModelParameters.oa_type != 'NONE'
+        
+    def invoke(self, context, event):
+        obj = context.object
+        params = obj.OAModelParameters
+
+        if params.oa_type in ('SIMP', 'IMPL'):
+            oa_type = ('SIMP', 'IMPL')
+                         
+        elif params.oa_type == 'BASE':
+            oa_type = ('BASE',)
+
+        model_ids = [obj.OAModelParameters.oa_id[2]
+                     for obj in bpy.data.objects
+                     if obj.OAModelParameters.oa_type in oa_type and \
+                         obj.OAModelParameters.oa_id[0] == params.oa_id[0] and \
+                         obj.OAModelParameters.oa_id[1] == params.oa_id[1]]
+        print(model_ids)
+        print(max(model_ids))
+        max_model_id = max(model_ids)
+        if model_ids.count(params.oa_id[2]) != 1:
+            params.oa_id[2] = 1 + max_model_id
+
+        return {'FINISHED'}
+    
+class OBJECT_OT_oa_editor_next_unused_group_id(bpy.types.Operator):
+    bl_description = bl_label = "Apply next unused group Id, unless it is already unique."
+    bl_idname = "oa.editor_next_unused_group_id"
+    
+    @classmethod
+    def poll(cls, context):
+        return context.object.OAModelParameters.oa_type != 'NONE'
+        
+    def invoke(self, context, event):
+        obj = context.object
+        params = obj.OAModelParameters
+
+        if params.oa_type in ('SIMP', 'IMPL'):
+            oa_type = ('SIMP', 'IMPL')
+                         
+        elif params.oa_type == 'BASE':
+            oa_type = ('BASE',)
+
+        category_ids = [obj.OAModelParameters.oa_id[1]
+                        for obj in bpy.data.objects
+                        if obj.OAModelParameters.oa_type in oa_type and \
+                            obj.OAModelParameters.oa_id[0] == params.oa_id[0]]
+                        
+        max_category_id = max(category_ids)
+        if category_ids.count(params.oa_id[1]) != 1:
+            params.oa_id[1] = 1 + max_category_id
+
+        return {'FINISHED'}
 
 # class OBJECT_OT_oa_select_all_snap_points(bpy.types.Operator):
 #     bl_description = bl_label = "(De)select all Snap Points"
@@ -868,6 +944,42 @@ class OBJECT_OT_oa_show_snap_point(bpy.types.Operator):
 ###################################
 # Panels 
 ###################################
+class OBJECT_PT_oa_editor_error_checking(bpy.types.Panel):
+    bl_label = "Error Checking"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'TOOLS'
+    bl_category = "Object Assembler"
+
+    def draw(self, context):
+        obj = context.object
+        layout = self.layout
+
+        
+
+
+class OBJECT_PT_oa_editor_model(bpy.types.Panel):
+    bl_label = "Model"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'TOOLS'
+    bl_category = "Object Assembler"
+
+    def draw(self, context):
+        obj = context.object
+        layout = self.layout
+        sp_obj = None
+        
+        if obj is not None:
+            params = obj.OAModelParameters
+            layout.prop(params, "oa_type")
+
+            if params.oa_type == 'IMPL':
+                layout.prop(params, "base_id")
+
+            row = layout.row(align=True)
+            row.prop(params, "oa_id")
+            row.operator("oa.editor_next_unused_group_id", text="", icon="NEXT_KEYFRAME")
+            row.operator("oa.editor_next_unused_model_id", text="", icon="FORWARD")
+    
 
 class OBJECT_PT_oa_snap_point_editor(bpy.types.Panel):
     bl_label = "Snap Points Editor"
@@ -879,100 +991,99 @@ class OBJECT_PT_oa_snap_point_editor(bpy.types.Panel):
         obj = context.object
         layout = self.layout
         sp_obj = None
-        
-        if obj is not None:
-            # layout.prop(obj.OASnapPointsParameters, "marked", text="Mark %s as snap point object" % obj.name )
+
+        # if obj is not None:
+        #     # layout.prop(obj.OASnapPointsParameters, "marked", text="Mark %s as snap point object" % obj.name )
+        #     sp_obj = get_sp_obj(obj)
             
-            sp_obj = get_sp_obj(obj)
-            
-            if sp_obj:
-                params = sp_obj.OASnapPointsParameters
-                layout = layout.box()
-                row = layout.row()
-                layout.enabled = params.marked
-                row.prop(params, "group_id", text="ID")
-                layout.prop(params, "quality")
-                layout.operator("oa.apply_id")
+        #     if sp_obj:
+        #         params = sp_obj.OASnapPointsParameters
+        #         layout = layout.box()
+        #         row = layout.row()
+        #         layout.enabled = params.marked
+        #         row.prop(params, "group_id", text="ID")
+        #         layout.prop(params, "quality")
+        #         layout.operator("oa.apply_id")
                 
-                layout = self.layout
-                layout.label("Snap Points:")
+        #         layout = self.layout
+        #         layout.label("Snap Points:")
                 
-                row = layout.row()
-                row.template_list(
-                    "OBJECT_UL_oa_snap_points_list",
-                    'OA_SNAP_POINT_EDITOR_TEMPLATE_LIST', #unique id
-                    params,
-                    "snap_points",
-                    params,
-                    "snap_points_index",
-                    6,
-                    )
+        #         row = layout.row()
+        #         row.template_list(
+        #             "OBJECT_UL_oa_snap_points_list",
+        #             'OA_SNAP_POINT_EDITOR_TEMPLATE_LIST', #unique id
+        #             params,
+        #             "snap_points",
+        #             params,
+        #             "snap_points_index",
+        #             6,
+        #             )
                 
-                col = row.column(align=True)
-                col.operator("oa.construct_abc", icon="EDITMODE_VEC_DEHLT", text="")
-                col.operator("view3d.snap_cursor_to_selected", icon='CURSOR', text="")
+        #         col = row.column(align=True)
+        #         col.operator("oa.construct_abc", icon="EDITMODE_VEC_DEHLT", text="")
+        #         col.operator("view3d.snap_cursor_to_selected", icon='CURSOR', text="")
 
                 
-                col.separator()
+        #         col.separator()
                 
-                col.operator("oa.move_snap_point_up", icon="TRIA_UP", text="")
-                col.operator("oa.move_snap_point_down", icon="TRIA_DOWN", text="")
+        #         col.operator("oa.move_snap_point_up", icon="TRIA_UP", text="")
+        #         col.operator("oa.move_snap_point_down", icon="TRIA_DOWN", text="")
                 
-                col.separator()
-                #col.operator("oa.add_snap_point", icon="ZOOMIN", text="")
-                col.operator("oa.remove_snap_point", icon="X", text="")
+        #         col.separator()
+        #         #col.operator("oa.add_snap_point", icon="ZOOMIN", text="")
+        #         col.operator("oa.remove_snap_point", icon="X", text="")
 
-                col.separator()
-                # col.operator("oa.select_all_snap_points", icon="CHECKBOX_HLT", text="")
+        #         col.separator()
+        #         # col.operator("oa.select_all_snap_points", icon="CHECKBOX_HLT", text="")
                 
-                # row = layout.row(align=True)
-                # row.label(text="Assign:")
-                # row.operator("oa.assign_snap_point_a",text="a")
-                # row.operator("oa.assign_snap_point_b",text="b")
-                # row.operator("oa.assign_snap_point_c",text="c")
-                # row.operator("oa.assign_snap_point",text="abc")
+        #         # row = layout.row(align=True)
+        #         # row.label(text="Assign:")
+        #         # row.operator("oa.assign_snap_point_a",text="a")
+        #         # row.operator("oa.assign_snap_point_b",text="b")
+        #         # row.operator("oa.assign_snap_point_c",text="c")
+        #         # row.operator("oa.assign_snap_point",text="abc")
                 
-                # row = layout.row(align=True)
-                # row.label(text="Select:")
-                # row.operator("oa.select_snap_point_a",text="a")
-                # row.operator("oa.select_snap_point_b",text="b")
-                # row.operator("oa.select_snap_point_c",text="c")
-                # row.operator("oa.select_snap_point",text="abc")
+        #         # row = layout.row(align=True)
+        #         # row.label(text="Select:")
+        #         # row.operator("oa.select_snap_point_a",text="a")
+        #         # row.operator("oa.select_snap_point_b",text="b")
+        #         # row.operator("oa.select_snap_point_c",text="c")
+        #         # row.operator("oa.select_snap_point",text="abc")
                 
-                row = layout.row()
-                row.operator("oa.show_snap_point")
-                row.operator("oa.switch_ab")
+        #         row = layout.row()
+        #         row.operator("oa.show_snap_point")
+        #         row.operator("oa.switch_ab")
                 
-                row = layout.row()
-                row.label("Orientation:")
+        #         row = layout.row()
+        #         row.label("Orientation:")
                 
-                col = layout.column_flow(columns=2, align=True)
-                col.label("Vertical")
-                col.label("Horizontal")
+        #         col = layout.column_flow(columns=2, align=True)
+        #         col.label("Vertical")
+        #         col.label("Horizontal")
 
-                if params.valid_vertical:
-                    col.label("", icon="FILE_TICK")
-                else:
-                    col.label("", icon="PANEL_CLOSE")
+        #         if params.valid_vertical:
+        #             col.label("", icon="FILE_TICK")
+        #         else:
+        #             col.label("", icon="PANEL_CLOSE")
 
-                if params.valid_horizontal:
-                    col.label("", icon="FILE_TICK")
-                else:
-                    col.label("", icon="PANEL_CLOSE")
+        #         if params.valid_horizontal:
+        #             col.label("", icon="FILE_TICK")
+        #         else:
+        #             col.label("", icon="PANEL_CLOSE")
 
-                col = layout.column_flow(columns=2, align=True)
-                col.operator("oa.set_upside", text="Set Upside")
-                col.operator("oa.set_downside", text="Set Downside")
-                col.operator("oa.set_outside", text="Set Outside")
-                col.operator("oa.set_inside", text="Set Inside")
-                col.label("", icon="FILE_TICK") if params.upside_set else col.label("", icon="PANEL_CLOSE")
-                col.label("", icon="FILE_TICK") if params.downside_set else col.label("", icon="PANEL_CLOSE")
-                col.label("", icon="FILE_TICK") if params.outside_set else col.label("", icon="PANEL_CLOSE")
-                col.label("", icon="FILE_TICK") if params.inside_set else col.label("", icon="PANEL_CLOSE")
+        #         col = layout.column_flow(columns=2, align=True)
+        #         col.operator("oa.set_upside", text="Set Upside")
+        #         col.operator("oa.set_downside", text="Set Downside")
+        #         col.operator("oa.set_outside", text="Set Outside")
+        #         col.operator("oa.set_inside", text="Set Inside")
+        #         col.label("", icon="FILE_TICK") if params.upside_set else col.label("", icon="PANEL_CLOSE")
+        #         col.label("", icon="FILE_TICK") if params.downside_set else col.label("", icon="PANEL_CLOSE")
+        #         col.label("", icon="FILE_TICK") if params.outside_set else col.label("", icon="PANEL_CLOSE")
+        #         col.label("", icon="FILE_TICK") if params.inside_set else col.label("", icon="PANEL_CLOSE")
 
-            elif sp_obj is None and obj.type == 'MESH':
-                layout.operator("oa.add_sp_obj")
-                
+        #     elif sp_obj is None and obj.type == 'MESH':
+        #         layout.operator("oa.add_sp_obj")
+        #         #layout.props_enum(params, "base_id")
 
 ################
 # Register
@@ -980,14 +1091,18 @@ class OBJECT_PT_oa_snap_point_editor(bpy.types.Panel):
 
 def register():
     # Properties
+    bpy.utils.register_class(OAModelParameters)
     bpy.utils.register_class(OASnapPointsItem)
-    bpy.utils.register_class(OASnapPointsParameters)
-    bpy.types.Object.OASnapPointsParameters = bpy.props.PointerProperty(type=OASnapPointsParameters)
+    #bpy.utils.register_class(OASnapPointsParameters)
+    bpy.types.Object.OAModelParameters = bpy.props.PointerProperty(type=OAModelParameters)
+    #bpy.types.Object.OASnapPointsParameters = bpy.props.PointerProperty(type=OASnapPointsParameters)
 
     # UILists
     bpy.utils.register_class(OBJECT_UL_oa_snap_points_list)
     
     # Operators
+    bpy.utils.register_class(OBJECT_OT_oa_editor_next_unused_group_id)
+    bpy.utils.register_class(OBJECT_OT_oa_editor_next_unused_model_id)
     # bpy.utils.register_class(OBJECT_OT_oa_select_all_snap_points)
     bpy.utils.register_class(OBJECT_OT_oa_set_downside)
     bpy.utils.register_class(OBJECT_OT_oa_set_upside)
@@ -1006,11 +1121,15 @@ def register():
     bpy.utils.register_class(OBJECT_OT_oa_show_snap_point)
 
     # Panels
+    bpy.utils.register_class(OBJECT_PT_oa_editor_error_checking)
+    bpy.utils.register_class(OBJECT_PT_oa_editor_model)
     bpy.utils.register_class(OBJECT_PT_oa_snap_point_editor)
 
 def unregister():
     # Panels
     bpy.utils.unregister_class(OBJECT_PT_oa_snap_point_editor)
+    bpy.utils.unregister_class(OBJECT_PT_oa_editor_model)
+    bpy.utils.unregister_class(OBJECT_PT_oa_editor_error_checking)
 
     # Operators
     # bpy.utils.unregister_class(OBJECT_OT_oa_add_snap_point)
@@ -1029,13 +1148,17 @@ def unregister():
     bpy.utils.unregister_class(OBJECT_OT_oa_set_upside)
     bpy.utils.unregister_class(OBJECT_OT_oa_set_downside)
     # bpy.utils.unregister_class(OBJECT_OT_oa_select_all_snap_points)
+    bpy.utils.unregister_class(OBJECT_OT_oa_editor_next_unused_model_id)
+    bpy.utils.unregister_class(OBJECT_OT_oa_editor_next_unused_group_id)
     
     # UILists
     bpy.utils.unregister_class(OBJECT_UL_oa_snap_points_list)
         
     # Properties
-    del bpy.types.Object.OASnapPointsParameters
-    bpy.utils.unregister_class(OASnapPointsParameters)
+    #del bpy.types.Object.OASnapPointsParameters
+    del bpy.types.Object.OAModelParameters
     bpy.utils.unregister_class(OASnapPointsItem)
+    #bpy.utils.unregister_class(OASnapPointsParameters)
+    bpy.utils.unregister_class(OAModelParameters)
 
    
