@@ -16,7 +16,12 @@ if "bpy" in locals():
     import imp
     imp.reload(common)
     imp.reload(debug)
-    imp.reload(snap_point_editor)
+
+    imp.reload(editor_properties)
+    imp.reload(editor_uilists)
+    imp.reload(editor_operators)
+    imp.reload(editor_panels)
+
     imp.reload(object_editor)
     imp.reload(ui)
     imp.reload(menu)
@@ -26,12 +31,20 @@ if "bpy" in locals():
     imp.reload(align)
 
 else:
-    from . import snap_point_editor, object_editor, ui, menu, mode, add, mode_title, align, common, debug
+    from .editor import (properties as editor_properties,
+                         uilists as editor_uilists,
+                         operators as editor_operators,
+                         panels as editor_panels)
+    from . import object_editor, ui, menu, mode, add, mode_title, align, common, debug
 
 import bpy
 
 def register():
-    snap_point_editor.register()
+    editor_properties.register()
+    editor_uilists.register()
+    editor_operators.register()
+    editor_panels.register()
+
     object_editor.register()
     ui.register()
     mode.register()
@@ -43,4 +56,8 @@ def unregister():
     mode.unregister()
     ui.unregister()
     object_editor.unregister()
-    snap_point_editor.unregister()
+
+    editor_panels.register()
+    editor_operators.register()
+    editor_uilists.register()
+    editor_properties.register()
