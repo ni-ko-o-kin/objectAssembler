@@ -14,28 +14,28 @@ bl_info = {
 
 if "bpy" in locals():
     import imp
-    imp.reload(common)
-    imp.reload(debug)
+    # imp.reload(common)
+    # imp.reload(debug)
 
     imp.reload(editor_properties)
     imp.reload(editor_uilists)
     imp.reload(editor_operators)
     imp.reload(editor_panels)
 
-    imp.reload(object_editor)
-    imp.reload(ui)
-    imp.reload(menu)
-    imp.reload(mode)
-    imp.reload(add)
-    imp.reload(mode_title)
-    imp.reload(align)
+    # imp.reload(object_editor)
+    # imp.reload(ui)
+    # imp.reload(menu)
+    # imp.reload(mode)
+    # imp.reload(add)
+    # imp.reload(mode_title)
+    # imp.reload(align)
 
 else:
     from .editor import (properties as editor_properties,
                          uilists as editor_uilists,
                          operators as editor_operators,
                          panels as editor_panels)
-    from . import object_editor, ui, menu, mode, add, mode_title, align, common, debug
+    # from . import object_editor, ui, menu, mode, add, mode_title, align, common, debug
 
 import bpy
 
@@ -45,17 +45,17 @@ def register():
     editor_operators.register()
     editor_panels.register()
 
-    object_editor.register()
-    ui.register()
-    mode.register()
-    add.register()
+    # object_editor.register()
+    # ui.register()
+    # mode.register()
+    # add.register()
 
 
 def unregister():
-    add.unregister()
-    mode.unregister()
-    ui.unregister()
-    object_editor.unregister()
+    # add.unregister()
+    # mode.unregister()
+    # ui.unregister()
+    # object_editor.unregister()
 
     editor_panels.register()
     editor_operators.register()

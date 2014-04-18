@@ -144,14 +144,30 @@ def move_origin_to_geometry(obj):
     offset = old_origin - new_origin
     for v in obj.data.vertices: v.co += offset
 
-def get_oa_obj(obj):
+def get_oa_group(obj):
+    ''' get excatly one object assembler group or return None '''
+    if not obj: return None
+    oa_group = None
+    for group in obj.users_group:
+        if group.OAGroup.oa_type != 'NONE':
+            if oa_group is not None:
+                return None
+            oa_group = group
+            
+    return oa_group
+
+def get_sp_obj(obj):
     ''' get excatly one snap point object or return None '''
-    oa_obj = None
+    if not obj: return None
+    sp_obj = None
     for group in obj.users_group:
         for obj_in_group in group.objects:
-            if obj_in_group.type == 'MESH' and obj_in_group.OAModelParameters.oa_type #todo todo todo):
-                if oa_obj is not None:
+            if obj_in_group.type == 'MESH' and obj_in_group.OASnapPoints.marked:
+                if sp_obj is not None:
                     return None
                 else:
-                    oa_obj = obj_in_group
-    return oa_obj
+                    sp_obj = obj_in_group
+    return sp_obj
+
+def get_oa_and_sp_obj(obj):
+    pass # necessary?

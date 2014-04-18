@@ -3,12 +3,12 @@ from bpy.props import (IntProperty, StringProperty, FloatProperty, IntVectorProp
                        CollectionProperty, BoolProperty, EnumProperty, FloatVectorProperty)
 
 
-class OAModel(bpy.types.PropertyGroup):
+class OAGroup(bpy.types.PropertyGroup):
     def get_base_ids(self, context):
         ret = []
         for obj in bpy.data.objects:
-            params = obj.OAModel
-            if obj.library == None and obj.OAModel.oa_type == 'BASE':
+            params = obj.OAGroup
+            if obj.library == None and obj.OAGroup.oa_type == 'BASE':
                 ret.append((
                         str(tuple(params.oa_id)),
                         str(tuple(params.oa_id)) + " " + obj.name,
@@ -22,7 +22,7 @@ class OAModel(bpy.types.PropertyGroup):
             ("BASE", "Base", "Base", "icon", 2),
             ("IMPL", "Implementation", "Implementation", "icon", 3)],
                            default="NONE", name="Type")
-    
+
     oa_id = IntVectorProperty(name="Id", default=(0,0,0), size=3, min=0) # former group_id
     base_id = EnumProperty(items=get_base_ids, name="Base") # reference to a oa_id from an obj with oa_type==BASE
 
@@ -60,6 +60,7 @@ class OASnapPointsItem(bpy.types.PropertyGroup):
     index = IntProperty(name="", default=0, min=0)
 
 class OASnapPoints(bpy.types.PropertyGroup):
+    marked = BoolProperty(default=False)
     snap_points_index = bpy.props.IntProperty(default=0, min=0)
     snap_points = CollectionProperty(type=OASnapPointsItem)
     
@@ -67,13 +68,15 @@ class OASnapPoints(bpy.types.PropertyGroup):
 # Register
 ################
 def register():
-    bpy.utils.register_class(OAModel)
+    bpy.utils.register_class(OAGroup)
     bpy.utils.register_class(OASnapPointsItem)
     bpy.utils.register_class(OASnapPoints)
-    bpy.types.Group.OAModel = bpy.props.PointerProperty(type=OAModel)
+    bpy.types.Group.OAGroup = bpy.props.PointerProperty(type=OAGroup)
+    bpy.types.Object.OASnapPoints = bpy.props.PointerProperty(type=OASnapPoints)
 
 def unregister():
-    del bpy.types.Group.OAModel
+    del bpy.types.Object.OASnapPoints
+    del bpy.types.Group.OAGroup
     bpy.utils.unregister_class(OASnapPoints)
     bpy.utils.unregister_class(OASnapPointsItem)
-    bpy.utils.unregister_class(OAModel)
+    bpy.utils.unregister_class(OAGroup)
