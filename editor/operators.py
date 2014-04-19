@@ -3,13 +3,153 @@ from math import pi, ceil
 import bpy, bmesh, blf, bgl
 from bpy_extras import view3d_utils
 from mathutils import Matrix, Vector, Euler
+from bpy.props import IntProperty, CollectionProperty, StringProperty
 
 from ..common import toggle, double_toggle, select_and_active, move_origin_to_geometry, get_oa_group, get_sp_obj, ALLOWED_NAVIGATION
+
+class OBJECT_OT_oa_editor_error_checking_same_tags(bpy.types.Operator):
+    bl_description = bl_label = "Check Model for same Tags"
+    bl_idname = "oa.editor_error_checking_same_tags"
+    bl_options = {'INTERNAL'}
+
+    def invoke(self, context, event):
+        errors = context.scene.OAErrors
+        errors.clear()
+
+        groups = []
+        for obj in context.scene.objects:
+            for group in obj.users_group:
+                if group.OAGroup.oa_type != 'NONE':
+                   groups.append(group) 
+        
+        multiple = []
+        for group in set(groups):
+            tags = []
+            for tag in group.OAGroup.tags:
+                tags.append(tag.key)
+                if tags.count(tag.key) > 1:
+                    if not errors:
+                        item = errors.add()
+                        item.text = "Tag found multiple times Error:"
+                    multiple.append((group.name, tag.key))
+        multiple = set(multiple)
+        for group, tag in multiple:
+            item = errors.add()
+            item.text = "    " + tag + " in " + group
+
+        if not errors:
+            item = errors.add()
+            item.text = "No errors found"
+        return {'FINISHED'}
+
+        
+
+class OBJECT_OT_oa_editor_error_checking_multiple_oa_group(bpy.types.Operator):
+    bl_description = bl_label = "Check Objects for multiple OA-Groups"
+    bl_idname = "oa.editor_error_checking_multiple_oa_group"
+    bl_options = {'INTERNAL'}
+
+    def invoke(self, context, event):
+        errors = context.scene.OAErrors
+        errors.clear()
+        
+        for obj in context.scene.objects:
+            oa_group = None
+            multiple_groups = []
+            for group in obj.users_group:
+                if group.OAGroup.oa_type != 'NONE':
+                    if oa_group is not None:
+                        multiple_groups.append(group.name)
+                    else:
+                        multiple_groups.append(obj.name + " in: ")
+                        multiple_groups.append(group.name)
+                    oa_group = group
+            if len(multiple_groups) > 2:
+                item = errors.add()
+                item.text = "Multiple OA-Groups Error:"
+                item = errors.add()
+                item.text = "    " + multiple_groups[0] + ', '.join(multiple_groups[1:])
+        if not errors:
+            item = errors.add()
+            item.text = "No errors found"
+        return {'FINISHED'}
+
+class OBJECT_OT_oa_editor_add_model_tag(bpy.types.Operator):
+    bl_description = bl_label = "Assign a Tag to the Model"
+    bl_idname = "oa.editor_add_model_tag"
+    bl_options = {'INTERNAL'}
+
+    def invoke(self, context, event):
+        oa_group = get_oa_group(context.object)
+        oa_group.OAGroup.tags.add()
+        return {'FINISHED'}
+
+class OBJECT_OT_oa_editor_remove_model_tag(bpy.types.Operator):
+    bl_description = bl_label = "Remove the Tag from the Model"
+    bl_idname = "oa.editor_remove_model_tag"
+    bl_options = {'INTERNAL'}
+
+    index = IntProperty(default=0, min=0)
+
+    def invoke(self, context, event):
+        oa_group = get_oa_group(context.object)
+        oa_group.OAGroup.tags.remove(self.index)
+        return {'FINISHED'}
+
+class OBJECT_OT_oa_editor_add_tag_value(bpy.types.Operator):
+    bl_description = bl_label = "Add Item"
+    bl_idname = "oa.editor_add_tag_value"
+    bl_options = {'INTERNAL'}
+
+    key_index = IntProperty(default=0, min=0)
+
+    def invoke(self, context, event):
+        tags = context.scene.OATags
+        tags[self.key_index].values.add()
+        tags[self.key_index].values[-1].name = "Item"
+        return {'FINISHED'}
+
+class OBJECT_OT_oa_editor_add_tag_key(bpy.types.Operator):
+    bl_description = bl_label = "Add Tag"
+    bl_idname = "oa.editor_add_tag_key"
+    bl_options = {'INTERNAL'}
+
+    def invoke(self, context, event):
+        tags = context.scene.OATags
+        tags.add()
+        tags[-1].name = "Tag"
+        return {'FINISHED'}
+
+class OBJECT_OT_oa_editor_remove_tag_value(bpy.types.Operator):
+    bl_description = bl_label = "Remove Item"
+    bl_idname = "oa.editor_remove_tag_value"
+    bl_options = {'INTERNAL'}
+
+    key_index = IntProperty(default=0, min=0)
+    value_index = IntProperty(default=0, min=0)
+
+    def invoke(self, context, event):
+        tags = context.scene.OATags
+        tags[self.key_index].values.remove(self.value_index)
+        return {'FINISHED'}
+
+class OBJECT_OT_oa_editor_remove_tag_key(bpy.types.Operator):
+    bl_description = bl_label = "Remove Tag"
+    bl_idname = "oa.editor_remove_tag_key"
+    bl_options = {'INTERNAL'}
+
+    key_index = IntProperty(default=0, min=0)
+
+    def invoke(self, context, event):
+        tags = context.scene.OATags
+        tags.remove(self.key_index)
+        return {'FINISHED'}
 
 class OBJECT_OT_oa_editor_next_unused_model_id(bpy.types.Operator):
     bl_description = bl_label = "Apply next unused model Id, unless it is already unique"
     bl_idname = "oa.editor_next_unused_model_id"
-    
+    bl_options = {'INTERNAL'}
+
     @classmethod
     def poll(cls, context):
         return get_oa_group(context.object)
@@ -39,7 +179,8 @@ class OBJECT_OT_oa_editor_next_unused_model_id(bpy.types.Operator):
 class OBJECT_OT_oa_editor_next_unused_group_id(bpy.types.Operator):
     bl_description = bl_label = "Apply next unused group Id, unless it is already unique."
     bl_idname = "oa.editor_next_unused_group_id"
-    
+    bl_options = {'INTERNAL'}
+
     @classmethod
     def poll(cls, context):
         return get_oa_group(context.object)
@@ -154,64 +295,55 @@ class OBJECT_OT_oa_add_sp_obj(bpy.types.Operator):
     def invoke(self, context, event):
         obj = context.object
 
-        #self.report({'ERROR'}, "There is already a snap point object assigned to this object.")
-        #   return {'CANCELLED'}
-
         sp_mesh = bpy.data.meshes.new(name='oa_mesh')
-        
         sp_obj = bpy.data.objects.new(name='oa_object', object_data=sp_mesh)
         context.scene.objects.link(sp_obj)
-        print("1", sp_obj)
         sp_obj = context.scene.objects.get(sp_obj.name)
-        print("2", sp_obj)
         sp_obj.OASnapPoints.marked = True
         sp_obj.location = context.object.location.copy()
         get_oa_group(obj).objects.link(sp_obj)
         
-        # group = bpy.data.groups.new(name='oa_group')
-        # group.objects.link(sp_obj)
-        # group.objects.link(obj)
-        
         return {'FINISHED'}
 
 
-class OBJECT_OT_oa_apply_id(bpy.types.Operator):
-    bl_description = bl_label = "Apply ID and Quality on Group"
-    bl_idname = "oa.apply_id"
+# class OBJECT_OT_oa_apply_id(bpy.types.Operator):
+#     bl_description = bl_label = "Apply ID and Quality on Group"
+#     bl_idname = "oa.apply_id"
  
-    @classmethod
-    def poll(cls, context):
-        obj = context.object
+#     @classmethod
+#     def poll(cls, context):
+#         obj = context.object
 
-        # obj has to be in a group
-        return bool(obj.users_group)
+#         # obj has to be in a group
+#         return bool(obj.users_group)
 
 
-    def invoke(self, context, event):
-        obj = context.object
+#     def invoke(self, context, event):
+#         obj = context.object
 
-        if len(obj.users_group) == 1:
-            name = "_".join((
-                    "oa",
-                    str(obj.OASnapPoints.group_id[0]),
-                    str(obj.OASnapPoints.group_id[1]),
-                    str(obj.OASnapPoints.group_id[2]),
-                    obj.OASnapPoints.quality
-                    ))
+#         if len(obj.users_group) == 1:
+#             name = "_".join((
+#                     "oa",
+#                     str(obj.OASnapPoints.group_id[0]),
+#                     str(obj.OASnapPoints.group_id[1]),
+#                     str(obj.OASnapPoints.group_id[2]),
+#                     obj.OASnapPoints.quality
+#                     ))
             
-            obj.users_group[0].name = name
-            obj.name = name
+#             obj.users_group[0].name = name
+#             obj.name = name
             
-        else:
-            self.report({'ERROR'}, "Only one group is allowed for each object")
-            return {'CANCELLED'}
+#         else:
+#             self.report({'ERROR'}, "Only one group is allowed for each object")
+#             return {'CANCELLED'}
         
-        return {'FINISHED'}
+#         return {'FINISHED'}
 
     
 class OBJECT_OT_oa_remove_snap_point(bpy.types.Operator):
     bl_description = bl_label = "Remove Snap Point"
     bl_idname = "oa.remove_snap_point"
+    bl_options = {'INTERNAL'}
 
     @classmethod
     def poll(cls, context):
@@ -254,6 +386,7 @@ class OBJECT_OT_oa_remove_snap_point(bpy.types.Operator):
 class OBJECT_OT_oa_move_snap_point_down(bpy.types.Operator):
     bl_description = bl_label = "Move Snap Point Down"
     bl_idname = "oa.move_snap_point_down"
+    bl_options = {'INTERNAL'}
 
     @classmethod
     def poll(cls, context):
@@ -277,6 +410,7 @@ class OBJECT_OT_oa_move_snap_point_down(bpy.types.Operator):
 class OBJECT_OT_oa_move_snap_point_up(bpy.types.Operator):
     bl_description = bl_label = "Move Snap Point Up"
     bl_idname = "oa.move_snap_point_up"
+    bl_options = {'INTERNAL'}
 
     @classmethod
     def poll(cls, context):
@@ -411,7 +545,7 @@ class OBJECT_OT_oa_ConstructAbc(bpy.types.Operator):
             new_index = highest_index + 1
 
             new_item = snap_points.add()
-            new_item.name = str(new_index)
+            new_item.name = "Snap Point" #str(new_index)
             new_item.index = new_index
 
             snap_points[new_index].a = sp_obj.data.vertices[-3].index
@@ -442,7 +576,7 @@ class OBJECT_OT_oa_ConstructAbc(bpy.types.Operator):
             self.report({'ERROR'}, "No snap point objects Found!\nNo Abc-Triangle constructed.")
             return {'CANCELLED'}
 
-        self.report({'INFO'}, "Info: New Abc-Triangle constructed.")
+        self.report({'INFO'}, "New Abc-Triangle constructed.")
         return {'FINISHED'}
 
 
@@ -639,6 +773,14 @@ class OBJECT_OT_oa_show_snap_point(bpy.types.Operator):
 # Register
 ################
 def register():
+    bpy.utils.register_class(OBJECT_OT_oa_editor_error_checking_same_tags)
+    bpy.utils.register_class(OBJECT_OT_oa_editor_error_checking_multiple_oa_group)
+    bpy.utils.register_class(OBJECT_OT_oa_editor_add_model_tag)
+    bpy.utils.register_class(OBJECT_OT_oa_editor_remove_model_tag)
+    bpy.utils.register_class(OBJECT_OT_oa_editor_add_tag_value)
+    bpy.utils.register_class(OBJECT_OT_oa_editor_add_tag_key)
+    bpy.utils.register_class(OBJECT_OT_oa_editor_remove_tag_key)
+    bpy.utils.register_class(OBJECT_OT_oa_editor_remove_tag_value)
     bpy.utils.register_class(OBJECT_OT_oa_editor_next_unused_group_id)
     bpy.utils.register_class(OBJECT_OT_oa_editor_next_unused_model_id)
     bpy.utils.register_class(OBJECT_OT_oa_set_downside)
@@ -649,7 +791,7 @@ def register():
     bpy.utils.register_class(OBJECT_OT_oa_remove_snap_point)
     bpy.utils.register_class(OBJECT_OT_oa_move_snap_point_down)
     bpy.utils.register_class(OBJECT_OT_oa_move_snap_point_up)
-    bpy.utils.register_class(OBJECT_OT_oa_apply_id)
+    #bpy.utils.register_class(OBJECT_OT_oa_apply_id)
     bpy.utils.register_class(OBJECT_OT_oa_ConstructAbc)
     bpy.utils.register_class(OBJECT_OT_oa_switch_ab)
     bpy.utils.register_class(OBJECT_OT_oa_show_snap_point)
@@ -658,7 +800,7 @@ def unregister():
     bpy.utils.unregister_class(OBJECT_OT_oa_remove_snap_point)
     bpy.utils.unregister_class(OBJECT_OT_oa_move_snap_point_down)
     bpy.utils.unregister_class(OBJECT_OT_oa_move_snap_point_up)
-    bpy.utils.unregister_class(OBJECT_OT_oa_apply_id)
+    #bpy.utils.unregister_class(OBJECT_OT_oa_apply_id)
     bpy.utils.unregister_class(OBJECT_OT_oa_ConstructAbc)
     bpy.utils.unregister_class(OBJECT_OT_oa_switch_ab)
     bpy.utils.unregister_class(OBJECT_OT_oa_show_snap_point)
@@ -669,4 +811,11 @@ def unregister():
     bpy.utils.unregister_class(OBJECT_OT_oa_set_downside)
     bpy.utils.unregister_class(OBJECT_OT_oa_editor_next_unused_model_id)
     bpy.utils.unregister_class(OBJECT_OT_oa_editor_next_unused_group_id)
-
+    bpy.utils.unregister_class(OBJECT_OT_oa_editor_remove_tag_value)
+    bpy.utils.unregister_class(OBJECT_OT_oa_editor_remove_tag_key)
+    bpy.utils.unregister_class(OBJECT_OT_oa_editor_add_tag_key)
+    bpy.utils.unregister_class(OBJECT_OT_oa_editor_add_tag_value)
+    bpy.utils.unregister_class(OBJECT_OT_oa_editor_remove_model_tag)
+    bpy.utils.unregister_class(OBJECT_OT_oa_editor_add_model_tag)
+    bpy.utils.unregister_class(OBJECT_OT_oa_editor_error_checking_multiple_oa_group)
+    bpy.utils.unregister_class(OBJECT_OT_oa_editor_error_checking_same_tags)

@@ -1,9 +1,18 @@
 import bpy
 from bpy.props import (IntProperty, StringProperty, FloatProperty, IntVectorProperty,
-                       CollectionProperty, BoolProperty, EnumProperty, FloatVectorProperty)
+                       CollectionProperty, BoolProperty, EnumProperty, FloatVectorProperty,
+                       PointerProperty)
+from bpy.types import PropertyGroup
 
 
-class OAGroup(bpy.types.PropertyGroup):
+class OAError(PropertyGroup):
+    text = StringProperty(default="")
+
+class OAModelTag(PropertyGroup):
+    key = StringProperty()
+    value = StringProperty()
+
+class OAGroup(PropertyGroup):
     def get_base_ids(self, context):
         ret = []
         for obj in bpy.data.objects:
@@ -39,7 +48,7 @@ class OAGroup(bpy.types.PropertyGroup):
     valid_horizontal = BoolProperty(default=False)
     valid_vertical = BoolProperty(default=False)
 
-    # quality = EnumProperty(
+    tags = CollectionProperty(type=OAModelTag)
     #     items=[
     #         ("low","Low", ""),
     #         ("medium","Medium", ""),
@@ -49,7 +58,7 @@ class OAGroup(bpy.types.PropertyGroup):
     #     name="Quality"
     #     )
 
-class OASnapPointsItem(bpy.types.PropertyGroup):
+class OASnapPointsItem(PropertyGroup):
     name = StringProperty(name="", default="")
 
     a = IntProperty(name="", default=0, min=0)
@@ -59,24 +68,49 @@ class OASnapPointsItem(bpy.types.PropertyGroup):
     snap_size = FloatProperty(name="", default=1, min=0.01, max=10, step=0.1, subtype='FACTOR')
     index = IntProperty(name="", default=0, min=0)
 
-class OASnapPoints(bpy.types.PropertyGroup):
+class OASnapPoints(PropertyGroup):
     marked = BoolProperty(default=False)
-    snap_points_index = bpy.props.IntProperty(default=0, min=0)
+    snap_points_index = IntProperty(default=0, min=0)
     snap_points = CollectionProperty(type=OASnapPointsItem)
-    
+
+class OATagValue(PropertyGroup):
+    name = StringProperty(default="")
+
+class OATagKey(PropertyGroup):
+    name = StringProperty(default="")
+    values = CollectionProperty(type=OATagValue)
+
 ################
 # Register
 ################
 def register():
+    bpy.utils.register_class(OAError)
+    
+    bpy.utils.register_class(OAModelTag)
     bpy.utils.register_class(OAGroup)
     bpy.utils.register_class(OASnapPointsItem)
     bpy.utils.register_class(OASnapPoints)
-    bpy.types.Group.OAGroup = bpy.props.PointerProperty(type=OAGroup)
-    bpy.types.Object.OASnapPoints = bpy.props.PointerProperty(type=OASnapPoints)
+
+    bpy.utils.register_class(OATagValue)
+    bpy.utils.register_class(OATagKey)
+
+    bpy.types.Group.OAGroup = PointerProperty(type=OAGroup)
+    bpy.types.Object.OASnapPoints = PointerProperty(type=OASnapPoints)
+    bpy.types.Scene.OATags = CollectionProperty(type=OATagKey)
+    bpy.types.Scene.OAErrors = CollectionProperty(type=OAError)
 
 def unregister():
+    del bpy.types.Scene.OAErrors
+    del bpy.types.Scene.OATags
     del bpy.types.Object.OASnapPoints
     del bpy.types.Group.OAGroup
+
+    bpy.utils.register_class(OATagKey)
+    bpy.utils.register_class(OATagValue)
+
     bpy.utils.unregister_class(OASnapPoints)
     bpy.utils.unregister_class(OASnapPointsItem)
     bpy.utils.unregister_class(OAGroup)
+    bpy.utils.unregister_class(OAModelTag)
+
+    bpy.utils.unregister_class(OAError)
