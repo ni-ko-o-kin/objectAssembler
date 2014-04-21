@@ -129,6 +129,7 @@ class OAPanel(bpy.types.Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
     bl_category = "Object Assembler"
+    bl_options = {'DEFAULT_CLOSED'}
     #bl_context = "scene"
 
     def draw(self, context):

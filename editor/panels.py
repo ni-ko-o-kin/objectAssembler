@@ -8,6 +8,7 @@ class OBJECT_PT_oa_editor_tags(bpy.types.Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
     bl_category = "Object Assembler"
+    bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
         sce = context.scene
@@ -48,6 +49,7 @@ class OBJECT_PT_oa_editor_error_checking(bpy.types.Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
     bl_category = "Object Assembler"
+    bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
         obj = context.object
@@ -65,6 +67,7 @@ class OBJECT_PT_oa_editor_oa_group(bpy.types.Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
     bl_category = "Object Assembler"
+    bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
         obj = context.object
@@ -107,37 +110,87 @@ class OBJECT_PT_oa_editor_oa_group(bpy.types.Panel):
 
             # Orientation
             layout.separator()
+
+
+
+class OBJECT_PT_oa_editor_model_orientation(bpy.types.Panel):
+    bl_label = "Model - Orientation"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'TOOLS'
+    bl_category = "Object Assembler"
+    bl_options = {'DEFAULT_CLOSED'}
+    
+    def draw(self, context):
+        obj = context.object
+        layout = self.layout
+        
+        if obj is None or not obj.users_group:
+            layout.label("No Group assigned")
+            return
+
+        oa_groups = [group for group in obj.users_group if group.OAGroup.oa_type in ('IMPL','SIMP')]
+        if oa_groups:
+            oa_group_params = oa_groups[0].OAGroup
+        else:
+            layout.enabled = False
+
+        if oa_groups:
+            oa_group_params = oa_groups[0].OAGroup
+
             row = layout.row().split(percentage=0.5)
+            row.enabled = oa_group_params.oa_type in ('BASE', 'SIMP')
             subrow = row.row()
             subrow.label("Orientation:")
             subrow.label("", icon='FILE_TICK' if oa_group_params.valid_vertical else 'PANEL_CLOSE')
             subrow = row.row()
             subrow.label("")
             subrow.label("", icon='FILE_TICK' if oa_group_params.valid_horizontal else 'PANEL_CLOSE')
-
+    
             row = layout.row().split(percentage=0.5)
-
+            row.enabled = oa_group_params.oa_type in ('BASE', 'SIMP')
             subrow = row.row(align=True)
             subrow.operator("oa.set_upside", text="Set Upside")
             subrow.label("", icon='FILE_TICK' if oa_group_params.upside_set else 'PANEL_CLOSE')
-
+    
             subrow = row.row(align=True)
             subrow.operator("oa.set_inside", text="Set Inside")
             subrow.label("", icon='FILE_TICK' if oa_group_params.inside_set else 'PANEL_CLOSE')
-
+    
             row = layout.row().split(percentage=0.5)
-
+            row.enabled = oa_group_params.oa_type in ('BASE', 'SIMP')
             subrow = row.row(align=True)
             subrow.operator("oa.set_downside", text="Set Downside")
             subrow.label("", icon='FILE_TICK' if oa_group_params.downside_set else 'PANEL_CLOSE')
-
+    
             subrow = row.row(align=True)
             subrow.operator("oa.set_outside", text="Set Outside")
             subrow.label("", icon='FILE_TICK' if oa_group_params.outside_set else 'PANEL_CLOSE')
 
-            # Tags
-            layout.separator()
-            layout.label("Tags:")
+
+
+
+class OBJECT_PT_oa_editor_model_tags(bpy.types.Panel):
+    bl_label = "Model - Tags"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'TOOLS'
+    bl_category = "Object Assembler"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context):
+        obj = context.object
+        layout = self.layout
+        
+        if obj is None or not obj.users_group:
+            layout.label("No Group assigned")
+            return
+
+        oa_groups = [group for group in obj.users_group if group.OAGroup.oa_type in ('IMPL','SIMP')]
+        if oa_groups:
+            oa_group_params = oa_groups[0].OAGroup
+        else:
+            layout.enabled = False
+
+        if oa_groups:
             layout.operator("oa.editor_add_model_tag", text="Assign new Tag", icon='ZOOMIN')
             for index, tag in enumerate(oa_group_params.tags):
                 row = layout.row()
@@ -148,18 +201,21 @@ class OBJECT_PT_oa_editor_oa_group(bpy.types.Panel):
                         subrow.prop_search(tag, "value", context.scene.OATags[tag.key], "values", text="")
                     else:
                         subrow.label("")
-
+    
                 except:
                     subrow.label("")
                 subrow = row.row()
                 op = subrow.operator("oa.editor_remove_model_tag", text="", icon='ZOOMOUT')
                 op.index = index
+    
+
 
 class OBJECT_PT_oa_snap_point_editor(bpy.types.Panel):
     bl_label = "Snap Points Editor"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
     bl_category = "Object Assembler"
+    bl_options = {'DEFAULT_CLOSED'}
     
     def draw(self, context):
         obj = context.object
@@ -221,11 +277,15 @@ class OBJECT_PT_oa_snap_point_editor(bpy.types.Panel):
 def register():
     bpy.utils.register_class(OBJECT_PT_oa_editor_tags)
     bpy.utils.register_class(OBJECT_PT_oa_editor_oa_group)
+    bpy.utils.register_class(OBJECT_PT_oa_editor_model_orientation)
+    bpy.utils.register_class(OBJECT_PT_oa_editor_model_tags)
     bpy.utils.register_class(OBJECT_PT_oa_snap_point_editor)
     bpy.utils.register_class(OBJECT_PT_oa_editor_error_checking)
 
 def unregister():
     bpy.utils.unregister_class(OBJECT_PT_oa_editor_error_checking)
     bpy.utils.unregister_class(OBJECT_PT_oa_snap_point_editor)
+    bpy.utils.unregister_class(OBJECT_PT_oa_editor_model_tags)
+    bpy.utils.unregister_class(OBJECT_PT_oa_editor_model_orientation)
     bpy.utils.unregister_class(OBJECT_PT_oa_editor_oa_group)
     bpy.utils.unregister_class(OBJECT_PT_oa_editor_tags)

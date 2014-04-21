@@ -57,7 +57,7 @@ def unregister():
     # ui.unregister()
     # object_editor.unregister()
 
-    editor_panels.register()
-    editor_operators.register()
-    editor_uilists.register()
-    editor_properties.register()
+    editor_panels.unregister()
+    editor_operators.unregister()
+    editor_uilists.unregister()
+    editor_properties.unregister()

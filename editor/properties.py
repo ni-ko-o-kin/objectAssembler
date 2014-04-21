@@ -15,12 +15,12 @@ class OAModelTag(PropertyGroup):
 class OAGroup(PropertyGroup):
     def get_base_ids(self, context):
         ret = []
-        for obj in bpy.data.objects:
-            params = obj.OAGroup
-            if obj.library == None and obj.OAGroup.oa_type == 'BASE':
+        for group in bpy.data.groups:
+            params = group.OAGroup
+            if group.library == None and group.OAGroup.oa_type == 'BASE':
                 ret.append((
                         str(tuple(params.oa_id)),
-                        str(tuple(params.oa_id)) + " " + obj.name,
+                        str(tuple(params.oa_id)) + " " + group.name,
                         ""
                         ))
         return ret
@@ -105,8 +105,8 @@ def unregister():
     del bpy.types.Object.OASnapPoints
     del bpy.types.Group.OAGroup
 
-    bpy.utils.register_class(OATagKey)
-    bpy.utils.register_class(OATagValue)
+    bpy.utils.unregister_class(OATagKey)
+    bpy.utils.unregister_class(OATagValue)
 
     bpy.utils.unregister_class(OASnapPoints)
     bpy.utils.unregister_class(OASnapPointsItem)

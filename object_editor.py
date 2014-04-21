@@ -79,7 +79,8 @@ class OBJECT_PT_oa_object_editor(bpy.types.Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
     bl_category = "Object Assembler"
-    
+    bl_options = {'DEFAULT_CLOSED'}
+
     def draw(self, context):
         obj = context.object
 
