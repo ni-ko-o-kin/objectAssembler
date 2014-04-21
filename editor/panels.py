@@ -138,17 +138,22 @@ class OBJECT_PT_oa_editor_oa_group(bpy.types.Panel):
             # Tags
             layout.separator()
             layout.label("Tags:")
-            for index, tag in enumerate(oa_group_params.tags):
-                row = layout.row(align=True)
-                try:
-                    row.prop_search(tag, "key", context.scene, "OATags", text="")
-                    if tag.key != "":
-                        row.prop_search(tag, "value", context.scene.OATags[tag.key], "values", text="")
-                    op = row.operator("oa.editor_remove_model_tag", text="", icon='ZOOMOUT')
-                    op.index = index
-                except:
-                    pass
             layout.operator("oa.editor_add_model_tag", text="Assign new Tag", icon='ZOOMIN')
+            for index, tag in enumerate(oa_group_params.tags):
+                row = layout.row()
+                subrow = row.row(align=True).split(percentage=0.5, align=True)
+                try:
+                    subrow.prop_search(tag, "key", context.scene, "OATags", text="")
+                    if tag.key != "":
+                        subrow.prop_search(tag, "value", context.scene.OATags[tag.key], "values", text="")
+                    else:
+                        subrow.label("")
+
+                except:
+                    subrow.label("")
+                subrow = row.row()
+                op = subrow.operator("oa.editor_remove_model_tag", text="", icon='ZOOMOUT')
+                op.index = index
 
 class OBJECT_PT_oa_snap_point_editor(bpy.types.Panel):
     bl_label = "Snap Points Editor"
