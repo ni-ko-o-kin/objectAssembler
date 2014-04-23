@@ -56,7 +56,6 @@ class OBJECT_PT_oa_editor_error_checking(bpy.types.Panel):
         layout = self.layout
         errors = context.scene.OAErrors
         
-        layout.operator("oa.editor_error_checking_multiple_oa_group")
         layout.operator("oa.editor_error_checking_same_tags")
 
         for error in errors:
@@ -72,144 +71,71 @@ class OBJECT_PT_oa_editor_oa_group(bpy.types.Panel):
     def draw(self, context):
         obj = context.object
         layout = self.layout
+
+        row = layout.row(align=True)
+        if bpy.data.groups:
+            row.operator("object.group_link", text="Add to Group")
+        else:
+            row.operator("object.group_add", text="Add to Group")
+        row.operator("object.group_add", text="", icon='ZOOMIN')
         
         if obj is None or not obj.users_group:
             layout.label("No Group assigned")
             row = layout.row(align=True)
-            if bpy.data.groups:
-                row.operator("object.group_link", text="Add to Group")
-            else:
-                row.operator("object.group_add", text="Add to Group")
-            row.operator("object.group_add", text="", icon='ZOOMIN')
             return
 
-        oa_groups = [group for group in obj.users_group if group.OAGroup.oa_type != 'NONE']
-        
-        for group in obj.users_group:
-            # only one oa_group is allowed for all users_group
-            if oa_groups and oa_groups[0] != group:
-                continue
-
+        for group_index, group in enumerate(obj.users_group):
+            layout.separator()
             params = group.OAGroup
 
             box = layout.box()
+
+            # type
             row = box.row()
             row.prop(group, "name", text="")
             row.prop(params, "oa_type", text="")
 
+            # id
             if params.oa_type == 'IMPL':
                 box.prop(params, "base_id")
     
             if params.oa_type != 'NONE':
                 row = box.row(align=True)
                 row.prop(params, "oa_id")
-                row.operator("oa.editor_next_unused_group_id", text="", icon='NEXT_KEYFRAME')
-                row.operator("oa.editor_next_unused_model_id", text="", icon='FORWARD')
+                row.operator("oa.editor_next_unused_group_id", text="", icon='NEXT_KEYFRAME').group_index = group_index
+                row.operator("oa.editor_next_unused_model_id", text="", icon='FORWARD').group_index = group_index
 
-        if oa_groups:
-            oa_group_params = oa_groups[0].OAGroup
+            # orientation
+            if params.oa_type in ('BASE','SIMP'):
+                row = box.row(align=True)
+                row.operator("oa.set_upside", text="Set Upside").group_index = group_index
+                row.operator("oa.set_downside", text="Set Downside").group_index = group_index
+                row.label("", icon='FILE_TICK' if params.valid_vertical else 'PANEL_CLOSE')
 
-            # Orientation
-            layout.separator()
+                row = box.row(align=True)
+                row.operator("oa.set_inside", text="Set Inside").group_index = group_index
+                row.operator("oa.set_outside", text="Set Outside").group_index = group_index
+                row.label("", icon='FILE_TICK' if params.valid_horizontal else 'PANEL_CLOSE')
 
-
-
-class OBJECT_PT_oa_editor_model_orientation(bpy.types.Panel):
-    bl_label = "Model - Orientation"
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'TOOLS'
-    bl_category = "Object Assembler"
-    bl_options = {'DEFAULT_CLOSED'}
-    
-    def draw(self, context):
-        obj = context.object
-        layout = self.layout
+            # tags
+            if params.oa_type in ('IMPL', 'SIMP'):
+                box.operator("oa.editor_add_model_tag", text="Assign Tag", icon='ZOOMIN').group_index = group_index
+                for tag_index, tag in enumerate(params.tags):
+                    row = box.row()
+                    subrow = row.row(align=True).split(percentage=0.5, align=True)
+                    try:
+                        subrow.prop_search(tag, "key", context.scene, "OATags", text="")
+                        if tag.key != "":
+                            subrow.prop_search(tag, "value", context.scene.OATags[tag.key], "values", text="")
+                        else:
+                            subrow.label("")
         
-        if obj is None or not obj.users_group:
-            layout.label("No Group assigned")
-            return
-
-        oa_groups = [group for group in obj.users_group if group.OAGroup.oa_type in ('IMPL','SIMP')]
-        if oa_groups:
-            oa_group_params = oa_groups[0].OAGroup
-        else:
-            layout.enabled = False
-
-        if oa_groups:
-            oa_group_params = oa_groups[0].OAGroup
-
-            row = layout.row().split(percentage=0.5)
-            row.enabled = oa_group_params.oa_type in ('BASE', 'SIMP')
-            subrow = row.row()
-            subrow.label("Orientation:")
-            subrow.label("", icon='FILE_TICK' if oa_group_params.valid_vertical else 'PANEL_CLOSE')
-            subrow = row.row()
-            subrow.label("")
-            subrow.label("", icon='FILE_TICK' if oa_group_params.valid_horizontal else 'PANEL_CLOSE')
-    
-            row = layout.row().split(percentage=0.5)
-            row.enabled = oa_group_params.oa_type in ('BASE', 'SIMP')
-            subrow = row.row(align=True)
-            subrow.operator("oa.set_upside", text="Set Upside")
-            subrow.label("", icon='FILE_TICK' if oa_group_params.upside_set else 'PANEL_CLOSE')
-    
-            subrow = row.row(align=True)
-            subrow.operator("oa.set_inside", text="Set Inside")
-            subrow.label("", icon='FILE_TICK' if oa_group_params.inside_set else 'PANEL_CLOSE')
-    
-            row = layout.row().split(percentage=0.5)
-            row.enabled = oa_group_params.oa_type in ('BASE', 'SIMP')
-            subrow = row.row(align=True)
-            subrow.operator("oa.set_downside", text="Set Downside")
-            subrow.label("", icon='FILE_TICK' if oa_group_params.downside_set else 'PANEL_CLOSE')
-    
-            subrow = row.row(align=True)
-            subrow.operator("oa.set_outside", text="Set Outside")
-            subrow.label("", icon='FILE_TICK' if oa_group_params.outside_set else 'PANEL_CLOSE')
-
-
-
-
-class OBJECT_PT_oa_editor_model_tags(bpy.types.Panel):
-    bl_label = "Model - Tags"
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'TOOLS'
-    bl_category = "Object Assembler"
-    bl_options = {'DEFAULT_CLOSED'}
-
-    def draw(self, context):
-        obj = context.object
-        layout = self.layout
-        
-        if obj is None or not obj.users_group:
-            layout.label("No Group assigned")
-            return
-
-        oa_groups = [group for group in obj.users_group if group.OAGroup.oa_type in ('IMPL','SIMP')]
-        if oa_groups:
-            oa_group_params = oa_groups[0].OAGroup
-        else:
-            layout.enabled = False
-
-        if oa_groups:
-            layout.operator("oa.editor_add_model_tag", text="Assign new Tag", icon='ZOOMIN')
-            for index, tag in enumerate(oa_group_params.tags):
-                row = layout.row()
-                subrow = row.row(align=True).split(percentage=0.5, align=True)
-                try:
-                    subrow.prop_search(tag, "key", context.scene, "OATags", text="")
-                    if tag.key != "":
-                        subrow.prop_search(tag, "value", context.scene.OATags[tag.key], "values", text="")
-                    else:
+                    except:
                         subrow.label("")
-    
-                except:
-                    subrow.label("")
-                subrow = row.row()
-                op = subrow.operator("oa.editor_remove_model_tag", text="", icon='ZOOMOUT')
-                op.index = index
-    
-
+                    subrow = row.row()
+                    op = subrow.operator("oa.editor_remove_model_tag", text="", icon='ZOOMOUT')
+                    op.group_index = group_index
+                    op.model_tag_index = tag_index
 
 class OBJECT_PT_oa_snap_point_editor(bpy.types.Panel):
     bl_label = "Snap Points Editor"
@@ -278,15 +204,11 @@ class OBJECT_PT_oa_snap_point_editor(bpy.types.Panel):
 def register():
     bpy.utils.register_class(OBJECT_PT_oa_editor_tags)
     bpy.utils.register_class(OBJECT_PT_oa_editor_oa_group)
-    bpy.utils.register_class(OBJECT_PT_oa_editor_model_orientation)
-    bpy.utils.register_class(OBJECT_PT_oa_editor_model_tags)
     bpy.utils.register_class(OBJECT_PT_oa_snap_point_editor)
     bpy.utils.register_class(OBJECT_PT_oa_editor_error_checking)
 
 def unregister():
     bpy.utils.unregister_class(OBJECT_PT_oa_editor_error_checking)
     bpy.utils.unregister_class(OBJECT_PT_oa_snap_point_editor)
-    bpy.utils.unregister_class(OBJECT_PT_oa_editor_model_tags)
-    bpy.utils.unregister_class(OBJECT_PT_oa_editor_model_orientation)
     bpy.utils.unregister_class(OBJECT_PT_oa_editor_oa_group)
     bpy.utils.unregister_class(OBJECT_PT_oa_editor_tags)

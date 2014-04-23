@@ -79,9 +79,10 @@ class OBJECT_OT_oa_editor_add_model_tag(bpy.types.Operator):
     bl_idname = "oa.editor_add_model_tag"
     bl_options = {'INTERNAL'}
 
+    group_index = IntProperty(default=0)
+
     def invoke(self, context, event):
-        oa_group = get_oa_group(context.object)
-        oa_group.OAGroup.tags.add()
+        context.object.users_group[self.group_index].OAGroup.tags.add()
         return {'FINISHED'}
 
 class OBJECT_OT_oa_editor_remove_model_tag(bpy.types.Operator):
@@ -89,11 +90,11 @@ class OBJECT_OT_oa_editor_remove_model_tag(bpy.types.Operator):
     bl_idname = "oa.editor_remove_model_tag"
     bl_options = {'INTERNAL'}
 
-    index = IntProperty(default=0, min=0)
-
+    model_tag_index = IntProperty(default=0, min=0)
+    group_index = IntProperty(default=0)
+    
     def invoke(self, context, event):
-        oa_group = get_oa_group(context.object)
-        oa_group.OAGroup.tags.remove(self.index)
+        context.object.users_group[self.group_index].OAGroup.tags.remove(self.model_tag_index)
         return {'FINISHED'}
 
 class OBJECT_OT_oa_editor_add_tag_value(bpy.types.Operator):
@@ -150,14 +151,11 @@ class OBJECT_OT_oa_editor_next_unused_model_id(bpy.types.Operator):
     bl_idname = "oa.editor_next_unused_model_id"
     bl_options = {'INTERNAL'}
 
-    @classmethod
-    def poll(cls, context):
-        return get_oa_group(context.object)
-        
+    group_index = IntProperty(default=0)
+
     def invoke(self, context, event):
         obj = context.object
-        params = get_oa_group(context.object).OAGroup
-
+        params = context.object.users_group[self.group_index].OAGroup
         if params.oa_type in ('SIMP', 'IMPL'):
             oa_type = ('SIMP', 'IMPL')
                          
@@ -181,13 +179,11 @@ class OBJECT_OT_oa_editor_next_unused_group_id(bpy.types.Operator):
     bl_idname = "oa.editor_next_unused_group_id"
     bl_options = {'INTERNAL'}
 
-    @classmethod
-    def poll(cls, context):
-        return get_oa_group(context.object)
-        
+    group_index = IntProperty(default=0)
+
     def invoke(self, context, event):
         obj = context.object
-        params = get_oa_group(context.object).OAGroup
+        params = context.object.users_group[self.group_index].OAGroup
 
         if params.oa_type in ('SIMP', 'IMPL'):
             oa_type = ('SIMP', 'IMPL')
@@ -209,15 +205,11 @@ class OBJECT_OT_oa_editor_next_unused_group_id(bpy.types.Operator):
 class OBJECT_OT_oa_set_outside(bpy.types.Operator):
     bl_description = bl_label = "Set Outside"
     bl_idname = "oa.set_outside"
-    
-    @classmethod
-    def poll(cls, context):
-        return get_oa_group(context.object)
+
+    group_index = IntProperty(default=0)
 
     def invoke(self, context, event):
-        obj = context.object
-        oa_group = get_oa_group(obj)
-        params = oa_group.OAGroup
+        params = context.object.users_group[self.group_index].OAGroup
         
         params.outside = context.scene.cursor_location.copy()
         params.outside_set = True
@@ -228,15 +220,11 @@ class OBJECT_OT_oa_set_outside(bpy.types.Operator):
 class OBJECT_OT_oa_set_inside(bpy.types.Operator):
     bl_description = bl_label = "Set Inside"
     bl_idname = "oa.set_inside"
-    
-    @classmethod
-    def poll(cls, context):
-        return get_oa_group(context.object)
+
+    group_index = IntProperty(default=0)
 
     def invoke(self, context, event):
-        obj = context.object
-        oa_group = get_oa_group(obj)
-        params = oa_group.OAGroup
+        params = context.object.users_group[self.group_index].OAGroup
         
         params.inside = context.scene.cursor_location.copy()
         params.inside_set = True
@@ -248,15 +236,11 @@ class OBJECT_OT_oa_set_inside(bpy.types.Operator):
 class OBJECT_OT_oa_set_upside(bpy.types.Operator):
     bl_description = bl_label = "Set Upside"
     bl_idname = "oa.set_upside"
-    
-    @classmethod
-    def poll(cls, context):
-        return get_oa_group(context.object)
+
+    group_index = IntProperty(default=0)
 
     def invoke(self, context, event):
-        obj = context.object
-        oa_group = get_oa_group(obj)
-        params = oa_group.OAGroup
+        params = context.object.users_group[self.group_index].OAGroup
         
         params.upside = context.scene.cursor_location.copy()
         params.upside_set = True
@@ -268,14 +252,10 @@ class OBJECT_OT_oa_set_downside(bpy.types.Operator):
     bl_description = bl_label = "Set Downside"
     bl_idname = "oa.set_downside"
     
-    @classmethod
-    def poll(cls, context):
-        return get_oa_group(context.object)
-
+    group_index = IntProperty(default=0)
+    
     def invoke(self, context, event):
-        obj = context.object
-        oa_group = get_oa_group(obj)
-        params = oa_group.OAGroup
+        params = context.object.users_group[self.group_index].OAGroup
         
         params.downside = context.scene.cursor_location.copy()
         params.downside_set = True
@@ -774,7 +754,6 @@ class OBJECT_OT_oa_show_snap_point(bpy.types.Operator):
 ################
 def register():
     bpy.utils.register_class(OBJECT_OT_oa_editor_error_checking_same_tags)
-    bpy.utils.register_class(OBJECT_OT_oa_editor_error_checking_multiple_oa_group)
     bpy.utils.register_class(OBJECT_OT_oa_editor_add_model_tag)
     bpy.utils.register_class(OBJECT_OT_oa_editor_remove_model_tag)
     bpy.utils.register_class(OBJECT_OT_oa_editor_add_tag_value)
@@ -817,5 +796,4 @@ def unregister():
     bpy.utils.unregister_class(OBJECT_OT_oa_editor_add_tag_value)
     bpy.utils.unregister_class(OBJECT_OT_oa_editor_remove_model_tag)
     bpy.utils.unregister_class(OBJECT_OT_oa_editor_add_model_tag)
-    bpy.utils.unregister_class(OBJECT_OT_oa_editor_error_checking_multiple_oa_group)
     bpy.utils.unregister_class(OBJECT_OT_oa_editor_error_checking_same_tags)
