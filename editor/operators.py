@@ -19,8 +19,8 @@ class OBJECT_OT_oa_editor_error_checking_same_tags(bpy.types.Operator):
         groups = []
         for obj in context.scene.objects:
             for group in obj.users_group:
-                if group.OAGroup.oa_type != 'NONE':
-                   groups.append(group) 
+                if group.OAGroup.oa_type in ('IMPL', 'SIMP'):
+                   groups.append(group)
         
         multiple = []
         for group in set(groups):
