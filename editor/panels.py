@@ -93,8 +93,9 @@ class OBJECT_PT_oa_editor_oa_group(bpy.types.Panel):
             params = group.OAGroup
 
             box = layout.box()
-            box.prop(group, "name", text="Group")
-            box.prop(params, "oa_type")
+            row = box.row()
+            row.prop(group, "name", text="")
+            row.prop(params, "oa_type", text="")
 
             if params.oa_type == 'IMPL':
                 box.prop(params, "base_id")
