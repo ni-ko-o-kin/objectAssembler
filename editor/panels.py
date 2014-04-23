@@ -193,10 +193,11 @@ class OBJECT_PT_oa_snap_point_editor(bpy.types.Panel):
                 row.operator("oa.switch_ab")
                 
             elif sp_obj is None:
-                if not get_oa_group(obj):
-                    layout.label("No OA-Group found")
-                layout.operator("oa.add_sp_obj")
-                #layout.props_enum(params, "base_id")
+                params = [group.OAGroup for group in obj.users_group if group.OAGroup.oa_type in ('BASE', 'SIMP')]
+                if params:
+                    layout.operator("oa.add_sp_obj")
+                else:
+                    layout.label("No Simple or Base OA-Group found")
 
 ################
 # Register
