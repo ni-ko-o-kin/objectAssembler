@@ -158,15 +158,13 @@ def get_oa_group(obj):
 
 def get_sp_obj(obj):
     ''' get excatly one snap point object or return None '''
+    # doesn't check for multiple sp_objs - error checking-ops should do that
     if not obj: return None
     sp_obj = None
     for group in obj.users_group:
         for obj_in_group in group.objects:
             if obj_in_group.type == 'MESH' and obj_in_group.OASnapPoints.marked:
-                if sp_obj is not None:
-                    return None
-                else:
-                    sp_obj = obj_in_group
+                return obj_in_group
     return sp_obj
 
 def get_oa_and_sp_obj(obj):

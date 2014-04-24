@@ -152,13 +152,11 @@ class OBJECT_PT_oa_snap_point_editor(bpy.types.Panel):
         if obj is None:
             return
 
-        oa_groups = [group.OAGroup for group in obj.users_group if group.OAGroup.oa_type != 'NONE']
+        base_ids = [group.OAGroup.base_id.replace('(','').replace(')','').replace(' ','').split(',')
+                    for group in obj.users_group if group.OAGroup.oa_type == 'IMPL']
         
-        # todo todo todo
         sp_obj = get_sp_obj(obj)
-
         
-
         if sp_obj:
             params = sp_obj.OASnapPoints
             # layout = layout.box()
