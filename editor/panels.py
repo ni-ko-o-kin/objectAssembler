@@ -1,6 +1,6 @@
 import bpy
 
-from ..common import get_oa_group, get_sp_obj
+from ..common import get_sp_obj
 
 
 class OBJECT_PT_oa_editor_tags(bpy.types.Panel):
@@ -149,55 +149,62 @@ class OBJECT_PT_oa_snap_point_editor(bpy.types.Panel):
         layout = self.layout
         sp_obj = None
  
-        if obj is not None:
-            sp_obj = get_sp_obj(obj)
+        if obj is None:
+            return
+
+        oa_groups = [group.OAGroup for group in obj.users_group if group.OAGroup.oa_type != 'NONE']
+        
+        # todo todo todo
+        sp_obj = get_sp_obj(obj)
+
+        
+
+        if sp_obj:
+            params = sp_obj.OASnapPoints
+            # layout = layout.box()
+            # row = layout.row()
+            # layout.enabled = params.marked
+            # row.prop(params, "group_id", text="ID")
+            # layout.prop(params, "quality")
+            # layout.operator("oa.apply_id")
             
-            if sp_obj:
-                params = sp_obj.OASnapPoints
-                # layout = layout.box()
-                # row = layout.row()
-                # layout.enabled = params.marked
-                # row.prop(params, "group_id", text="ID")
-                # layout.prop(params, "quality")
-                # layout.operator("oa.apply_id")
-                
-                layout = self.layout
+            layout = self.layout
 
-                row = layout.row()
-                row.template_list(
-                    "OBJECT_UL_oa_snap_points_list",
-                    'OA_SNAP_POINT_EDITOR_TEMPLATE_LIST', #unique id
-                    params,
-                    "snap_points",
-                    params,
-                    "snap_points_index",
-                    6,
-                    )
-                
-                col = row.column(align=True)
-                col.operator("oa.construct_abc", icon="EDITMODE_VEC_DEHLT", text="")
-                col.operator("view3d.snap_cursor_to_selected", icon='CURSOR', text="")
+            row = layout.row()
+            row.template_list(
+                "OBJECT_UL_oa_snap_points_list",
+                'OA_SNAP_POINT_EDITOR_TEMPLATE_LIST', #unique id
+                params,
+                "snap_points",
+                params,
+                "snap_points_index",
+                6,
+                )
+            
+            col = row.column(align=True)
+            col.operator("oa.construct_abc", icon="EDITMODE_VEC_DEHLT", text="")
+            col.operator("view3d.snap_cursor_to_selected", icon='CURSOR', text="")
 
-                col.separator()
-                
-                col.operator("oa.move_snap_point_up", icon="TRIA_UP", text="")
-                col.operator("oa.move_snap_point_down", icon="TRIA_DOWN", text="")
-                
-                col.separator()
-                col.operator("oa.remove_snap_point", icon="ZOOMOUT", text="")
+            col.separator()
+            
+            col.operator("oa.move_snap_point_up", icon="TRIA_UP", text="")
+            col.operator("oa.move_snap_point_down", icon="TRIA_DOWN", text="")
+            
+            col.separator()
+            col.operator("oa.remove_snap_point", icon="ZOOMOUT", text="")
 
-                col.separator()
+            col.separator()
 
-                row = layout.row()
-                row.operator("oa.show_snap_point")
-                row.operator("oa.switch_ab")
-                
-            elif sp_obj is None:
-                params = [group.OAGroup for group in obj.users_group if group.OAGroup.oa_type in ('BASE', 'SIMP')]
-                if params:
-                    layout.operator("oa.add_sp_obj")
-                else:
-                    layout.label("No Simple or Base OA-Group found")
+            row = layout.row()
+            row.operator("oa.show_snap_point")
+            row.operator("oa.switch_ab")
+            
+        elif sp_obj is None:
+            params = [group.OAGroup for group in obj.users_group if group.OAGroup.oa_type in ('BASE', 'SIMP')]
+            if params:
+                layout.operator("oa.add_sp_obj")
+            else:
+                layout.label("No Simple or Base OA-Group found")
 
 ################
 # Register

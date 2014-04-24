@@ -267,11 +267,8 @@ class OBJECT_OT_oa_set_downside(bpy.types.Operator):
 class OBJECT_OT_oa_add_sp_obj(bpy.types.Operator):
     bl_description = bl_label = "Add Snap Point Object"
     bl_idname = "oa.add_sp_obj"
+    bl_options = {'INTERNAL'}
     
-    @classmethod
-    def poll(cls, context):
-        return get_oa_group(context.object)
-
     def invoke(self, context, event):
         obj = context.object
 
@@ -622,6 +619,11 @@ class OBJECT_OT_oa_show_snap_point(bpy.types.Operator):
         b_3d = (sp_obj_matrix_world * b_norm)
         c_3d = (sp_obj_matrix_world * c_norm)
 
+        # if True: # nur bei impl
+        #     a_3d += group_base - group_impl
+        #     # b_3d ...
+        #     # c_3d ...
+            
         a_2d = tuple(map(ceil, view3d_utils.location_3d_to_region_2d(region, rv3d, a_3d)))
         b_2d = tuple(map(ceil, view3d_utils.location_3d_to_region_2d(region, rv3d, b_3d)))
         c_2d = tuple(map(ceil, view3d_utils.location_3d_to_region_2d(region, rv3d, c_3d)))
