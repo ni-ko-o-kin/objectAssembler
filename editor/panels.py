@@ -1,6 +1,6 @@
 import bpy
 
-from ..common import get_sp_obj
+from ..common import get_sp_obj, get_sp_obj_from_base_id, convert_base_id_to_array
 
 
 class OBJECT_PT_oa_editor_tags(bpy.types.Panel):
@@ -97,7 +97,15 @@ class OBJECT_PT_oa_editor_oa_group(bpy.types.Panel):
 
             # id
             if params.oa_type == 'IMPL':
-                box.prop(params, "base_id")
+                try:
+                    box.prop(params, "base_id")
+                except:
+                    pass
+                    # does not work, don't know why
+                    # errors = context.scene.OAErrors
+                    # errors.clear()
+                    # error = errors.add()
+                    # error.text = "Base ID not found in Group: " + str(group.name)
     
             if params.oa_type != 'NONE':
                 row = box.row(align=True)
@@ -137,72 +145,71 @@ class OBJECT_PT_oa_editor_oa_group(bpy.types.Panel):
                     op.group_index = group_index
                     op.model_tag_index = tag_index
 
-class OBJECT_PT_oa_snap_point_editor(bpy.types.Panel):
-    bl_label = "Snap Points Editor"
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'TOOLS'
-    bl_category = "Object Assembler"
-    bl_options = {'DEFAULT_CLOSED'}
-    
-    def draw(self, context):
-        obj = context.object
-        layout = self.layout
-        sp_obj = None
- 
-        if obj is None:
-            return
-
-        base_ids = [group.OAGroup.base_id.replace('(','').replace(')','').replace(' ','').split(',')
-                    for group in obj.users_group if group.OAGroup.oa_type == 'IMPL']
+            # snap points
+            if params.oa_type == 'IMPL':
+                base_id = convert_base_id_to_array(group)
+                sp_obj = get_sp_obj_from_base_id(base_id)
+                if sp_obj:
+                    snap_points = sp_obj.OASnapPoints.snap_points
+                    
+                    if sp_obj and snap_points:
+                        box.label("Show Snap Points:")
         
-        sp_obj = get_sp_obj(obj)
+                        for i, sp in enumerate(snap_points):
+                            if i % 4 == 0:
+                                row = box.row()
+                            op = row.operator("oa.show_snap_point_from_base", text=str(sp.name))
+                            op.group_index = group_index
+                            op.sp_index = i
+                            if i == len(snap_points) - 1:
+                                for j in range(3 - i % 4):
+                                    row.label("")
+                            
+                    else:
+                        box.label("No Snap Points found")
+
+            elif params.oa_type in ('BASE', 'SIMP'):
+                sp_obj = get_sp_obj(obj)
+                
+                if sp_obj:
+                    sp_obj_params = sp_obj.OASnapPoints
+                                    
+                    row = box.row()
+                    row.template_list(
+                        "OBJECT_UL_oa_snap_points_list",
+                        'OA_SNAP_POINT_EDITOR_TEMPLATE_LIST' + str(group_index), #unique id
+                        sp_obj_params,
+                        "snap_points",
+                        sp_obj_params,
+                        "snap_points_index",
+                        4,
+                        )
+                    
+                    col = row.column(align=True)
+                    col.operator("oa.construct_abc", icon="EDITMODE_VEC_DEHLT", text="")
+                    col.operator("view3d.snap_cursor_to_selected", icon='CURSOR', text="")
         
-        if sp_obj:
-            params = sp_obj.OASnapPoints
-            # layout = layout.box()
-            # row = layout.row()
-            # layout.enabled = params.marked
-            # row.prop(params, "group_id", text="ID")
-            # layout.prop(params, "quality")
-            # layout.operator("oa.apply_id")
-            
-            layout = self.layout
+                    col.separator()
+                    
+                    col.operator("oa.move_snap_point_up", icon="TRIA_UP", text="")
+                    col.operator("oa.move_snap_point_down", icon="TRIA_DOWN", text="")
+                    
+                    col.separator()
+                    col.operator("oa.remove_snap_point", icon="ZOOMOUT", text="")
+        
+                    col.separator()
+        
+                    row = box.row()
+                    row.operator("oa.show_snap_point").group_index = group_index
+                    row.operator("oa.switch_ab")
+                    
+                elif sp_obj is None:
+                    # params = [group.OAGroup for group in obj.users_group if group.OAGroup.oa_type in ('BASE', 'SIMP')]
+                    # if params:
+                    box.operator("oa.add_sp_obj").group_index = group_index
+                    # else:
+                    #     layout.label("No Simple or Base OA-Group found")
 
-            row = layout.row()
-            row.template_list(
-                "OBJECT_UL_oa_snap_points_list",
-                'OA_SNAP_POINT_EDITOR_TEMPLATE_LIST', #unique id
-                params,
-                "snap_points",
-                params,
-                "snap_points_index",
-                6,
-                )
-            
-            col = row.column(align=True)
-            col.operator("oa.construct_abc", icon="EDITMODE_VEC_DEHLT", text="")
-            col.operator("view3d.snap_cursor_to_selected", icon='CURSOR', text="")
-
-            col.separator()
-            
-            col.operator("oa.move_snap_point_up", icon="TRIA_UP", text="")
-            col.operator("oa.move_snap_point_down", icon="TRIA_DOWN", text="")
-            
-            col.separator()
-            col.operator("oa.remove_snap_point", icon="ZOOMOUT", text="")
-
-            col.separator()
-
-            row = layout.row()
-            row.operator("oa.show_snap_point")
-            row.operator("oa.switch_ab")
-            
-        elif sp_obj is None:
-            params = [group.OAGroup for group in obj.users_group if group.OAGroup.oa_type in ('BASE', 'SIMP')]
-            if params:
-                layout.operator("oa.add_sp_obj")
-            else:
-                layout.label("No Simple or Base OA-Group found")
 
 ################
 # Register
@@ -210,11 +217,9 @@ class OBJECT_PT_oa_snap_point_editor(bpy.types.Panel):
 def register():
     bpy.utils.register_class(OBJECT_PT_oa_editor_tags)
     bpy.utils.register_class(OBJECT_PT_oa_editor_oa_group)
-    bpy.utils.register_class(OBJECT_PT_oa_snap_point_editor)
     bpy.utils.register_class(OBJECT_PT_oa_editor_error_checking)
 
 def unregister():
     bpy.utils.unregister_class(OBJECT_PT_oa_editor_error_checking)
-    bpy.utils.unregister_class(OBJECT_PT_oa_snap_point_editor)
     bpy.utils.unregister_class(OBJECT_PT_oa_editor_oa_group)
     bpy.utils.unregister_class(OBJECT_PT_oa_editor_tags)

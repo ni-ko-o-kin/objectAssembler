@@ -5,7 +5,7 @@ from bpy_extras import view3d_utils
 from mathutils import Matrix, Vector, Euler
 from bpy.props import IntProperty, CollectionProperty, StringProperty
 
-from ..common import toggle, double_toggle, select_and_active, move_origin_to_geometry, get_oa_group, get_sp_obj, ALLOWED_NAVIGATION
+from ..common import toggle, double_toggle, select_and_active, move_origin_to_geometry, get_oa_group, get_sp_obj, ALLOWED_NAVIGATION, get_sp_obj_from_base_id, convert_base_id_to_array
 
 class OBJECT_OT_oa_editor_error_checking_same_tags(bpy.types.Operator):
     bl_description = bl_label = "Check Model for same Tags"
@@ -268,7 +268,9 @@ class OBJECT_OT_oa_add_sp_obj(bpy.types.Operator):
     bl_description = bl_label = "Add Snap Point Object"
     bl_idname = "oa.add_sp_obj"
     bl_options = {'INTERNAL'}
-    
+
+    group_index = IntProperty(default=0)
+
     def invoke(self, context, event):
         obj = context.object
 
@@ -278,43 +280,9 @@ class OBJECT_OT_oa_add_sp_obj(bpy.types.Operator):
         sp_obj = context.scene.objects.get(sp_obj.name)
         sp_obj.OASnapPoints.marked = True
         sp_obj.location = context.object.location.copy()
-        get_oa_group(obj).objects.link(sp_obj)
+        obj.users_group[self.group_index].objects.link(sp_obj)
         
         return {'FINISHED'}
-
-
-# class OBJECT_OT_oa_apply_id(bpy.types.Operator):
-#     bl_description = bl_label = "Apply ID and Quality on Group"
-#     bl_idname = "oa.apply_id"
- 
-#     @classmethod
-#     def poll(cls, context):
-#         obj = context.object
-
-#         # obj has to be in a group
-#         return bool(obj.users_group)
-
-
-#     def invoke(self, context, event):
-#         obj = context.object
-
-#         if len(obj.users_group) == 1:
-#             name = "_".join((
-#                     "oa",
-#                     str(obj.OASnapPoints.group_id[0]),
-#                     str(obj.OASnapPoints.group_id[1]),
-#                     str(obj.OASnapPoints.group_id[2]),
-#                     obj.OASnapPoints.quality
-#                     ))
-            
-#             obj.users_group[0].name = name
-#             obj.name = name
-            
-#         else:
-#             self.report({'ERROR'}, "Only one group is allowed for each object")
-#             return {'CANCELLED'}
-        
-#         return {'FINISHED'}
 
     
 class OBJECT_OT_oa_remove_snap_point(bpy.types.Operator):
@@ -411,6 +379,7 @@ class OBJECT_OT_oa_move_snap_point_up(bpy.types.Operator):
 class OBJECT_OT_oa_select_snap_point(bpy.types.Operator):
     bl_label = "Select abc"
     bl_idname = "oa.select_snap_point"
+    bl_options = {'INTERNAL'}
 
     @classmethod
     def poll(cls, context):
@@ -442,7 +411,8 @@ class OBJECT_OT_oa_ConstructAbc(bpy.types.Operator):
     """c = Cursor; a,b = Two selected vertices"""
     bl_description = bl_label = "Construct Abc-Triangle"
     bl_idname = "oa.construct_abc"
-    
+    bl_options = {'INTERNAL'}
+
     @classmethod
     def poll(cls, context):
         return context.object.mode == 'EDIT'
@@ -560,6 +530,7 @@ class OBJECT_OT_oa_ConstructAbc(bpy.types.Operator):
 class OBJECT_OT_oa_switch_ab(bpy.types.Operator):
     bl_description = bl_label = "Flip Normal"
     bl_idname = "oa.switch_ab"
+    bl_options = {'INTERNAL'}
 
     @classmethod
     def poll(cls, context):
@@ -582,11 +553,141 @@ class OBJECT_OT_oa_switch_ab(bpy.types.Operator):
         
         return {'FINISHED'}
 
+def draw_callback_abc(self, context):
+    font_id = 0
+
+    base_dupli_offset = [group.dupli_offset for group in self.sp_obj.users_group if group.OAGroup.oa_type in ('BASE','SIMP')][0]
+    impl_dupli_offset = context.object.users_group[self.group_index].dupli_offset
+    oa_type = context.object.users_group[self.group_index].OAGroup.oa_type
+    
+    scene = context.scene
+    region = context.region
+    rv3d = context.region_data
+    
+    sp_obj_matrix_world = self.sp_obj.matrix_world
+    
+    a = self.sp_obj.data.vertices[self.snap_points[self.index].a].co
+    b = self.sp_obj.data.vertices[self.snap_points[self.index].b].co
+    c = self.sp_obj.data.vertices[self.snap_points[self.index].c].co
+    
+    factor = 1.5
+    a_norm = c - (c - a).normalized() / factor
+    b_norm = c - (c - b).normalized() / factor
+    c_norm = c
+    
+    a_3d = (sp_obj_matrix_world * a_norm)
+    b_3d = (sp_obj_matrix_world * b_norm)
+    c_3d = (sp_obj_matrix_world * c_norm)
+    
+    if oa_type == 'IMPL':
+        offset = (impl_dupli_offset - base_dupli_offset)
+        a_3d += offset
+        b_3d += offset
+        c_3d += offset
+
+    a_2d = tuple(map(ceil, view3d_utils.location_3d_to_region_2d(region, rv3d, a_3d)))
+    b_2d = tuple(map(ceil, view3d_utils.location_3d_to_region_2d(region, rv3d, b_3d)))
+    c_2d = tuple(map(ceil, view3d_utils.location_3d_to_region_2d(region, rv3d, c_3d)))
+
+    def draw_letter(x=10, y=10, letter="-"):
+        bgl.glColor3f(0.1,0.1,0.1)
+        blf.position(0, x-7 , y-7, 0)
+        blf.size(0, 18, 72)
+        blf.draw(0, letter)
+
+    def draw_point(x=10, y=10, size=4, color=(0.5,0.5,0.5)):
+        bgl.glPointSize(size)
+        bgl.glColor3f(color[0], color[1], color[2])
+        bgl.glBegin(bgl.GL_POINTS)
+        bgl.glVertex2i(x, y)
+        bgl.glEnd()
+
+    def draw_line(start, end, color=(0.9,0.9,0.9)):
+        # outer
+        bgl.glLineWidth(4)
+        bgl.glBegin(bgl.GL_LINES)
+        bgl.glColor3f(0.1,0.1,0.1)
+        bgl.glVertex2i(start[0], start[1])
+        bgl.glVertex2i(end[0], end[1])
+        bgl.glEnd()
+        
+        # inner
+        bgl.glLineWidth(2)
+        bgl.glBegin(bgl.GL_LINES)
+        bgl.glColor3f(color[0], color[1], color[2])
+        bgl.glVertex2i(start[0], start[1])
+        bgl.glVertex2i(end[0], end[1])
+        bgl.glEnd()
+        
+
+    # draw triangle
+    # filled
+    bgl.glEnable(bgl.GL_BLEND)
+    bgl.glBegin(bgl.GL_POLYGON)
+    bgl.glColor4f(0.8,0.5,0.5, 0.2)
+    for x, y in (a_2d, b_2d, c_2d):
+        bgl.glVertex2i(x, y)
+    bgl.glEnd()
+    bgl.glDisable(bgl.GL_BLEND)
+            
+    bgl.glEnable(bgl.GL_LINE_SMOOTH)
+    bgl.glHint(bgl.GL_POLYGON_SMOOTH_HINT, bgl.GL_NICEST)
+    
+    # outer
+    bgl.glLineWidth(3)
+    bgl.glBegin(bgl.GL_LINE_LOOP)
+    bgl.glColor3f(0.1,0.1,0.1)
+    for x, y in (a_2d, b_2d, c_2d):
+        bgl.glVertex2i(x, y)
+    bgl.glEnd()
+    # inner
+    bgl.glLineWidth(1)
+    bgl.glBegin(bgl.GL_LINE_LOOP)
+    bgl.glColor3f(0.9,0.9,0.9)
+    for x, y in (a_2d, b_2d, c_2d):
+        bgl.glVertex2i(x, y)
+    bgl.glEnd()
+
+    bgl.glDisable(bgl.GL_LINE_SMOOTH)
+
+    # abc-points/letters
+    # black background
+    for x, y in (a_2d, b_2d, c_2d):
+        draw_point(x, y, 20, (0,0,0))
+
+    # white background
+    for x, y in (a_2d, b_2d, c_2d):
+        draw_point(x, y, 18, (1,1,1))
+
+    #draw_point(a_2d[0], a_2d[1], 4, (0.9, 0.1, 0.1))
+    draw_letter(a_2d[0], a_2d[1], 'A')
+
+    # draw_point(b_2d[0], b_2d[1], 4, (0.1, 0.9, 0.1))
+    draw_letter(b_2d[0], b_2d[1], 'B')
+    
+    # draw_point(c_2d[0], c_2d[1], 4, (0.3, 0.3, 0.9))
+    draw_letter(c_2d[0], c_2d[1], 'C')
+
+    # normal-line
+    normal_start_3d = (a_3d + b_3d + c_3d)/3
+    normal_end_3d = normal_start_3d + (c_3d - a_3d).cross(c_3d - b_3d) # /1.5 # scale normal
+    
+    normal_start_2d = tuple(map(ceil, view3d_utils.location_3d_to_region_2d(region, rv3d, normal_start_3d )))
+    normal_end_2d = tuple(map(ceil, view3d_utils.location_3d_to_region_2d(region, rv3d, normal_end_3d )))
+    
+    draw_line(normal_start_2d, normal_end_2d)
+    
+    # restore opengl defaults
+    bgl.glPointSize(1)
+    bgl.glLineWidth(1)
+    bgl.glColor4f(0.0, 0.0, 0.0, 1.0)
 
 class OBJECT_OT_oa_show_snap_point(bpy.types.Operator):
     bl_description = bl_label = "Show Snap Point"
     bl_idname = "oa.show_snap_point"
-
+    
+    group_index = IntProperty(default=0)
+    
     @classmethod
     def poll(cls, context):
         sp_obj = get_sp_obj(context.object)
@@ -596,131 +697,6 @@ class OBJECT_OT_oa_show_snap_point(bpy.types.Operator):
         index = sp_obj.OASnapPoints.snap_points_index
         
         return index < len(snap_points)
-
-    def draw_callback_abc(self, context):
-        font_id = 0
-
-        scene = context.scene
-        region = context.region
-        rv3d = context.region_data
-
-        sp_obj_matrix_world = self.sp_obj.matrix_world
-
-        a = self.sp_obj.data.vertices[self.snap_points[self.index].a].co
-        b = self.sp_obj.data.vertices[self.snap_points[self.index].b].co
-        c = self.sp_obj.data.vertices[self.snap_points[self.index].c].co
-
-        factor = 1.5
-        a_norm = c - (c - a).normalized() / factor
-        b_norm = c - (c - b).normalized() / factor
-        c_norm = c
-
-        a_3d = (sp_obj_matrix_world * a_norm)
-        b_3d = (sp_obj_matrix_world * b_norm)
-        c_3d = (sp_obj_matrix_world * c_norm)
-
-        # if True: # nur bei impl
-        #     a_3d += group_base - group_impl
-        #     # b_3d ...
-        #     # c_3d ...
-            
-        a_2d = tuple(map(ceil, view3d_utils.location_3d_to_region_2d(region, rv3d, a_3d)))
-        b_2d = tuple(map(ceil, view3d_utils.location_3d_to_region_2d(region, rv3d, b_3d)))
-        c_2d = tuple(map(ceil, view3d_utils.location_3d_to_region_2d(region, rv3d, c_3d)))
-
-        def draw_letter(x=10, y=10, letter="-"):
-            bgl.glColor3f(0.1,0.1,0.1)
-            blf.position(0, x-7 , y-7, 0)
-            blf.size(0, 18, 72)
-            blf.draw(0, letter)
-
-        def draw_point(x=10, y=10, size=4, color=(0.5,0.5,0.5)):
-            bgl.glPointSize(size)
-            bgl.glColor3f(color[0], color[1], color[2])
-            bgl.glBegin(bgl.GL_POINTS)
-            bgl.glVertex2i(x, y)
-            bgl.glEnd()
-
-        def draw_line(start, end, color=(0.9,0.9,0.9)):
-            # outer
-            bgl.glLineWidth(4)
-            bgl.glBegin(bgl.GL_LINES)
-            bgl.glColor3f(0.1,0.1,0.1)
-            bgl.glVertex2i(start[0], start[1])
-            bgl.glVertex2i(end[0], end[1])
-            bgl.glEnd()
-            
-            # inner
-            bgl.glLineWidth(2)
-            bgl.glBegin(bgl.GL_LINES)
-            bgl.glColor3f(color[0], color[1], color[2])
-            bgl.glVertex2i(start[0], start[1])
-            bgl.glVertex2i(end[0], end[1])
-            bgl.glEnd()
-            
-
-        # draw triangle
-        # filled
-        bgl.glEnable(bgl.GL_BLEND)
-        bgl.glBegin(bgl.GL_POLYGON)
-        bgl.glColor4f(0.8,0.5,0.5, 0.2)
-        for x, y in (a_2d, b_2d, c_2d):
-            bgl.glVertex2i(x, y)
-        bgl.glEnd()
-        bgl.glDisable(bgl.GL_BLEND)
-                
-        bgl.glEnable(bgl.GL_LINE_SMOOTH)
-        bgl.glHint(bgl.GL_POLYGON_SMOOTH_HINT, bgl.GL_NICEST)
-        
-        # outer
-        bgl.glLineWidth(3)
-        bgl.glBegin(bgl.GL_LINE_LOOP)
-        bgl.glColor3f(0.1,0.1,0.1)
-        for x, y in (a_2d, b_2d, c_2d):
-            bgl.glVertex2i(x, y)
-        bgl.glEnd()
-        # inner
-        bgl.glLineWidth(1)
-        bgl.glBegin(bgl.GL_LINE_LOOP)
-        bgl.glColor3f(0.9,0.9,0.9)
-        for x, y in (a_2d, b_2d, c_2d):
-            bgl.glVertex2i(x, y)
-        bgl.glEnd()
-
-        bgl.glDisable(bgl.GL_LINE_SMOOTH)
-
-        # abc-points/letters
-        # black background
-        for x, y in (a_2d, b_2d, c_2d):
-            draw_point(x, y, 20, (0,0,0))
-
-        # white background
-        for x, y in (a_2d, b_2d, c_2d):
-            draw_point(x, y, 18, (1,1,1))
-
-        #draw_point(a_2d[0], a_2d[1], 4, (0.9, 0.1, 0.1))
-        draw_letter(a_2d[0], a_2d[1], 'A')
-
-        # draw_point(b_2d[0], b_2d[1], 4, (0.1, 0.9, 0.1))
-        draw_letter(b_2d[0], b_2d[1], 'B')
-        
-        # draw_point(c_2d[0], c_2d[1], 4, (0.3, 0.3, 0.9))
-        draw_letter(c_2d[0], c_2d[1], 'C')
-
-        # normal-line
-        normal_start_3d = (a_3d + b_3d + c_3d)/3
-        normal_end_3d = normal_start_3d + (c_3d - a_3d).cross(c_3d - b_3d) # /1.5 # scale normal
-        
-        normal_start_2d = tuple(map(ceil, view3d_utils.location_3d_to_region_2d(region, rv3d, normal_start_3d )))
-        normal_end_2d = tuple(map(ceil, view3d_utils.location_3d_to_region_2d(region, rv3d, normal_end_3d )))
-        
-        draw_line(normal_start_2d, normal_end_2d)
-        
-        # restore opengl defaults
-        bgl.glPointSize(1)
-        bgl.glLineWidth(1)
-        bgl.glColor4f(0.0, 0.0, 0.0, 1.0)
-
 
     def modal(self, context, event):
         context.area.tag_redraw()
@@ -737,13 +713,49 @@ class OBJECT_OT_oa_show_snap_point(bpy.types.Operator):
     def invoke(self, context, event):
         if context.area.type == 'VIEW_3D':
             context.window_manager.modal_handler_add(self)
-
-            self._handle = bpy.types.SpaceView3D.draw_handler_add(self.draw_callback_abc, (context,), 'WINDOW', 'POST_PIXEL')
-
+            
+            self._handle = bpy.types.SpaceView3D.draw_handler_add(draw_callback_abc, (self, context,), 'WINDOW', 'POST_PIXEL')
+            
             self.sp_obj = get_sp_obj(context.object)
             self.snap_points = self.sp_obj.OASnapPoints.snap_points
             self.index = self.sp_obj.OASnapPoints.snap_points_index
+            
+            return {'RUNNING_MODAL'}
+        
+        else:
+            self.report({'WARNING'}, "View3D not found, cannot run operator")
+            return {'CANCELLED'}
 
+class OBJECT_OT_oa_show_snap_point_from_base(bpy.types.Operator):
+    bl_description = bl_label = "Show Snap Point"
+    bl_idname = "oa.show_snap_point_from_base"
+    bl_options = {'INTERNAL'}
+    
+    group_index = IntProperty(default=0)
+    sp_index = IntProperty(default=0)
+    
+    def modal(self, context, event):
+        context.area.tag_redraw()
+        
+        if event.type in ALLOWED_NAVIGATION:
+            return {'PASS_THROUGH'}
+        
+        elif event.type in {'RIGHTMOUSE', 'ESC', 'LEFTMOUSE'}:
+            bpy.types.SpaceView3D.draw_handler_remove(self._handle, 'WINDOW')
+            return {'FINISHED'}
+        
+        return {'RUNNING_MODAL'}
+    
+    def invoke(self, context, event):
+        if context.area.type == 'VIEW_3D':
+            context.window_manager.modal_handler_add(self)
+            
+            self._handle = bpy.types.SpaceView3D.draw_handler_add(draw_callback_abc, (self, context,), 'WINDOW', 'POST_PIXEL')
+            base_id = convert_base_id_to_array(context.object.users_group[self.group_index])
+            self.sp_obj = get_sp_obj_from_base_id(base_id)
+            self.snap_points = self.sp_obj.OASnapPoints.snap_points
+            self.index = self.sp_index
+            
             return {'RUNNING_MODAL'}
 
         else:
@@ -776,8 +788,10 @@ def register():
     bpy.utils.register_class(OBJECT_OT_oa_ConstructAbc)
     bpy.utils.register_class(OBJECT_OT_oa_switch_ab)
     bpy.utils.register_class(OBJECT_OT_oa_show_snap_point)
+    bpy.utils.register_class(OBJECT_OT_oa_show_snap_point_from_base)
 
 def unregister():
+    bpy.utils.unregister_class(OBJECT_OT_oa_show_snap_point_from_base)
     bpy.utils.unregister_class(OBJECT_OT_oa_remove_snap_point)
     bpy.utils.unregister_class(OBJECT_OT_oa_move_snap_point_down)
     bpy.utils.unregister_class(OBJECT_OT_oa_move_snap_point_up)

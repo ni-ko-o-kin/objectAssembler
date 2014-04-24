@@ -167,5 +167,18 @@ def get_sp_obj(obj):
                 return obj_in_group
     return sp_obj
 
-def get_oa_and_sp_obj(obj):
-    pass # necessary?
+def get_sp_obj_from_base_id(base):
+    for group in bpy.data.groups:
+        if group.OAGroup.oa_type == 'BASE':
+            if tuple(group.OAGroup.oa_id) == base:
+                for obj in group.objects:
+                    if obj.type == 'MESH' and obj.OASnapPoints.marked:
+                        return obj
+
+def convert_base_id_to_array(group):
+    params = group.OAGroup
+    # base_id: from '(0, 1, 2)' to ['0', '1', '2']
+    base_id = params.base_id.replace('(','').replace(')','').replace(' ','').split(',')
+    # base_id: convert to (0,1,2)
+    base_id = tuple(map(int, base_id))
+    return base_id

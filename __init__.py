@@ -14,7 +14,7 @@ bl_info = {
 
 if "bpy" in locals():
     import imp
-    # imp.reload(common)
+    imp.reload(common)
     # imp.reload(debug)
 
     imp.reload(editor_properties)
@@ -35,7 +35,7 @@ else:
                          uilists as editor_uilists,
                          operators as editor_operators,
                          panels as editor_panels)
-    # from . import object_editor, ui, menu, mode, add, mode_title, align, common, debug
+    # from . import object_editor, ui, menu, mode, add, mode_title, align
 
 import bpy
 
