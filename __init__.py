@@ -37,6 +37,8 @@ else:
                          panels as editor_panels)
     from .common import (common as common_common,
                          debug as common_debug)
+    from .ui import (properties as ui_properties,
+                     )
     # from . import object_editor, ui, menu, mode, add, mode_title, align
 
 import bpy
@@ -47,6 +49,7 @@ def register():
     editor_operators.register()
     editor_panels.register()
 
+    ui_properties.register()
     # object_editor.register()
     # ui.register()
     # mode.register()
@@ -58,6 +61,7 @@ def unregister():
     # mode.unregister()
     # ui.unregister()
     # object_editor.unregister()
+    ui_properties.unregister()
 
     editor_panels.unregister()
     editor_operators.unregister()
