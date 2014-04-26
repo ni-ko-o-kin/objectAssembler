@@ -80,6 +80,9 @@ class OATagKey(PropertyGroup):
     name = StringProperty(default="")
     values = CollectionProperty(type=OATagValue)
 
+class OAEditorSettings(PropertyGroup):
+    tags = CollectionProperty(type=OATagKey)
+
 ################
 # Register
 ################
@@ -93,18 +96,20 @@ def register():
 
     bpy.utils.register_class(OATagValue)
     bpy.utils.register_class(OATagKey)
+    bpy.utils.register_class(OAEditorSettings)
 
     bpy.types.Group.OAGroup = PointerProperty(type=OAGroup)
     bpy.types.Object.OASnapPoints = PointerProperty(type=OASnapPoints)
-    bpy.types.Scene.OATags = CollectionProperty(type=OATagKey)
+    bpy.types.Scene.OAEditorSettings = PointerProperty(type=OAEditorSettings)
     bpy.types.Scene.OAErrors = CollectionProperty(type=OAError)
 
 def unregister():
     del bpy.types.Scene.OAErrors
-    del bpy.types.Scene.OATags
+    del bpy.types.Scene.OAEditorSettings
     del bpy.types.Object.OASnapPoints
     del bpy.types.Group.OAGroup
 
+    bpy.utils.unregister_class(OAEditorSettings)
     bpy.utils.unregister_class(OATagKey)
     bpy.utils.unregister_class(OATagValue)
 

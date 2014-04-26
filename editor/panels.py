@@ -7,14 +7,14 @@ class OBJECT_PT_oa_editor_tags(bpy.types.Panel):
     bl_label = "Tags"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
-    bl_category = "Object Assembler"
+    bl_category = "OA-Editor"
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
         sce = context.scene
         layout = self.layout
-        tags = sce.OATags
-
+        tags = context.scene.OAEditorSettings.tags
+        
         # add key
         layout.operator("oa.editor_add_tag_key", text="Add Tag", icon='ZOOMIN')
         
@@ -48,7 +48,7 @@ class OBJECT_PT_oa_editor_error_checking(bpy.types.Panel):
     bl_label = "Error Checking"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
-    bl_category = "Object Assembler"
+    bl_category = "OA-Editor"
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
@@ -65,7 +65,7 @@ class OBJECT_PT_oa_editor_oa_group(bpy.types.Panel):
     bl_label = "Model"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
-    bl_category = "Object Assembler"
+    bl_category = "OA-Editor"
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
@@ -132,9 +132,9 @@ class OBJECT_PT_oa_editor_oa_group(bpy.types.Panel):
                     row = box.row()
                     subrow = row.row(align=True).split(percentage=0.5, align=True)
                     try:
-                        subrow.prop_search(tag, "key", context.scene, "OATags", text="")
+                        subrow.prop_search(tag, "key", context.scene.OAEditorSettings, "tags", text="")
                         if tag.key != "":
-                            subrow.prop_search(tag, "value", context.scene.OATags[tag.key], "values", text="")
+                            subrow.prop_search(tag, "value", context.scene.OAEditorSettings.tags[tag.key], "values", text="")
                         else:
                             subrow.label("")
         

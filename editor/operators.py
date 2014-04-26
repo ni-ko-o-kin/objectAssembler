@@ -105,7 +105,7 @@ class OBJECT_OT_oa_editor_add_tag_value(bpy.types.Operator):
     key_index = IntProperty(default=0, min=0)
 
     def invoke(self, context, event):
-        tags = context.scene.OATags
+        tags = context.scene.OAEditorSettings.tags
         tags[self.key_index].values.add()
         tags[self.key_index].values[-1].name = "Item"
         return {'FINISHED'}
@@ -116,7 +116,7 @@ class OBJECT_OT_oa_editor_add_tag_key(bpy.types.Operator):
     bl_options = {'INTERNAL'}
 
     def invoke(self, context, event):
-        tags = context.scene.OATags
+        tags = context.scene.OAEditorSettings.tags
         tags.add()
         tags[-1].name = "Tag"
         return {'FINISHED'}
@@ -130,6 +130,7 @@ class OBJECT_OT_oa_editor_remove_tag_value(bpy.types.Operator):
     value_index = IntProperty(default=0, min=0)
 
     def invoke(self, context, event):
+        tags = context.scene.OAEditorSettings.tags
         tags = context.scene.OATags
         tags[self.key_index].values.remove(self.value_index)
         return {'FINISHED'}
@@ -142,7 +143,7 @@ class OBJECT_OT_oa_editor_remove_tag_key(bpy.types.Operator):
     key_index = IntProperty(default=0, min=0)
 
     def invoke(self, context, event):
-        tags = context.scene.OATags
+        tags = context.scene.OAEditorSettings.tags
         tags.remove(self.key_index)
         return {'FINISHED'}
 
