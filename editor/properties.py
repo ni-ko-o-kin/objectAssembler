@@ -82,7 +82,7 @@ class OATagKey(PropertyGroup):
 
 class OAEditorSettings(PropertyGroup):
     tags = CollectionProperty(type=OATagKey)
-    icon_size = IntProperty(default=40, min=0)
+    icon_size = IntProperty(default=40, min=0, subtype='PIXEL')
 
 ################
 # Register
