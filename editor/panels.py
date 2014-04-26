@@ -3,8 +3,8 @@ import bpy
 from ..common import get_sp_obj, get_sp_obj_from_base_id, convert_base_id_to_array
 
 
-class OBJECT_PT_oa_editor_tags(bpy.types.Panel):
-    bl_label = "Tags"
+class OBJECT_PT_oa_editor_settings(bpy.types.Panel):
+    bl_label = "Settings"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
     bl_category = "OA-Editor"
@@ -13,7 +13,14 @@ class OBJECT_PT_oa_editor_tags(bpy.types.Panel):
     def draw(self, context):
         sce = context.scene
         layout = self.layout
-        tags = context.scene.OAEditorSettings.tags
+        settings = context.scene.OAEditorSettings
+        tags = settings.tags
+
+        # icon size
+        layout.prop(settings, "icon_size", text="Icon Size")
+
+        # tags
+        layout.label("Tags:")
         
         # add key
         layout.operator("oa.editor_add_tag_key", text="Add Tag", icon='ZOOMIN')
@@ -215,11 +222,11 @@ class OBJECT_PT_oa_editor_oa_group(bpy.types.Panel):
 # Register
 ################
 def register():
-    bpy.utils.register_class(OBJECT_PT_oa_editor_tags)
+    bpy.utils.register_class(OBJECT_PT_oa_editor_settings)
     bpy.utils.register_class(OBJECT_PT_oa_editor_oa_group)
     bpy.utils.register_class(OBJECT_PT_oa_editor_error_checking)
 
 def unregister():
     bpy.utils.unregister_class(OBJECT_PT_oa_editor_error_checking)
     bpy.utils.unregister_class(OBJECT_PT_oa_editor_oa_group)
-    bpy.utils.unregister_class(OBJECT_PT_oa_editor_tags)
+    bpy.utils.unregister_class(OBJECT_PT_oa_editor_settings)
