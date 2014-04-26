@@ -23,7 +23,7 @@ class OBJECT_OT_oa_editor_collect_models(bpy.types.Operator):
         errors = context.scene.OAErrors
         errors.clear()
         for oa_type, oa_groups in oa_types.items():
-            if not oa_groups: continue 
+            if not oa_groups: continue
             e = errors.add()
             e.text = oa_type
             for oa_group in oa_groups:
