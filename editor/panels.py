@@ -1,6 +1,6 @@
 import bpy
 
-from ..common import get_sp_obj, get_sp_obj_from_base_id, convert_base_id_to_array
+from ..common.common import get_sp_obj, get_sp_obj_from_base_id, convert_base_id_to_array
 
 
 class OBJECT_PT_oa_editor_settings(bpy.types.Panel):

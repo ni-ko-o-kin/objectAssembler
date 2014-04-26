@@ -1,12 +1,9 @@
 from math import pi
 
 import bpy
-from bpy.props import StringProperty, IntVectorProperty, BoolProperty, CollectionProperty, FloatProperty, IntProperty, EnumProperty
-from bpy.app.handlers import persistent
+from bpy.props import (StringProperty, IntVectorProperty, BoolProperty, CollectionProperty,
+                       FloatProperty, IntProperty, EnumProperty)
 
-from .debug import line
-
-DEBUG = False
 
 class OAValidGroupsItem(bpy.types.PropertyGroup):
     group_id = IntVectorProperty(name="", default=(0,0,0), size=3, min=0)
@@ -81,7 +78,7 @@ class OASettings(bpy.types.PropertyGroup):
         else:
             print("  Error: No valid OA-Group found")
 
-    oa_file = bpy.props.StringProperty(
+    oa_file = StringProperty(
         name = "",
         default = "", 
         
@@ -122,97 +119,13 @@ class OASettings(bpy.types.PropertyGroup):
         default="medium",
         )
 
-
-class OAPanel(bpy.types.Panel):
-    bl_label = "Object Assembler"
-    bl_idname = "OBJECT_PT_OA"
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'TOOLS'
-    bl_category = "Object Assembler"
-    bl_options = {'DEFAULT_CLOSED'}
-    #bl_context = "scene"
-
-    def draw(self, context):
-        settings = context.scene.OASettings
-        layout = self.layout
-
-        layout.operator("oa.enteroamode")
-        #layout.operator("script.reload")
-
-        layout.label("OA-File:")
-        layout.prop(settings, 'oa_file')
-
-        # for i in settings.valid_groups:
-        #     row = layout.row()
-        #     row.label(text=str(list(i.group_id)))
-        #     row.label(text=i.quality)
-        #     row.label(text=str(i.last_active_snap_point))
-
-        # layout.prop(settings, 'more_objects')
-        # layout.prop(settings, 'shift')
-
-        layout.label("Defaults:")
-        box = layout.box()
-
-        row = box.row()
-        row.label("Rotation Angle")
-        row.prop(settings, 'rotation_angle', text="")
-
-        row = box.row()
-        row.label("Quality")
-        row.prop(settings, 'quality', text="")
-
-        layout.label("Menu Options:")
-        box = layout.box()
-
-        row = box.row()
-        row.label("Columns")
-        row.prop(settings, 'menu_columns', text="")
-
-        row = box.row()
-        row.label("Icon Display Size")
-        row.prop(settings, 'menu_icon_display_size', text="")
-
-        row = box.row()
-        row.label("Icon Size")
-        row.prop(settings, 'menu_icon_size', text="")
-
-################
-### Handlers ###
-
-@persistent
-def force_reload_of_oa_file(dummy):
-    for s in bpy.data.scenes:
-        s.OASettings['file_valid'] = False
-
-
-################
-### Register ###
-
 def register():
-    # PropertyGroups
     bpy.utils.register_class(OAValidGroupsItem)
     bpy.utils.register_class(OASettings)
     bpy.types.Scene.OASettings = bpy.props.PointerProperty(type=OASettings)
-    
-    # all other classes
-    bpy.utils.register_class(OAPanel)
-    
-    # handlers
-    bpy.app.handlers.load_post.append(force_reload_of_oa_file)
 
 def unregister():
-    # handlers
-    bpy.app.handlers.load_post.remove(force_reload_of_oa_file)
-
-    # all other classes
-    bpy.utils.unregister_class(OAPanel)
-
-    # PropertyGroups
-    bpy.utils.unregister_class(OASettings)
     del bpy.types.Scene.OASettings
+    bpy.utils.unregister_class(OASettings)
     bpy.utils.unregister_class(OAValidGroupsItem)
-
-if __name__ == "__main__":
-    register()
-
+    
