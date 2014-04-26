@@ -26,16 +26,16 @@ class OBJECT_OT_oa_editor_error_checking_same_tags(bpy.types.Operator):
         for group in set(groups):
             tags = []
             for tag in group.OAGroup.tags:
-                tags.append(tag.key)
-                if tags.count(tag.key) > 1:
+                tags.append((tag.key, tag.value))
+                if tags.count((tag.key, tag.value)) > 1:
                     if not errors:
                         item = errors.add()
                         item.text = "Tag found multiple times Error:"
-                    multiple.append((group.name, tag.key))
+                    multiple.append((group.name, tag))
         multiple = set(multiple)
         for group, tag in multiple:
             item = errors.add()
-            item.text = "    " + tag + " in " + group
+            item.text = "    " + tag.key + "/" + tag.value + " in " + group
 
         if not errors:
             item = errors.add()
