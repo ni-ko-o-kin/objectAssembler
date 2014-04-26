@@ -81,6 +81,7 @@ class OATagKey(PropertyGroup):
     values = CollectionProperty(type=OATagValue)
 
 class OAEditorSettings(PropertyGroup):
+    marked = BoolProperty(default=False)
     tags = CollectionProperty(type=OATagKey)
     icon_size = IntProperty(default=40, min=0, subtype='PIXEL')
 

@@ -7,6 +7,31 @@ from bpy.props import IntProperty, CollectionProperty, StringProperty
 
 from ..common import toggle, double_toggle, select_and_active, move_origin_to_geometry, get_oa_group, get_sp_obj, ALLOWED_NAVIGATION, get_sp_obj_from_base_id, convert_base_id_to_array
 
+class OBJECT_OT_oa_editor_collect_models(bpy.types.Operator):
+    bl_description = bl_label = "Collect Models"
+    bl_idname = "oa.editor_collect_models"
+    bl_options = {'INTERNAL'}
+    
+    def invoke(self, context, event):
+        # collect oa_groups
+        oa_types = {'BASE': [], 'SIMP': [], 'IMPL': []}
+        for group in bpy.data.groups:
+            if group.OAGroup.oa_type != 'NONE' and group.objects:
+                oa_types[group.OAGroup.oa_type].append(group.name)
+
+        # print them
+        errors = context.scene.OAErrors
+        errors.clear()
+        for oa_type, oa_groups in oa_types.items():
+            if not oa_groups: continue 
+            e = errors.add()
+            e.text = oa_type
+            for oa_group in oa_groups:
+                e = errors.add()
+                e.text = "    " + oa_group
+                
+        return {'FINISHED'}
+
 class OBJECT_OT_oa_editor_error_checking_same_tags(bpy.types.Operator):
     bl_description = bl_label = "Check Model for same Tags"
     bl_idname = "oa.editor_error_checking_same_tags"
@@ -768,6 +793,7 @@ class OBJECT_OT_oa_show_snap_point_from_base(bpy.types.Operator):
 # Register
 ################
 def register():
+    bpy.utils.register_class(OBJECT_OT_oa_editor_collect_models)
     bpy.utils.register_class(OBJECT_OT_oa_editor_error_checking_same_tags)
     bpy.utils.register_class(OBJECT_OT_oa_editor_add_model_tag)
     bpy.utils.register_class(OBJECT_OT_oa_editor_remove_model_tag)

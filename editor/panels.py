@@ -13,9 +13,19 @@ class OBJECT_PT_oa_editor_settings(bpy.types.Panel):
     def draw(self, context):
         sce = context.scene
         layout = self.layout
-        settings = context.scene.OAEditorSettings
-        tags = settings.tags
+        settings_scenes = [scene for scene in bpy.data.scenes if scene.OAEditorSettings.marked]
 
+        # settings-scene
+        row = layout.row()
+        row.prop(context.scene.OAEditorSettings, "marked", text="Use this Scene for Settings")
+        if not context.scene.OAEditorSettings.marked and settings_scenes:
+            row.enabled = False
+        if settings_scenes:
+            settings = settings_scenes[0].OAEditorSettings
+            tags = settings.tags
+        else:
+            return
+        
         # icon size
         layout.prop(settings, "icon_size", text="Icon Size")
 
@@ -64,6 +74,7 @@ class OBJECT_PT_oa_editor_error_checking(bpy.types.Panel):
         errors = context.scene.OAErrors
         
         layout.operator("oa.editor_error_checking_same_tags")
+        layout.operator("oa.editor_collect_models")
 
         for error in errors:
             layout.label(error.text)
@@ -139,11 +150,13 @@ class OBJECT_PT_oa_editor_oa_group(bpy.types.Panel):
                     row = box.row()
                     subrow = row.row(align=True).split(percentage=0.5, align=True)
                     try:
-                        subrow.prop_search(tag, "key", context.scene.OAEditorSettings, "tags", text="")
-                        if tag.key != "":
-                            subrow.prop_search(tag, "value", context.scene.OAEditorSettings.tags[tag.key], "values", text="")
-                        else:
-                            subrow.label("")
+                        settings_scenes = [scene for scene in bpy.data.scenes if scene.OAEditorSettings.marked]
+                        if settings_scenes:
+                            subrow.prop_search(tag, "key", settings_scenes[0].OAEditorSettings, "tags", text="")
+                            if tag.key != "":
+                                subrow.prop_search(tag, "value", settings_scenes[0].OAEditorSettings.tags[tag.key], "values", text="")
+                            else:
+                                subrow.label("")
         
                     except:
                         subrow.label("")
