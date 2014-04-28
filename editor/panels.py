@@ -143,28 +143,6 @@ class OBJECT_PT_oa_editor_oa_group(bpy.types.Panel):
                 row.operator("oa.set_outside", text="Set Outside").group_index = group_index
                 row.label("", icon='FILE_TICK' if params.valid_horizontal else 'PANEL_CLOSE')
 
-            # tags
-            if params.oa_type in ('IMPL', 'SIMP'):
-                box.operator("oa.editor_add_model_tag", text="Assign Tag", icon='ZOOMIN').group_index = group_index
-                for tag_index, tag in enumerate(params.tags):
-                    row = box.row()
-                    subrow = row.row(align=True).split(percentage=0.5, align=True)
-                    try:
-                        settings_scenes = [scene for scene in bpy.data.scenes if scene.OAEditorSettings.marked]
-                        if settings_scenes:
-                            subrow.prop_search(tag, "key", settings_scenes[0].OAEditorSettings, "tags", text="")
-                            if tag.key != "":
-                                subrow.prop_search(tag, "value", settings_scenes[0].OAEditorSettings.tags[tag.key], "values", text="")
-                            else:
-                                subrow.label("")
-        
-                    except:
-                        subrow.label("")
-                    subrow = row.row()
-                    op = subrow.operator("oa.editor_remove_model_tag", text="", icon='ZOOMOUT')
-                    op.group_index = group_index
-                    op.model_tag_index = tag_index
-
             # snap points
             if params.oa_type == 'IMPL':
                 base_id = convert_base_id_to_array(group)
@@ -224,11 +202,29 @@ class OBJECT_PT_oa_editor_oa_group(bpy.types.Panel):
                     row.operator("oa.switch_ab")
                     
                 elif sp_obj is None:
-                    # params = [group.OAGroup for group in obj.users_group if group.OAGroup.oa_type in ('BASE', 'SIMP')]
-                    # if params:
                     box.operator("oa.add_sp_obj").group_index = group_index
-                    # else:
-                    #     layout.label("No Simple or Base OA-Group found")
+
+            # tags
+            if params.oa_type in ('IMPL', 'SIMP'):
+                box.operator("oa.editor_add_model_tag", text="Assign Tag", icon='ZOOMIN').group_index = group_index
+                for tag_index, tag in enumerate(params.tags):
+                    row = box.row()
+                    subrow = row.row(align=True).split(percentage=0.5, align=True)
+                    try:
+                        settings_scenes = [scene for scene in bpy.data.scenes if scene.OAEditorSettings.marked]
+                        if settings_scenes:
+                            subrow.prop_search(tag, "key", settings_scenes[0].OAEditorSettings, "tags", text="")
+                            if tag.key != "":
+                                subrow.prop_search(tag, "value", settings_scenes[0].OAEditorSettings.tags[tag.key], "values", text="")
+                            else:
+                                subrow.label("")
+        
+                    except:
+                        subrow.label("")
+                    subrow = row.row()
+                    op = subrow.operator("oa.editor_remove_model_tag", text="", icon='ZOOMOUT')
+                    op.group_index = group_index
+                    op.model_tag_index = tag_index
 
 
 ################

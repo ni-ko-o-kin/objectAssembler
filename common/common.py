@@ -1,3 +1,5 @@
+from itertools import chain, combinations
+
 import bpy, bgl
 from bpy_extras import view3d_utils
 from mathutils import Vector
@@ -182,3 +184,13 @@ def convert_base_id_to_array(group):
     # base_id: convert to (0,1,2)
     base_id = tuple(map(int, base_id))
     return base_id
+
+def powerset(iterable):
+    "powerset([1,2,3]) --> () (1,) (2,) (3,) (1,2) (1,3) (2,3) (1,2,3)"
+    s = list(iterable)
+    return chain.from_iterable(combinations(s, r) for r in range(len(s)+1))
+
+def powerset_without_empty_set(iterable):
+    "powerset([1,2,3]) --> (1,) (2,) (3,) (1,2) (1,3) (2,3) (1,2,3)"
+    s = list(iterable)
+    return chain.from_iterable(combinations(s, r) for r in range(1, len(s)+1))
