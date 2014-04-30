@@ -194,3 +194,67 @@ def powerset_without_empty_set(iterable):
     "powerset([1,2,3]) --> (1,) (2,) (3,) (1,2) (1,3) (2,3) (1,2,3)"
     s = list(iterable)
     return chain.from_iterable(combinations(s, r) for r in range(1, len(s)+1))
+
+def collect_models(groups, collect):
+    bases = collect.bases
+    impls = collect.impls
+    simps = collect.simps
+    
+    bases.clear()
+    impls.clear()
+    simps.clear()
+    
+    for group in groups:
+        if group.OAGroup.oa_type != 'NONE' and group.objects:
+            oa_group = group.OAGroup
+            oa_type = oa_group.oa_type
+            oa_id = tuple(oa_group.oa_id)
+
+            if oa_type == 'BASE':
+                if oa_id not in [tuple(base.oa_id) for base in bases]:
+                    new_base = bases.add()
+                    new_base.oa_id = oa_id
+                else:
+                    print("error: duplicate base found")
+
+            elif oa_type == 'SIMP':
+                if oa_id not in [tuple(simp.oa_id) for simp in simps]:
+                    new_simp = simps.add()
+                    new_simp.oa_id = oa_id
+
+                    new_set_of_tags = new_simp.tags.add()
+                    new_tags = new_set_of_tags.key_values
+
+                    for key, value in {tag.key: tag.value for tag in oa_group.tags}.items():
+                        new_tag = new_tags.add()
+                        new_tag.key = key
+                        new_tag.value = value
+                    # oa_groups['SIMP'].update({oa_id: [{tag.key: tag.value for tag in oa_group.tags}]})
+                    
+                else:
+                    pass
+                    # # add only new set of tags to existing simp-tags
+                    # new_tags = {tag.key: tag.value for tag in oa_group.tags}
+                    # old_tags = oa_groups['SIMP'][oa_id]
+                    # if new_tags in old_tags:
+                    #     print("error, duplicate set of tags")
+                    # else:
+                    #     old_tags.append(new_tags)
+
+            elif oa_type == 'IMPL':
+                pass
+                # base_id = convert_base_id_to_array(group)
+                # if base_id not in bases:
+                #     print("error, base_id not found")
+                # else:
+                #     if (oa_id, base_id) not in oa_groups['IMPL']:
+                #         # add impl with base_id and tags
+                #         oa_groups['IMPL'].update({(oa_id, base_id) : [{tag.key: tag.value for tag in oa_group.tags}]})
+                #     else:
+                #         # add only new tags to existing impl
+                #         new_tags = {tag.key: tag.value for tag in oa_group.tags}
+                #         old_tags = oa_groups['IMPL'][(oa_id, base_id)]
+                #         if new_tags in old_tags:
+                #             print("error, duplicate set of tags")
+                #         else:
+                #             old_tags.append(new_tags)

@@ -2,7 +2,7 @@ from math import pi
 
 import bpy
 from bpy.props import (StringProperty, IntVectorProperty, BoolProperty, CollectionProperty,
-                       FloatProperty, IntProperty, EnumProperty)
+                       FloatProperty, IntProperty, EnumProperty, PointerProperty)
 
 class OACollectKeyValue(bpy.types.PropertyGroup):
     key = StringProperty(default="")
@@ -17,7 +17,7 @@ class OACollectBase(bpy.types.PropertyGroup):
 class OACollectSimp(bpy.types.PropertyGroup):
     oa_id = IntVectorProperty(default=(0,0,0), size=3, min=0)
     tags = CollectionProperty(type=OACollectTag)
-
+    
 class OACollectImpl(bpy.types.PropertyGroup):
     oa_id = IntVectorProperty(default=(0,0,0), size=3, min=0)
     base_id = IntVectorProperty(default=(0,0,0), size=3, min=0)
@@ -36,7 +36,7 @@ class OACollectModels(bpy.types.PropertyGroup):
 
 class OASettings(bpy.types.PropertyGroup):
     oa_file = StringProperty(name = "", default = "", subtype = 'FILE_PATH')
-    models = CollectionProperty(type=OACollectModels)
+    models = PointerProperty(type=OACollectModels)
     # valid_groups = CollectionProperty(type=OAValidGroupsItem)
     valid_icon_file = BoolProperty(name="", default = False)
     icon_clicked = IntVectorProperty(name = "", default = (0,0,0))

@@ -14,16 +14,6 @@ class OBJECT_OT_oa_editor_collect_models(bpy.types.Operator):
     bl_options = {'INTERNAL'}
 
     def invoke(self, context, event):
-        def get_key_values(group_tags):
-            tags = [tag for tag in group_tags]
-            key_values = {tag.key: list() for tag in tags}
-            for tag in tags:
-                if tag.value in key_values[tag.key]:
-                    print("error: duplicate tag key-value-pair found")
-                else:
-                    key_values[tag.key].append(tag.value)
-            return key_values
-
         oa_groups = {'BASE': list(), 'SIMP': dict(), 'IMPL': dict()}
         
         bases = set(
@@ -35,9 +25,7 @@ class OBJECT_OT_oa_editor_collect_models(bpy.types.Operator):
                 oa_group = group.OAGroup
                 oa_type = oa_group.oa_type
                 oa_id = tuple(oa_group.oa_id)
-                if oa_type == 'IMPL':
-                    base_id = convert_base_id_to_array(group)
-                
+                                
                 if oa_type == 'BASE':
                     if oa_id not in oa_groups['BASE']:
                         oa_groups['BASE'].append(oa_id)
@@ -59,6 +47,8 @@ class OBJECT_OT_oa_editor_collect_models(bpy.types.Operator):
                             old_tags.append(new_tags)
 
                 elif oa_type == 'IMPL':
+                    base_id = convert_base_id_to_array(group)
+
                     if base_id not in bases:
                         print("error, base_id not found")
                     else:
