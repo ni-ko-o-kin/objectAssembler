@@ -4,6 +4,7 @@ from bpy.props import (IntProperty, StringProperty, FloatProperty, IntVectorProp
                        PointerProperty)
 from bpy.types import PropertyGroup
 
+from ..common.properties import OACollectModels
 
 class OAError(PropertyGroup):
     text = StringProperty(default="")
@@ -21,7 +22,7 @@ class OAGroup(PropertyGroup):
                            default="NONE", name="Type")
     
     oa_id = IntVectorProperty(name="Id", default=(0,0,0), size=3, min=0)
-    base_id = IntVectorProperty(default=(0,0,0), size=3, min=0)
+    base_id = IntVectorProperty(name="Base Id", default=(0,0,0), size=3, min=0)
     
     upside = FloatVectorProperty(default=(0,0,0))
     downside = FloatVectorProperty(default=(0,0,0))
@@ -64,6 +65,7 @@ class OAEditorSettings(PropertyGroup):
     marked = BoolProperty(default=False)
     tags = CollectionProperty(type=OATagKey)
     icon_size = IntProperty(default=40, min=0, subtype='PIXEL')
+    models = PointerProperty(type=OACollectModels)
 
 ################
 # Register

@@ -14,6 +14,7 @@ bl_info = {
 
 if "bpy" in locals():
     import imp
+    imp.reload(common_properties)
     imp.reload(common_common)
     imp.reload(common_debug)
 
@@ -38,7 +39,9 @@ else:
                          operators as editor_operators,
                          panels as editor_panels)
     from .common import (common as common_common,
-                         debug as common_debug)
+                         debug as common_debug,
+                         properties as common_properties,
+                         )
     from .ui import (properties as ui_properties,
                      panels as ui_panels,
                      operators as ui_operators,
@@ -48,6 +51,8 @@ else:
 import bpy
 
 def register():
+    common_properties.register()
+    
     editor_properties.register()
     editor_uilists.register()
     editor_operators.register()
@@ -75,3 +80,5 @@ def unregister():
     editor_operators.unregister()
     editor_uilists.unregister()
     editor_properties.unregister()
+
+    common_properties.unregister()

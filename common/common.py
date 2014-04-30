@@ -243,56 +243,35 @@ def collect_models(groups, collect):
 
             elif oa_type == 'IMPL':
                 base_id = tuple(oa_group.base_id)
-                print(base_id)
-                # print(base_id)
-                # if base_id not in all_bases:
-                #     print("error, impl_id not found")
-                #     continue
 
-                # impl = [impl for impl in impls if oa_id == tuple(impl.oa_id) and base_id == tuple(impl.base_id)]
-                # new_tags = {tag.key: tag.value for tag in oa_group.tags}
-
-                # print("impl:", impl)
-                # print("new tags:", new_tags)
+                if base_id not in all_bases:
+                    print("error, impl_id not found")
+                    continue
                 
+                impl = [impl for impl in impls if oa_id == tuple(impl.oa_id) and base_id == tuple(impl.base_id)]
+                new_tags = {tag.key: tag.value for tag in oa_group.tags}
 
-                # if not impl:
-                #     new_impl = impls.add()
-                #     new_impl.oa_id = oa_id
+                if not impl:
+                    new_impl = impls.add()
+                    new_impl.oa_id = oa_id
 
-                #     tags = new_impl.set_of_tags.add()
-                #     for key, value in new_tags.items():
-                #         new_tag = tags.tag.add()
-                #         new_tag.key = key
-                #         new_tag.value = value
+                    tags = new_impl.set_of_tags.add()
+                    for key, value in new_tags.items():
+                        new_tag = tags.tag.add()
+                        new_tag.key = key
+                        new_tag.value = value
                     
-                # else:
-                #     # add only new set of tags to existing impl-tags
-                #     impl = impl[0]
-                #     old_tags = [{tag.key:tag.value for tag in tags.tag} for tags in impl.set_of_tags]
+                else:
+                    # add only new set of tags to existing impl-tags
+                    impl = impl[0]
+                    old_tags = [{tag.key:tag.value for tag in tags.tag} for tags in impl.set_of_tags]
 
-                #     if new_tags in old_tags:
-                #         print("error, same set of tags found")
-                #     else:
-                #         tags = impl.set_of_tags.add()
-                #         for key, value in new_tags.items():
-                #             new_tag = tags.tag.add()
-                #             new_tag.key = key
-                #             new_tag.value = value
+                    if new_tags in old_tags:
+                        print("error, same set of tags found")
+                    else:
+                        tags = impl.set_of_tags.add()
+                        for key, value in new_tags.items():
+                            new_tag = tags.tag.add()
+                            new_tag.key = key
+                            new_tag.value = value
 
-
-                # base_id = tuple(group.OAGroup.base_id)
-                # if base_id not in bases:
-                #     print("error, base_id not found")
-                # else:
-                #     if (oa_id, base_id) not in oa_groups['IMPL']:
-                #         # add impl with base_id and tags
-                #         oa_groups['IMPL'].update({(oa_id, base_id) : [{tag.key: tag.value for tag in oa_group.tags}]})
-                #     else:
-                #         # add only new tags to existing impl
-                #         new_tags = {tag.key: tag.value for tag in oa_group.tags}
-                #         old_tags = oa_groups['IMPL'][(oa_id, base_id)]
-                #         if new_tags in old_tags:
-                #             print("error, duplicate set of tags")
-                #         else:
-                #             old_tags.append(new_tags)

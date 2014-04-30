@@ -6,7 +6,9 @@ from bpy_extras import view3d_utils
 from mathutils import Matrix, Vector, Euler
 from bpy.props import IntProperty, CollectionProperty, StringProperty
 
-from ..common.common import toggle, double_toggle, select_and_active, move_origin_to_geometry, get_oa_group, get_sp_obj, ALLOWED_NAVIGATION, get_sp_obj_from_base_id, powerset_without_empty_set
+from ..common.common import (toggle, double_toggle, select_and_active, move_origin_to_geometry,
+                             get_oa_group, get_sp_obj, ALLOWED_NAVIGATION, get_sp_obj_from_base_id,
+                             powerset_without_empty_set, collect_models)
 
 class OBJECT_OT_oa_editor_collect_models(bpy.types.Operator):
     bl_description = bl_label = "Collect Models"
@@ -14,91 +16,93 @@ class OBJECT_OT_oa_editor_collect_models(bpy.types.Operator):
     bl_options = {'INTERNAL'}
 
     def invoke(self, context, event):
-        oa_groups = {'BASE': list(), 'SIMP': dict(), 'IMPL': dict()}
+        collect_models(bpy.data.groups, context.scene.OAEditorSettings.models)
         
-        bases = set(
-            [tuple(group.OAGroup.oa_id) for group in bpy.data.groups if group.OAGroup.oa_type == 'BASE' and group.objects]
-            )
+        # oa_groups = {'BASE': list(), 'SIMP': dict(), 'IMPL': dict()}
+        
+        # bases = set(
+        #     [tuple(group.OAGroup.oa_id) for group in bpy.data.groups if group.OAGroup.oa_type == 'BASE' and group.objects]
+        #     )
                 
-        for group in bpy.data.groups:
-            if group.OAGroup.oa_type != 'NONE' and group.objects:
-                oa_group = group.OAGroup
-                oa_type = oa_group.oa_type
-                oa_id = tuple(oa_group.oa_id)
+        # for group in bpy.data.groups:
+        #     if group.OAGroup.oa_type != 'NONE' and group.objects:
+        #         oa_group = group.OAGroup
+        #         oa_type = oa_group.oa_type
+        #         oa_id = tuple(oa_group.oa_id)
                                 
-                if oa_type == 'BASE':
-                    if oa_id not in oa_groups['BASE']:
-                        oa_groups['BASE'].append(oa_id)
-                    else:
-                        print("error: duplicate base found")
+        #         if oa_type == 'BASE':
+        #             if oa_id not in oa_groups['BASE']:
+        #                 oa_groups['BASE'].append(oa_id)
+        #             else:
+        #                 print("error: duplicate base found")
 
-                elif oa_type == 'SIMP':
-                    if oa_id not in oa_groups['SIMP']:
-                        # add simp and tags
-                        oa_groups['SIMP'].update({oa_id: [{tag.key: tag.value for tag in oa_group.tags}]})
+        #         elif oa_type == 'SIMP':
+        #             if oa_id not in oa_groups['SIMP']:
+        #                 # add simp and tags
+        #                 oa_groups['SIMP'].update({oa_id: [{tag.key: tag.value for tag in oa_group.tags}]})
                         
-                    else:
-                        # add only new tags to existing simp
-                        new_tags = {tag.key: tag.value for tag in oa_group.tags}
-                        old_tags = oa_groups['SIMP'][oa_id]
-                        if new_tags in old_tags:
-                            print("error, duplicate set of tags")
-                        else:
-                            old_tags.append(new_tags)
+        #             else:
+        #                 # add only new tags to existing simp
+        #                 new_tags = {tag.key: tag.value for tag in oa_group.tags}
+        #                 old_tags = oa_groups['SIMP'][oa_id]
+        #                 if new_tags in old_tags:
+        #                     print("error, duplicate set of tags")
+        #                 else:
+        #                     old_tags.append(new_tags)
 
-                elif oa_type == 'IMPL':
-                    base_id = group.OAGroup.base_id
+        #         elif oa_type == 'IMPL':
+        #             base_id = group.OAGroup.base_id
 
-                    if base_id not in bases:
-                        print("error, base_id not found")
-                    else:
-                        if (oa_id, base_id) not in oa_groups['IMPL']:
-                            # add impl with base_id and tags
-                            oa_groups['IMPL'].update({(oa_id, base_id) : [{tag.key: tag.value for tag in oa_group.tags}]})
-                        else:
-                            # add only new tags to existing impl
-                            new_tags = {tag.key: tag.value for tag in oa_group.tags}
-                            old_tags = oa_groups['IMPL'][(oa_id, base_id)]
-                            if new_tags in old_tags:
-                                print("error, duplicate set of tags")
-                            else:
-                                old_tags.append(new_tags)
+        #             if base_id not in bases:
+        #                 print("error, base_id not found")
+        #             else:
+        #                 if (oa_id, base_id) not in oa_groups['IMPL']:
+        #                     # add impl with base_id and tags
+        #                     oa_groups['IMPL'].update({(oa_id, base_id) : [{tag.key: tag.value for tag in oa_group.tags}]})
+        #                 else:
+        #                     # add only new tags to existing impl
+        #                     new_tags = {tag.key: tag.value for tag in oa_group.tags}
+        #                     old_tags = oa_groups['IMPL'][(oa_id, base_id)]
+        #                     if new_tags in old_tags:
+        #                         print("error, duplicate set of tags")
+        #                     else:
+        #                         old_tags.append(new_tags)
 
-        # print them
-        errors = context.scene.OAErrors
-        errors.clear()
+        # # print them
+        # errors = context.scene.OAErrors
+        # errors.clear()
 
-        e = errors.add()
-        e.text = "Bases"
-        for b in oa_groups['BASE']:
-            e = errors.add()
-            e.text = "    id: " + str(b)
+        # e = errors.add()
+        # e.text = "Bases"
+        # for b in oa_groups['BASE']:
+        #     e = errors.add()
+        #     e.text = "    id: " + str(b)
     
-        e = errors.add()
-        e.text = "Implementations"
-        for k,v in oa_groups['IMPL'].items():
-            e = errors.add()
-            e.text = "    id: " + str(k[0]) + ", base: " + str(k[1])
-            for i in v:
-                e = errors.add()
-                e.text = "         |"
-                for n,m in i.items():
-                    e = errors.add()
-                    e.text = "        " + n + " : " + m
+        # e = errors.add()
+        # e.text = "Implementations"
+        # for k,v in oa_groups['IMPL'].items():
+        #     e = errors.add()
+        #     e.text = "    id: " + str(k[0]) + ", base: " + str(k[1])
+        #     for i in v:
+        #         e = errors.add()
+        #         e.text = "         |"
+        #         for n,m in i.items():
+        #             e = errors.add()
+        #             e.text = "        " + n + " : " + m
 
-        e = errors.add()
-        e.text = "Simple"
-        for k,v in oa_groups['SIMP'].items():
-            e = errors.add()
-            e.text = "    id: " + str(k)
-            for i in v:
-                e = errors.add()
-                e.text = "         |"
-                for n,m in i.items():
-                    e = errors.add()
-                    e.text = "        " + n + " : " + m
+        # e = errors.add()
+        # e.text = "Simple"
+        # for k,v in oa_groups['SIMP'].items():
+        #     e = errors.add()
+        #     e.text = "    id: " + str(k)
+        #     for i in v:
+        #         e = errors.add()
+        #         e.text = "         |"
+        #         for n,m in i.items():
+        #             e = errors.add()
+        #             e.text = "        " + n + " : " + m
 
-        print(oa_groups)
+        # print(oa_groups)
         return {'FINISHED'}
 
 class OBJECT_OT_oa_editor_error_checking_same_tags(bpy.types.Operator):
