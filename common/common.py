@@ -275,3 +275,21 @@ def collect_models(groups, collect):
                             new_tag.key = key
                             new_tag.value = value
 
+def get_collected_models_as_printables(models):
+    yield "Bases"
+    for base in models.bases:
+        yield " "*4 + str(tuple(base.oa_id))
+    yield "Simple"
+    for simp in models.simps:
+        yield " "*4 + str(tuple(simp.oa_id))
+        for tags in simp.set_of_tags:
+            yield " "*8 + "Set of Tags:"
+            for tag in tags.tag:
+                yield "            " + tag.key + " : " + tag.value
+    yield "Implementations"
+    for impl in models.impls:
+        yield " "*4 + str(tuple(impl.oa_id)) + "(" + str(tuple(impl.base_id)) + ")"
+        for tags in impl.set_of_tags:
+            yield " "*8 + "Set of Tags:"
+            for tag in tags.tag:
+                yield " "*12 + tag.key + " : " + tag.value

@@ -4,7 +4,7 @@ from ..common.debug import line
 
 DEBUG = True
 
-from ..common.common import collect_models
+from ..common.common import collect_models, get_collected_models_as_printables
 
 class OBJECT_OT_oa_load_models(bpy.types.Operator):
     bl_description = bl_label = "Load Models"
@@ -38,6 +38,10 @@ class OBJECT_OT_oa_load_models(bpy.types.Operator):
             if scene.OAEditorSettings.marked:
                 settings.menu_icon_size = scene.OAEditorSettings.icon_size
                 collect_models(data_to.groups, settings.models)
+                if DEBUG:
+                    print("\nCollected Models:")
+                    for i in get_collected_models_as_printables(settings.models):
+                        print(" "*4 + i)
 
         # for debugging:
         # if DEBUG:
