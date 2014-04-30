@@ -23,7 +23,9 @@ if "bpy" in locals():
     imp.reload(editor_panels)
 
     # imp.reload(object_editor)
-    # imp.reload(ui)
+    imp.reload(ui_properties)
+    imp.reload(ui_panels)
+    imp.reload(ui_operators)
     # imp.reload(menu)
     # imp.reload(mode)
     # imp.reload(add)
@@ -38,6 +40,8 @@ else:
     from .common import (common as common_common,
                          debug as common_debug)
     from .ui import (properties as ui_properties,
+                     panels as ui_panels,
+                     operators as ui_operators,
                      )
     # from . import object_editor, ui, menu, mode, add, mode_title, align
 
@@ -50,6 +54,8 @@ def register():
     editor_panels.register()
 
     ui_properties.register()
+    ui_panels.register()
+    ui_operators.register()
     # object_editor.register()
     # ui.register()
     # mode.register()
@@ -61,6 +67,8 @@ def unregister():
     # mode.unregister()
     # ui.unregister()
     # object_editor.unregister()
+    ui_operators.unregister()
+    ui_panels.unregister()
     ui_properties.unregister()
 
     editor_panels.unregister()

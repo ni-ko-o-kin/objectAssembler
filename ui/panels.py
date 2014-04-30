@@ -13,11 +13,11 @@ class OAPanel(bpy.types.Panel):
         settings = context.scene.OASettings
         layout = self.layout
 
-        layout.operator("oa.enteroamode")
-        #layout.operator("script.reload")
+        # layout.operator("oa.enteroamode")
 
         layout.label("OA-File:")
         layout.prop(settings, 'oa_file')
+        layout.operator("oa.load_models")
 
         # for i in settings.valid_groups:
         #     row = layout.row()
@@ -28,31 +28,27 @@ class OAPanel(bpy.types.Panel):
         # layout.prop(settings, 'more_objects')
         # layout.prop(settings, 'shift')
 
-        layout.label("Defaults:")
-        box = layout.box()
+        # layout.label("Defaults:")
+        # box = layout.box()
 
-        row = box.row()
-        row.label("Rotation Angle")
-        row.prop(settings, 'rotation_angle', text="")
+        # row = box.row()
+        # row.label("Rotation Angle")
+        # row.prop(settings, 'rotation_angle', text="")
 
-        row = box.row()
-        row.label("Quality")
-        row.prop(settings, 'quality', text="")
+        # row = box.row()
+        # row.label("Quality")
+        # row.prop(settings, 'quality', text="")
 
-        layout.label("Menu Options:")
-        box = layout.box()
+        # layout.label("Menu Options:")
+        # box = layout.box()
 
-        row = box.row()
-        row.label("Columns")
-        row.prop(settings, 'menu_columns', text="")
+        # row = box.row()
+        # row.label("Columns")
+        # row.prop(settings, 'menu_columns', text="")
 
-        row = box.row()
-        row.label("Icon Display Size")
-        row.prop(settings, 'menu_icon_display_size', text="")
-
-        row = box.row()
-        row.label("Icon Size")
-        row.prop(settings, 'menu_icon_size', text="")
+        # row = box.row()
+        # row.label("Icon Display Size")
+        # row.prop(settings, 'menu_icon_display_size', text="")
 
 def register():
     bpy.utils.register_class(OAPanel)

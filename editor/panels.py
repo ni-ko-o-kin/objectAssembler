@@ -145,7 +145,10 @@ class OBJECT_PT_oa_editor_oa_group(bpy.types.Panel):
 
             # snap points
             if params.oa_type == 'IMPL':
-                base_id = convert_base_id_to_array(group)
+                try:
+                    base_id = convert_base_id_to_array(group)
+                except:
+                    base_id = None
                 sp_obj = get_sp_obj_from_base_id(base_id)
                 if sp_obj:
                     snap_points = sp_obj.OASnapPoints.snap_points

@@ -35,7 +35,8 @@ class OBJECT_OT_oa_editor_collect_models(bpy.types.Operator):
                 oa_group = group.OAGroup
                 oa_type = oa_group.oa_type
                 oa_id = tuple(oa_group.oa_id)
-                base_id = convert_base_id_to_array(group)
+                if oa_type == 'IMPL':
+                    base_id = convert_base_id_to_array(group)
                 
                 if oa_type == 'BASE':
                     if oa_id not in oa_groups['BASE']:
@@ -107,6 +108,7 @@ class OBJECT_OT_oa_editor_collect_models(bpy.types.Operator):
                     e = errors.add()
                     e.text = "        " + n + " : " + m
 
+        print(oa_groups)
         return {'FINISHED'}
 
 class OBJECT_OT_oa_editor_error_checking_same_tags(bpy.types.Operator):
