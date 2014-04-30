@@ -1,6 +1,6 @@
 import bpy
 
-from ..common.common import get_sp_obj, get_sp_obj_from_base_id, str_base_id_to_tuple
+from ..common.common import get_sp_obj, get_sp_obj_from_base_id
 
 
 class OBJECT_PT_oa_editor_settings(bpy.types.Panel):
@@ -115,23 +115,12 @@ class OBJECT_PT_oa_editor_oa_group(bpy.types.Panel):
 
             # id
             if params.oa_type == 'IMPL':
-                try:
-                    row = box.row()
-                    row.prop(params, "base_id", text="")
-                    row = box.row()
-                    row.operator("oa.editor_apply_base_id_to_plain", text="", icon='FORWARD').group_index = group_index
-                    row.prop(params, "base_id_plain", text="")                    
-                except:
-                    pass
-                    # does not work, don't know why
-                    # errors = context.scene.OAErrors
-                    # errors.clear()
-                    # error = errors.add()
-                    # error.text = "Base ID not found in Group: " + str(group.name)
+                row = box.row()
+                row.prop(params, "base_id", text="Base Id")
     
             if params.oa_type != 'NONE':
                 row = box.row(align=True)
-                row.prop(params, "oa_id", text="")
+                row.prop(params, "oa_id", text="Id")
                 row.operator("oa.editor_next_unused_group_id", text="", icon='NEXT_KEYFRAME').group_index = group_index
                 row.operator("oa.editor_next_unused_model_id", text="", icon='FORWARD').group_index = group_index
 
@@ -149,11 +138,9 @@ class OBJECT_PT_oa_editor_oa_group(bpy.types.Panel):
 
             # snap points
             if params.oa_type == 'IMPL':
-                try:
-                    base_id = str_base_id_to_tuple(group.OAGroup.base_id)
-                except:
-                    base_id = None
+                base_id = group.OAGroup.base_id
                 sp_obj = get_sp_obj_from_base_id(base_id)
+
                 if sp_obj:
                     snap_points = sp_obj.OASnapPoints.snap_points
                     

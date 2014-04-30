@@ -177,12 +177,6 @@ def get_sp_obj_from_base_id(base):
                     if obj.type == 'MESH' and obj.OASnapPoints.marked:
                         return obj
 
-def str_base_id_to_tuple(str_base_id):
-    # base_id: from '(0, 1, 2)' to ['0', '1', '2']
-    str_base_id = str_base_id.replace('(','').replace(')','').replace(' ','').split(',')
-    # base_id: convert to (0,1,2)
-    return tuple(map(int, str_base_id))
-
 def powerset(iterable):
     "powerset([1,2,3]) --> () (1,) (2,) (3,) (1,2) (1,3) (2,3) (1,2,3)"
     s = list(iterable)
@@ -248,9 +242,8 @@ def collect_models(groups, collect):
                             new_tag.value = value
 
             elif oa_type == 'IMPL':
-                print(group.OAGroup.base_id)
-                print(oa_id, group.name)
-                # base_id = str_base_id_to_tuple(group.OAGroup.base_id)
+                base_id = tuple(oa_group.base_id)
+                print(base_id)
                 # print(base_id)
                 # if base_id not in all_bases:
                 #     print("error, impl_id not found")
@@ -288,7 +281,7 @@ def collect_models(groups, collect):
                 #             new_tag.value = value
 
 
-                # base_id = str_base_id_to_tuple(group.OAGroup.base_id)
+                # base_id = tuple(group.OAGroup.base_id)
                 # if base_id not in bases:
                 #     print("error, base_id not found")
                 # else:

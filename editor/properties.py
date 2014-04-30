@@ -4,8 +4,6 @@ from bpy.props import (IntProperty, StringProperty, FloatProperty, IntVectorProp
                        PointerProperty)
 from bpy.types import PropertyGroup
 
-from ..common.common import str_base_id_to_tuple
-
 
 class OAError(PropertyGroup):
     text = StringProperty(default="")
@@ -15,31 +13,15 @@ class OAModelTag(PropertyGroup):
     value = StringProperty()
 
 class OAGroup(PropertyGroup):
-    def get_base_ids(self, context):
-        ret = []
-        for group in bpy.data.groups:
-            params = group.OAGroup
-            if group.library == None and group.OAGroup.oa_type == 'BASE':
-                ret.append((
-                        str(tuple(params.oa_id)),
-                        str(tuple(params.oa_id)) + " " + group.name,
-                        ""
-                        ))
-        return ret
-
-    def base_id_to_base_id_plain(self, context):
-        self.base_id_plain = str_base_id_to_tuple(self.base_id)
-        
     oa_type = EnumProperty(items=[
             ("NONE", "None", "None", "icon", 0),
             ("SIMP", "Simple", "Simple", "icon", 1),
             ("BASE", "Base", "Base", "icon", 2),
             ("IMPL", "Implementation", "Implementation", "icon", 3)],
                            default="NONE", name="Type")
-
+    
     oa_id = IntVectorProperty(name="Id", default=(0,0,0), size=3, min=0)
-    base_id = EnumProperty(items=get_base_ids, name="Base", update=base_id_to_base_id_plain)
-    base_id_plain = IntVectorProperty(default=(0,0,0), size=3, min=0)
+    base_id = IntVectorProperty(default=(0,0,0), size=3, min=0)
     
     upside = FloatVectorProperty(default=(0,0,0))
     downside = FloatVectorProperty(default=(0,0,0))
