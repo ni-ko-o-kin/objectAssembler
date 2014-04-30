@@ -177,13 +177,11 @@ def get_sp_obj_from_base_id(base):
                     if obj.type == 'MESH' and obj.OASnapPoints.marked:
                         return obj
 
-def convert_base_id_to_array(group):
-    params = group.OAGroup
+def str_base_id_to_tuple(str_base_id):
     # base_id: from '(0, 1, 2)' to ['0', '1', '2']
-    base_id = params.base_id.replace('(','').replace(')','').replace(' ','').split(',')
+    str_base_id = str_base_id.replace('(','').replace(')','').replace(' ','').split(',')
     # base_id: convert to (0,1,2)
-    base_id = tuple(map(int, base_id))
-    return base_id
+    return tuple(map(int, str_base_id))
 
 def powerset(iterable):
     "powerset([1,2,3]) --> () (1,) (2,) (3,) (1,2) (1,3) (2,3) (1,2,3)"
@@ -203,6 +201,10 @@ def collect_models(groups, collect):
     bases.clear()
     impls.clear()
     simps.clear()
+
+    all_bases = set(
+        [tuple(group.OAGroup.oa_id) for group in groups if group.OAGroup.oa_type == 'BASE' and group.objects]
+        )
     
     for group in groups:
         if group.OAGroup.oa_type != 'NONE' and group.objects:
@@ -225,27 +227,68 @@ def collect_models(groups, collect):
                     new_simp = simps.add()
                     new_simp.oa_id = oa_id
 
-                    new_tags = new_simp.set_of_tags.add()
-
+                    tags = new_simp.set_of_tags.add()
                     for key, value in new_tags.items():
-                        new_tag = new_tags.tag.add()
+                        new_tag = tags.tag.add()
                         new_tag.key = key
                         new_tag.value = value
                     
                 else:
-                    simp = simp[0]
-                    simp.tags
                     # add only new set of tags to existing simp-tags
-                    
-                    old_tags = oa_groups['SIMP'][oa_id]
+                    simp = simp[0]
+                    old_tags = [{tag.key:tag.value for tag in tags.tag} for tags in simp.set_of_tags]
+
                     if new_tags in old_tags:
-                        print("error, duplicate set of tags")
+                        print("error, same set of tags found")
                     else:
-                        old_tags.append(new_tags)
+                        tags = simp.set_of_tags.add()
+                        for key, value in new_tags.items():
+                            new_tag = tags.tag.add()
+                            new_tag.key = key
+                            new_tag.value = value
 
             elif oa_type == 'IMPL':
-                pass
-                # base_id = convert_base_id_to_array(group)
+                print(group.OAGroup.base_id)
+                print(oa_id, group.name)
+                # base_id = str_base_id_to_tuple(group.OAGroup.base_id)
+                # print(base_id)
+                # if base_id not in all_bases:
+                #     print("error, impl_id not found")
+                #     continue
+
+                # impl = [impl for impl in impls if oa_id == tuple(impl.oa_id) and base_id == tuple(impl.base_id)]
+                # new_tags = {tag.key: tag.value for tag in oa_group.tags}
+
+                # print("impl:", impl)
+                # print("new tags:", new_tags)
+                
+
+                # if not impl:
+                #     new_impl = impls.add()
+                #     new_impl.oa_id = oa_id
+
+                #     tags = new_impl.set_of_tags.add()
+                #     for key, value in new_tags.items():
+                #         new_tag = tags.tag.add()
+                #         new_tag.key = key
+                #         new_tag.value = value
+                    
+                # else:
+                #     # add only new set of tags to existing impl-tags
+                #     impl = impl[0]
+                #     old_tags = [{tag.key:tag.value for tag in tags.tag} for tags in impl.set_of_tags]
+
+                #     if new_tags in old_tags:
+                #         print("error, same set of tags found")
+                #     else:
+                #         tags = impl.set_of_tags.add()
+                #         for key, value in new_tags.items():
+                #             new_tag = tags.tag.add()
+                #             new_tag.key = key
+                #             new_tag.value = value
+
+
+                # base_id = str_base_id_to_tuple(group.OAGroup.base_id)
                 # if base_id not in bases:
                 #     print("error, base_id not found")
                 # else:

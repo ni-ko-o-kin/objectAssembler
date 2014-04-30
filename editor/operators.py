@@ -6,7 +6,20 @@ from bpy_extras import view3d_utils
 from mathutils import Matrix, Vector, Euler
 from bpy.props import IntProperty, CollectionProperty, StringProperty
 
-from ..common.common import toggle, double_toggle, select_and_active, move_origin_to_geometry, get_oa_group, get_sp_obj, ALLOWED_NAVIGATION, get_sp_obj_from_base_id, convert_base_id_to_array, powerset_without_empty_set
+from ..common.common import toggle, double_toggle, select_and_active, move_origin_to_geometry, get_oa_group, get_sp_obj, ALLOWED_NAVIGATION, get_sp_obj_from_base_id, str_base_id_to_tuple, powerset_without_empty_set
+
+class OBJECT_OT_oa_editor_apply_base_id_to_plain(bpy.types.Operator):
+    bl_description = bl_label = "Apply base Id to plain base Id"
+    bl_idname = "oa.editor_apply_base_id_to_plain"
+    bl_options = {'INTERNAL'}
+
+    group_index = IntProperty(default=0)
+
+    def invoke(self, context, event):
+        oa_group = context.object.users_group[self.group_index].OAGroup
+        oa_group.base_id_plain = str_base_id_to_tuple(oa_group.base_id)
+        return {'FINISHED'}
+
 
 class OBJECT_OT_oa_editor_collect_models(bpy.types.Operator):
     bl_description = bl_label = "Collect Models"
@@ -47,7 +60,7 @@ class OBJECT_OT_oa_editor_collect_models(bpy.types.Operator):
                             old_tags.append(new_tags)
 
                 elif oa_type == 'IMPL':
-                    base_id = convert_base_id_to_array(group)
+                    base_id = str_base_id_to_tuple(group.OAGroup.base_id)
 
                     if base_id not in bases:
                         print("error, base_id not found")
@@ -846,7 +859,7 @@ class OBJECT_OT_oa_show_snap_point_from_base(bpy.types.Operator):
             context.window_manager.modal_handler_add(self)
             
             self._handle = bpy.types.SpaceView3D.draw_handler_add(draw_callback_abc, (self, context,), 'WINDOW', 'POST_PIXEL')
-            base_id = convert_base_id_to_array(context.object.users_group[self.group_index])
+            base_id = str_base_id_to_tuple(context.object.users_group[self.group_index].OAGroup.base_id)
             self.sp_obj = get_sp_obj_from_base_id(base_id)
             self.snap_points = self.sp_obj.OASnapPoints.snap_points
             self.index = self.sp_index
@@ -862,6 +875,7 @@ class OBJECT_OT_oa_show_snap_point_from_base(bpy.types.Operator):
 # Register
 ################
 def register():
+    bpy.utils.register_class(OBJECT_OT_oa_editor_apply_base_id_to_plain)
     bpy.utils.register_class(OBJECT_OT_oa_editor_collect_models)
     bpy.utils.register_class(OBJECT_OT_oa_editor_error_checking_same_tags)
     bpy.utils.register_class(OBJECT_OT_oa_editor_add_model_tag)
@@ -909,3 +923,4 @@ def unregister():
     bpy.utils.unregister_class(OBJECT_OT_oa_editor_remove_model_tag)
     bpy.utils.unregister_class(OBJECT_OT_oa_editor_add_model_tag)
     bpy.utils.unregister_class(OBJECT_OT_oa_editor_error_checking_same_tags)
+    bpy.utils.unregister_class(OBJECT_OT_oa_editor_apply_base_id_to_plain)

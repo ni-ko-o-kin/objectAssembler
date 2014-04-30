@@ -4,6 +4,8 @@ from bpy.props import (IntProperty, StringProperty, FloatProperty, IntVectorProp
                        PointerProperty)
 from bpy.types import PropertyGroup
 
+from ..common.common import str_base_id_to_tuple
+
 
 class OAError(PropertyGroup):
     text = StringProperty(default="")
@@ -25,6 +27,9 @@ class OAGroup(PropertyGroup):
                         ))
         return ret
 
+    def base_id_to_base_id_plain(self, context):
+        self.base_id_plain = str_base_id_to_tuple(self.base_id)
+        
     oa_type = EnumProperty(items=[
             ("NONE", "None", "None", "icon", 0),
             ("SIMP", "Simple", "Simple", "icon", 1),
@@ -32,9 +37,10 @@ class OAGroup(PropertyGroup):
             ("IMPL", "Implementation", "Implementation", "icon", 3)],
                            default="NONE", name="Type")
 
-    oa_id = IntVectorProperty(name="Id", default=(0,0,0), size=3, min=0) # former group_id
-    base_id = EnumProperty(items=get_base_ids, name="Base") # reference to a oa_id from an obj with oa_type==BASE
-
+    oa_id = IntVectorProperty(name="Id", default=(0,0,0), size=3, min=0)
+    base_id = EnumProperty(items=get_base_ids, name="Base", update=base_id_to_base_id_plain)
+    base_id_plain = IntVectorProperty(default=(0,0,0), size=3, min=0)
+    
     upside = FloatVectorProperty(default=(0,0,0))
     downside = FloatVectorProperty(default=(0,0,0))
     outside = FloatVectorProperty(default=(0,0,0))
@@ -49,14 +55,6 @@ class OAGroup(PropertyGroup):
     valid_vertical = BoolProperty(default=False)
 
     tags = CollectionProperty(type=OAModelTag)
-    #     items=[
-    #         ("low","Low", ""),
-    #         ("medium","Medium", ""),
-    #         ("high","High", "")
-    #         ],
-    #     default="medium",
-    #     name="Quality"
-    #     )
 
 class OASnapPointsItem(PropertyGroup):
     name = StringProperty(name="", default="")
