@@ -218,28 +218,30 @@ def collect_models(groups, collect):
                     print("error: duplicate base found")
 
             elif oa_type == 'SIMP':
-                if oa_id not in [tuple(simp.oa_id) for simp in simps]:
+                simp = [simp for simp in simps if oa_id == tuple(simp.oa_id)]
+                new_tags = {tag.key: tag.value for tag in oa_group.tags}
+
+                if not simp:
                     new_simp = simps.add()
                     new_simp.oa_id = oa_id
 
-                    new_set_of_tags = new_simp.tags.add()
-                    new_tags = new_set_of_tags.key_values
+                    new_tags = new_simp.set_of_tags.add()
 
-                    for key, value in {tag.key: tag.value for tag in oa_group.tags}.items():
-                        new_tag = new_tags.add()
+                    for key, value in new_tags.items():
+                        new_tag = new_tags.tag.add()
                         new_tag.key = key
                         new_tag.value = value
-                    # oa_groups['SIMP'].update({oa_id: [{tag.key: tag.value for tag in oa_group.tags}]})
                     
                 else:
-                    pass
-                    # # add only new set of tags to existing simp-tags
-                    # new_tags = {tag.key: tag.value for tag in oa_group.tags}
-                    # old_tags = oa_groups['SIMP'][oa_id]
-                    # if new_tags in old_tags:
-                    #     print("error, duplicate set of tags")
-                    # else:
-                    #     old_tags.append(new_tags)
+                    simp = simp[0]
+                    simp.tags
+                    # add only new set of tags to existing simp-tags
+                    
+                    old_tags = oa_groups['SIMP'][oa_id]
+                    if new_tags in old_tags:
+                        print("error, duplicate set of tags")
+                    else:
+                        old_tags.append(new_tags)
 
             elif oa_type == 'IMPL':
                 pass
