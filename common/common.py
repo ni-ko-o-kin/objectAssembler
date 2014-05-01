@@ -210,6 +210,7 @@ def collect_models(groups, collect):
                 if oa_id not in [tuple(base.oa_id) for base in bases]:
                     new_base = bases.add()
                     new_base.oa_id = oa_id
+                    new_base.group_name = group.name
                 else:
                     print("error: duplicate base found")
 
@@ -222,6 +223,7 @@ def collect_models(groups, collect):
                     new_simp.oa_id = oa_id
 
                     tags = new_simp.set_of_tags.add()
+                    tags.group_name = group.name
                     for key, value in new_tags.items():
                         new_tag = tags.tag.add()
                         new_tag.key = key
@@ -236,6 +238,7 @@ def collect_models(groups, collect):
                         print("error, same set of tags found")
                     else:
                         tags = simp.set_of_tags.add()
+                        tags.group_name = group.name
                         for key, value in new_tags.items():
                             new_tag = tags.tag.add()
                             new_tag.key = key
@@ -256,6 +259,7 @@ def collect_models(groups, collect):
                     new_impl.oa_id = oa_id
 
                     tags = new_impl.set_of_tags.add()
+                    tags.group_name = group.name
                     for key, value in new_tags.items():
                         new_tag = tags.tag.add()
                         new_tag.key = key
@@ -270,6 +274,7 @@ def collect_models(groups, collect):
                         print("error, same set of tags found")
                     else:
                         tags = impl.set_of_tags.add()
+                        tags.group_name = group.name
                         for key, value in new_tags.items():
                             new_tag = tags.tag.add()
                             new_tag.key = key
@@ -278,18 +283,18 @@ def collect_models(groups, collect):
 def get_collected_models_as_printables(models):
     yield "Bases"
     for base in models.bases:
-        yield " "*4 + str(tuple(base.oa_id))
+        yield " "*4 + str(tuple(base.oa_id)) + " - " + base.group_name
     yield "Simple"
     for simp in models.simps:
         yield " "*4 + str(tuple(simp.oa_id))
         for tags in simp.set_of_tags:
-            yield " "*8 + "Set of Tags:"
+            yield " "*8 + "Set of Tags ("+ tags.group_name +"):"
             for tag in tags.tag:
                 yield "            " + tag.key + " : " + tag.value
     yield "Implementations"
     for impl in models.impls:
         yield " "*4 + str(tuple(impl.oa_id)) + "(" + str(tuple(impl.base_id)) + ")"
         for tags in impl.set_of_tags:
-            yield " "*8 + "Set of Tags:"
+            yield " "*8 + "Set of Tags ("+ tags.group_name +"):"
             for tag in tags.tag:
                 yield " "*12 + tag.key + " : " + tag.value

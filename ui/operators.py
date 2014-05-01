@@ -43,23 +43,11 @@ class OBJECT_OT_oa_load_models(bpy.types.Operator):
                     for i in get_collected_models_as_printables(settings.models):
                         print(" "*4 + i)
 
-        # for debugging:
-        # if DEBUG:
-        #     for s in settings.models.simps:
-        #         print()
-        #         print(tuple(s.oa_id))
-        #         for t in s.tags:
-        #             print("tag-set")
-        #             for tag in t.key_values:
-        #                 print(tag.key, tag.value)
-                
-                # print([[(tag.key,tag.value) for tag in t.key_values] for t in s.tags])
-                    
-        # unlink after settings saved to current file 
+        # unlink scenes after settings saved to current file 
         for scene in data_to.scenes:
             bpy.data.scenes.remove(scene)
-
-
+        
+        
         
         # # add oa-valid groups from current file to valid_groups
         # for group in [g for g in bpy.data.groups if g.library and g.library.filepath == settings.oa_file]:

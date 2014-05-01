@@ -9,9 +9,11 @@ class OACollectTag(bpy.types.PropertyGroup):
 
 class OACollectTags(bpy.types.PropertyGroup):
     tag = CollectionProperty(type=OACollectTag)
+    group_name = StringProperty(default="")
 
 class OACollectBase(bpy.types.PropertyGroup):
     oa_id = IntVectorProperty(default=(0,0,0), size=3, min=0)
+    group_name = StringProperty(default="")
     
 class OACollectSimp(bpy.types.PropertyGroup):
     oa_id = IntVectorProperty(default=(0,0,0), size=3, min=0)
