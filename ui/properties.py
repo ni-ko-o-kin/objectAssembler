@@ -4,12 +4,13 @@ import bpy
 from bpy.props import (StringProperty, IntVectorProperty, BoolProperty, CollectionProperty,
                        FloatProperty, IntProperty, EnumProperty, PointerProperty)
 
-from ..common.properties import OACollectModels
+from ..common.properties import OACollectModels, OAIcons
 
 
 class OASettings(bpy.types.PropertyGroup):
     oa_file = StringProperty(name = "", default = "", subtype = 'FILE_PATH')
     models = PointerProperty(type=OACollectModels)
+    icons = CollectionProperty(type=OAIcons)
 
     valid_icon_file = BoolProperty(name="", default = False)
     icon_clicked = IntVectorProperty(name = "", default = (0,0,0))

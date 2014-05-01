@@ -12,12 +12,18 @@ class OAPanel(bpy.types.Panel):
     def draw(self, context):
         settings = context.scene.OASettings
         layout = self.layout
-
-        # layout.operator("oa.enteroamode")
-
+        
         layout.label("OA-File:")
         layout.prop(settings, 'oa_file')
-        layout.operator("oa.load_models")
+
+        if not settings.models.simps or settings.models.impls:
+            layout.operator("oa.load_models")
+
+        else:
+            layout.operator("oa.load_models", text="Reload Models")
+
+        layout.operator("oa.enteroamode")
+
 
         # for i in settings.valid_groups:
         #     row = layout.row()

@@ -1,9 +1,9 @@
 import bpy, bgl
 from .menu import construct_menu
 from .mode_title import mode_title
-from .common import ray, ALLOWED_NAVIGATION
+from ..common.common import ray, ALLOWED_NAVIGATION
 
-DEBUG = False
+DEBUG = True
 
 def mouse_hover_icon(icon, mouse):
     if mouse[0] <= icon[2] and mouse[0] >= icon[0]:
@@ -88,12 +88,15 @@ class OAEnterOAMode(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return (
-            context.scene.OASettings.file_valid and
-            context.mode == 'OBJECT' and
-            context.scene.OASettings.valid_icon_file
-            )
-
+        settings = context.scene.OASettings
+        
+        return settings.models.simps or settings.models.impls
+    # (
+            # context.scene.OASettings.file_valid and
+            # context.mode == 'OBJECT' and
+            # context.scene.OASettings.valid_icon_file
+            # )
+    
     def modal(self, context, event):
         context.area.tag_redraw()
         settings = bpy.context.scene.OASettings
@@ -162,8 +165,8 @@ class OAEnterOAMode(bpy.types.Operator):
         if context.area.type == 'VIEW_3D':
             settings = bpy.context.scene.OASettings
             
-            settings.more_objects = False
-            settings.shift = False
+            # settings.more_objects = False
+            # settings.shift = False
             
             context.window_manager.modal_handler_add(self)
             
@@ -173,7 +176,7 @@ class OAEnterOAMode(bpy.types.Operator):
             self.value_last = "" # last event.value
             self.icon_last = []  # icon on event.value==press
             
-            self.img = bpy.data.images["oa_icons.png", settings.oa_file]
+            # self.img = bpy.data.images["oa_icons.png", settings.oa_file]
             
             # generate menu-positions
             self.menu = construct_menu(settings)

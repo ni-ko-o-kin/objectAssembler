@@ -1,12 +1,13 @@
 import bpy
-from .common import get_tool_shelf_width
+from ..common.common import get_tool_shelf_width
 
 DEBUG = False
 
 def construct_menu(settings):
-    # groups = CollectionProperty
-    groups = settings.valid_groups
+    models = settings.models
 
+    
+    
     # as list  [(0,0,0), (0,1,0), (0,0,2), ...]
     groups = [tuple(i.group_id) for i in groups]
 
@@ -69,7 +70,7 @@ def construct_menu(settings):
     # calculate startvalues for y-positions
     pos_y = bpy.context.region.height - PAD_TOP - ICON_DISPLAY
     
-    # lilst of all icon-relevant information
+    # list of all icon-relevant information
     # [
     #  (
     #   [group_id],
@@ -77,10 +78,10 @@ def construct_menu(settings):
     #   ( -""- for frame)
     #   ( -""- for hover)
     #   (
-    #    (uv_x1y1),
-    #    (uv_x1y2),
-    #    (uv_x2y2),
-    #    (uv_x2y1)
+    #    (uv_x1,y1),
+    #    (uv_x1,y2),
+    #    (uv_x2,y2),
+    #    (uv_x2,y1)
     #   )
     #  ), next icon ...
     # ]

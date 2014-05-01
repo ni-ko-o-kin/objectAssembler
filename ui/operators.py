@@ -42,7 +42,7 @@ class OBJECT_OT_oa_load_models(bpy.types.Operator):
                     print("\nCollected Models:")
                     for i in get_collected_models_as_printables(settings.models):
                         print(" "*4 + i)
-
+            
         # unlink scenes after settings saved to current file 
         for scene in data_to.scenes:
             bpy.data.scenes.remove(scene)

@@ -1,6 +1,6 @@
 import bpy, bgl, blf
 
-from .common import get_tool_shelf_width
+from ..common.common import get_tool_shelf_width
 
 
 def mode_title(beginning=False, title="title"):
