@@ -1,3 +1,5 @@
+from random import randint
+
 import bpy, bgl
 from .menu import construct_menu
 from .mode_title import mode_title
@@ -5,7 +7,7 @@ from ..common.common import ray, ALLOWED_NAVIGATION
 
 DEBUG = True
 
-def mouse_hover_icon(icon, mouse):
+def mouse_over_icon(icon, mouse):
     if mouse[0] <= icon[2] and mouse[0] >= icon[0]:
         if mouse[1] <= icon[3] and mouse[1] >= icon[1]:
             return True
@@ -72,7 +74,7 @@ def draw_callback_mode(self, context):
     # draw hover effekt
     for icon in self.menu:
         # mouse hover icon
-        if mouse_hover_icon(icon[1], self.mouse):
+        if mouse_over_icon(icon[1], self.mouse):
             bgl.glColor3f(0.4, 0.4, 0.4)
             bgl.glLineWidth(2)
             rect_round_corners(icon[3][0], icon[3][1], icon[3][2], icon[3][3])
@@ -115,7 +117,7 @@ class OAEnterOAMode(bpy.types.Operator):
         elif event.type == 'LEFTMOUSE' and event.value == 'PRESS':
             for icon in self.menu:
                 # mouse hover icon
-                if mouse_hover_icon(icon[1], self.mouse):
+                if mouse_over_icon(icon[1], self.mouse):
                     self.value_last = 'PRESS'
                     self.icon_last = icon[0]
 
@@ -130,12 +132,31 @@ class OAEnterOAMode(bpy.types.Operator):
         elif event.type == 'LEFTMOUSE' and event.value == 'RELEASE':
             for icon in self.menu:
                 # mouse hover icon
-                if mouse_hover_icon(icon[1], self.mouse):
+                if mouse_over_icon(icon[1], self.mouse):
                     if self.value_last == 'PRESS':
                         # if mouse has been pressed over the same icon were it was released
                         if icon[0] == self.icon_last:
                             settings.icon_clicked =  icon[0]
-                            bpy.ops.oa.add('INVOKE_DEFAULT')
+                            model = [simp for simp in settings.models.simps if tuple(simp.oa_id) ==  tuple(settings.icon_clicked)]
+                            if not model:
+                                model = [impl for impl in settings.models.impls if  tuple(impl.oa_id) ==  tuple(settings.icon_clicked)]
+                                
+                            model = model[0]
+
+                            print("="*20)
+                            ts = model.set_of_tags[randint(0, len(model.set_of_tags) - 1)]
+                            print(tuple(model.oa_id), ts.group_name)
+                            for tag in ts.tag:
+                                print("    " + tag.key, tag.value)
+
+                            bpy.ops.object.empty_add()
+                            new_obj = bpy.context.scene.objects.active
+                            new_obj.location.x = randint(0,20) - 10
+                            new_obj.location.y = randint(0,20) - 10
+                            new_obj.dupli_type = 'GROUP'
+                            new_obj.dupli_group = [g for g in bpy.data.groups if g.name == ts.group_name and g.library and g.library.filepath == settings.oa_file][0]
+                            
+                            # bpy.ops.oa.add('INVOKE_DEFAULT')
                             
                             settings.shift = event.shift
                             settings.more_objects = False
@@ -176,7 +197,7 @@ class OAEnterOAMode(bpy.types.Operator):
             self.value_last = "" # last event.value
             self.icon_last = []  # icon on event.value==press
             
-            # self.img = bpy.data.images["oa_icons.png", settings.oa_file]
+            self.img = bpy.data.images["oa_icons.png", settings.oa_file]
             
             # generate menu-positions
             self.menu = construct_menu(settings)

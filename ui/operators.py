@@ -10,6 +10,10 @@ class OBJECT_OT_oa_load_models(bpy.types.Operator):
     bl_description = bl_label = "Load Models"
     bl_idname = "oa.load_models"
 
+    @classmethod
+    def poll(cls, context):
+        return context.scene.OASettings.oa_file != ''
+
     def invoke(self, context, event):
         settings = context.scene.OASettings
         
@@ -32,20 +36,23 @@ class OBJECT_OT_oa_load_models(bpy.types.Operator):
         with bpy.data.libraries.load(settings.oa_file, link=True) as (data_from, data_to):
             data_to.scenes = data_from.scenes
             data_to.groups = data_from.groups
+            data_to.images = [name for name in data_from.images if name == "oa_icons.png"]
 
         # store settings and collect models
         for scene in data_to.scenes:
             if scene.OAEditorSettings.marked:
                 settings.menu_icon_size = scene.OAEditorSettings.icon_size
+                settings.menu_icon_display_size = scene.OAEditorSettings.icon_display_size
                 collect_models(data_to.groups, settings.models)
                 if DEBUG:
                     print("\nCollected Models:")
                     for i in get_collected_models_as_printables(settings.models):
                         print(" "*4 + i)
-            
+          
         # unlink scenes after settings saved to current file 
         for scene in data_to.scenes:
             bpy.data.scenes.remove(scene)
+        
         
         
         

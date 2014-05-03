@@ -44,7 +44,6 @@ def construct_menu(settings):
                 impl_idx += 1
 
         # fill rest with remaining ids (either simps or impls)
-        print(structured)
         if simp_idx >= len(simps):
             while impl_idx < len(impls):
                 if impls[impl_idx].oa_id[1] != last_category:
@@ -59,9 +58,6 @@ def construct_menu(settings):
                     last_category = simps[simp_idx].oa_id[1]
                 structured[-1].append(tuple(simps[simp_idx].oa_id))
                 simp_idx += 1
-        print(structured)
-    
-                
     
     # # as list  [(0,0,0), (0,1,0), (0,0,2), ...]
     # groups = [tuple(i.group_id) for i in groups]

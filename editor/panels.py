@@ -28,6 +28,7 @@ class OBJECT_PT_oa_editor_settings(bpy.types.Panel):
         
         # icon size
         layout.prop(settings, "icon_size", text="Icon Size")
+        layout.prop(settings, "icon_display_size", text="Icon Display Size")
 
         # tags
         layout.label("Tags:")
