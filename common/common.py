@@ -196,6 +196,10 @@ def collect_models(groups, collect):
     impls.clear()
     simps.clear()
 
+    bases_unsorted = []
+    impls_unsorted = []
+    simps_unsorted = []
+
     all_bases = set(
         [tuple(group.OAGroup.oa_id) for group in groups if group.OAGroup.oa_type == 'BASE' and group.objects]
         )
@@ -207,78 +211,79 @@ def collect_models(groups, collect):
             oa_id = tuple(oa_group.oa_id)
 
             if oa_type == 'BASE':
-                if oa_id not in [tuple(base.oa_id) for base in bases]:
-                    new_base = bases.add()
-                    new_base.oa_id = oa_id
-                    new_base.group_name = group.name
+                if oa_id not in [base[0] for base in bases_unsorted]:
+                    bases_unsorted.append((oa_id, group.name))
                 else:
-                    print("error: duplicate base found")
+                    print("error: duplicate found (base, %s)" % group.name)
 
             elif oa_type == 'SIMP':
-                simp = [simp for simp in simps if oa_id == tuple(simp.oa_id)]
-                new_tags = {tag.key: tag.value for tag in oa_group.tags}
+                simp = [simp for simp in simps_unsorted if oa_id == simp[0]]
+                new_tags = {tag.key: tag.value for tag in oa_group.tags if tag.key!='' and tag.value!=''}
 
                 if not simp:
-                    new_simp = simps.add()
-                    new_simp.oa_id = oa_id
+                    simps_unsorted.append((oa_id, [(group.name, new_tags),]))
 
-                    tags = new_simp.set_of_tags.add()
-                    tags.group_name = group.name
-                    for key, value in new_tags.items():
-                        new_tag = tags.tag.add()
-                        new_tag.key = key
-                        new_tag.value = value
-                    
                 else:
-                    # add only new set of tags to existing simp-tags
                     simp = simp[0]
-                    old_tags = [{tag.key:tag.value for tag in tags.tag} for tags in simp.set_of_tags]
-
-                    if new_tags in old_tags:
-                        print("error, same set of tags found")
+                    # add only new set of tags to existing simp-tags
+                    if new_tags in [old_tags[1] for old_tags in simp[1]]:
+                        print("error, same set of tags found (simp, %s)" % group.name)
                     else:
-                        tags = simp.set_of_tags.add()
-                        tags.group_name = group.name
-                        for key, value in new_tags.items():
-                            new_tag = tags.tag.add()
-                            new_tag.key = key
-                            new_tag.value = value
+                        simp[1].append((group.name, new_tags))
 
             elif oa_type == 'IMPL':
                 base_id = tuple(oa_group.base_id)
+                impl = [impl for impl in impls_unsorted if oa_id == impl[0]]
+                new_tags = {tag.key: tag.value for tag in oa_group.tags if tag.key!='' and tag.value!=''}
 
                 if base_id not in all_bases:
-                    print("error, impl_id not found")
+                    print("error, base_id not found (impl, %s)" % str(base_id))
                     continue
                 
-                impl = [impl for impl in impls if oa_id == tuple(impl.oa_id) and base_id == tuple(impl.base_id)]
-                new_tags = {tag.key: tag.value for tag in oa_group.tags}
-
                 if not impl:
-                    new_impl = impls.add()
-                    new_impl.oa_id = oa_id
+                    impls_unsorted.append((oa_id, base_id, [(group.name, new_tags),]))
 
-                    tags = new_impl.set_of_tags.add()
-                    tags.group_name = group.name
-                    for key, value in new_tags.items():
-                        new_tag = tags.tag.add()
-                        new_tag.key = key
-                        new_tag.value = value
-                    
                 else:
-                    # add only new set of tags to existing impl-tags
                     impl = impl[0]
-                    old_tags = [{tag.key:tag.value for tag in tags.tag} for tags in impl.set_of_tags]
-
-                    if new_tags in old_tags:
-                        print("error, same set of tags found")
+                    if impl[1] != base_id:
+                        print("error, different base_id for same oa_id (impl, %s)" % group.name)
+                    # add only new set of tags to existing impl-tags
+                    if new_tags in [old_tags[1] for old_tags in impl[2]]:
+                        print("error, same set of tags found (impl, %s)" % group.name)
                     else:
-                        tags = impl.set_of_tags.add()
-                        tags.group_name = group.name
-                        for key, value in new_tags.items():
-                            new_tag = tags.tag.add()
-                            new_tag.key = key
-                            new_tag.value = value
+                        impl[2].append((group.name, new_tags))
+    
+    # insert sorted bases
+    for base in sorted(bases_unsorted, key=lambda item: item[0]):
+        new_base = bases.add()
+        new_base.oa_id = base[0]
+        new_base.group_name = base[1]
+
+    # insert sorted simps
+    for simp in sorted(simps_unsorted, key=lambda item: item[0]):
+        new_simp = simps.add()
+        new_simp.oa_id = simp[0]
+        
+        for tag_set in simp[1]:
+            tags = new_simp.set_of_tags.add()
+            tags.group_name = tag_set[0]
+            for key, value in tag_set[1].items():
+                new_tag = tags.tag.add()
+                new_tag.key = key
+                new_tag.value = value
+
+    # insert sorted impls
+    for impl in sorted(impls_unsorted, key=lambda item: item[0]):
+        new_impl = impls.add()
+        new_impl.oa_id = impl[0]
+        
+        for tag_set in impl[2]:
+            tags = new_impl.set_of_tags.add()
+            tags.group_name = tag_set[0]
+            for key, value in tag_set[1].items():
+                new_tag = tags.tag.add()
+                new_tag.key = key
+                new_tag.value = value
 
 def get_collected_models_as_printables(models):
     yield "Bases"
@@ -288,13 +293,13 @@ def get_collected_models_as_printables(models):
     for simp in models.simps:
         yield " "*4 + str(tuple(simp.oa_id))
         for tags in simp.set_of_tags:
-            yield " "*8 + "Set of Tags ("+ tags.group_name +"):"
+            yield " "*8 + "Variation ("+ tags.group_name +"):"
             for tag in tags.tag:
                 yield "            " + tag.key + " : " + tag.value
     yield "Implementations"
     for impl in models.impls:
         yield " "*4 + str(tuple(impl.oa_id)) + "(" + str(tuple(impl.base_id)) + ")"
         for tags in impl.set_of_tags:
-            yield " "*8 + "Set of Tags ("+ tags.group_name +"):"
+            yield " "*8 + "Variation ("+ tags.group_name +"):"
             for tag in tags.tag:
                 yield " "*12 + tag.key + " : " + tag.value
