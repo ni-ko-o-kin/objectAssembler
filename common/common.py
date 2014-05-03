@@ -187,10 +187,10 @@ def powerset_without_empty_set(iterable):
     s = list(iterable)
     return chain.from_iterable(combinations(s, r) for r in range(1, len(s)+1))
 
-def collect_models(groups, collect):
-    bases = collect.bases
-    impls = collect.impls
-    simps = collect.simps
+def collect_models(groups, models):
+    bases = models.bases
+    impls = models.impls
+    simps = models.simps
     
     bases.clear()
     impls.clear()
@@ -252,7 +252,15 @@ def collect_models(groups, collect):
                         print("error, same set of tags found (impl, %s)" % group.name)
                     else:
                         impl[2].append((group.name, new_tags))
-    
+
+    # check for duplicate ids in simp and impl
+    simp_ids = set([simp[0] for simp in simps_unsorted])
+    impl_ids = set([impl[0] for impl in impls_unsorted])
+    if not simp_ids.isdisjoint(impl_ids):
+        print("error, duplicate ids in impls and simps: " +\
+                  str(simp_ids.intersection(impl_ids)))
+        return
+
     # insert sorted bases
     for base in sorted(bases_unsorted, key=lambda item: item[0]):
         new_base = bases.add()

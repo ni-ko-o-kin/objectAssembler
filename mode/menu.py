@@ -5,45 +5,100 @@ DEBUG = False
 
 def construct_menu(settings):
     models = settings.models
-
+    simps = models.simps
+    impls = models.impls
     
+    simp_idx = 0
+    impl_idx = 0
+    structured = [[]]
+    if simps and impls:
+        min_simps_id = simps[0].oa_id
+        min_impls_id = impls[0].oa_id
+        first_category = min_simps_id[1] if min_simps_id[1] < min_impls_id[1] else min_impls_id[1]
+        last_category = first_category
+        
+        while simp_idx < len(simps) and impl_idx < len(impls):
+            if simps[simp_idx].oa_id[1] < impls[impl_idx].oa_id[1]:
+                lower_category = simps[simp_idx].oa_id[1]
+            else:
+                lower_category = impls[impl_idx].oa_id[1]
+                
+            if last_category != lower_category: 
+                structured.append([])
+                last_category = lower_category
+                
+            # check category
+            if simps[simp_idx].oa_id[1] == impls[impl_idx].oa_id[1]:
+                # check model
+                if simps[simp_idx].oa_id[2] < impls[impl_idx].oa_id[2]:
+                    structured[-1].append(tuple(simps[simp_idx].oa_id))
+                    simp_idx += 1
+                else:
+                    structured[-1].append(tuple(impls[impl_idx].oa_id))
+                    impl_idx += 1
+            elif simps[simp_idx].oa_id[1] < impls[impl_idx].oa_id[1]: 
+                structured[-1].append(tuple(simps[simp_idx].oa_id))
+                simp_idx += 1
+            else:
+                structured[-1].append(tuple(impls[impl_idx].oa_id))
+                impl_idx += 1
+
+        # fill rest with remaining ids (either simps or impls)
+        print(structured)
+        if simp_idx >= len(simps):
+            while impl_idx < len(impls):
+                if impls[impl_idx].oa_id[1] != last_category:
+                    structured.append([])
+                    last_category = impls[impl_idx].oa_id[1]
+                structured[-1].append(tuple(impls[impl_idx].oa_id))
+                impl_idx += 1
+        else:
+            while simp_idx < len(simps):
+                if simps[simp_idx].oa_id[1] != last_category:
+                    structured.append([])
+                    last_category = simps[simp_idx].oa_id[1]
+                structured[-1].append(tuple(simps[simp_idx].oa_id))
+                simp_idx += 1
+        print(structured)
     
-    # as list  [(0,0,0), (0,1,0), (0,0,2), ...]
-    groups = [tuple(i.group_id) for i in groups]
+                
+    
+    # # as list  [(0,0,0), (0,1,0), (0,0,2), ...]
+    # groups = [tuple(i.group_id) for i in groups]
 
-    # make groups unique (meaning: merge different qualities(low, high, ..) to one group_id)
-    groups = tuple(set(groups))
+    # # make groups unique (meaning: merge different qualities(low, high, ..) to one group_id)
+    # groups = tuple(set(groups))
 
-    # add all groups occuring
-    groupings = []
-    for i in groups:
-        if i[1] not in groupings:
-            groupings.append(i[1])
+    # # add all groups occuring
+    # groupings = []
+    # for i in groups:
+    #     if i[1] not in groupings:
+    #         groupings.append(i[1])
 
-    # sort groups asc
-    # [1,3,2] --> [1,2,3]
-    groupings.sort()
+    # # sort groups asc
+    # # [1,3,2] --> [1,2,3]
+    # groupings.sort()
 
-    # groups structured in groups as array with integers
-    # [
-    #  [
-    #   [0,0,0],[0,0,1]
-    #  ],
-    #   [0,1,0],[0,1,1],[0,1,2],[0,1,3]
-    #  ]
-    # ]
+    # # groups structured in groups as array with integers
+    # # [
+    # #  [
+    # #   [0,0,0],[0,0,1]
+    # #  ],
+    # #   [0,1,0],[0,1,1],[0,1,2],[0,1,3]
+    # #  ]
+    # # ]
 
-    structured = []
-    for i in groupings:
-        structured.append([])
-        for j in groups:
-            if j[1] == i:
-                structured[-1].append(j)
+    # structured = []
+    # for i in groupings:
+    #     structured.append([])
+    #     for j in groups:
+    #         if j[1] == i:
+    #             structured[-1].append(j)
 
-    # sort lists in groups asc
-    # [[0,0,1],[0,0,0]] --> [[0,0,0],[0,0,1]]
-    for i in structured:
-        i.sort()
+    # # sort lists in groups asc
+    # # [[0,0,1],[0,0,0]] --> [[0,0,0],[0,0,1]]
+    # for i in structured:
+    #     i.sort()
     
     ##########################
     ### generate geometry ###
