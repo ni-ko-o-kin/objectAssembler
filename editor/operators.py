@@ -187,7 +187,6 @@ class OBJECT_OT_oa_editor_remove_tag_value(bpy.types.Operator):
 
     def invoke(self, context, event):
         tags = context.scene.OAEditorSettings.tags
-        tags = context.scene.OATags
         tags[self.key_index].values.remove(self.value_index)
         return {'FINISHED'}
 

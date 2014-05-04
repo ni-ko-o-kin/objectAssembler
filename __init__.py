@@ -29,7 +29,7 @@ if "bpy" in locals():
     imp.reload(ui_operators)
 
     imp.reload(mode_operators)
-    # imp.reload(menu)
+    imp.reload(mode_menu)
     # imp.reload(mode)
     # imp.reload(add)
     # imp.reload(mode_title)
@@ -49,6 +49,7 @@ else:
                      operators as ui_operators,
                      )
     from .mode import (operators as mode_operators,
+                       menu as mode_menu
                        )
     import bpy
 
