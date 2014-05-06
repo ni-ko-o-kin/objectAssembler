@@ -1,13 +1,13 @@
 import bpy
 
-class OAPanel(bpy.types.Panel):
+class OALoad(bpy.types.Panel):
     bl_label = "Object Assembler"
-    bl_idname = "OBJECT_PT_OA"
+    bl_idname = "OBJECT_PT_OA_LOAD"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
     bl_category = "Object Assembler"
     bl_options = {'DEFAULT_CLOSED'}
-    #bl_context = "scene"
+
 
     def draw(self, context):
         settings = context.scene.OASettings
@@ -56,8 +56,25 @@ class OAPanel(bpy.types.Panel):
         # row.label("Icon Display Size")
         # row.prop(settings, 'menu_icon_display_size', text="")
 
+class OAModels(bpy.types.Panel):
+    bl_label = "Model Defaults"
+    bl_idname = "OBJECT_PT_OA_MODELS"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'TOOLS'
+    bl_category = "Object Assembler"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context):
+        settings = context.scene.OASettings
+        layout = self.layout
+
+
 def register():
-    bpy.utils.register_class(OAPanel)
+    bpy.utils.register_class(OALoad)
+    bpy.utils.register_class(OAModels)
 
 def unregister():
-    bpy.utils.unregister_class(OAPanel)
+    bpy.utils.unregister_class(OAModels)
+    bpy.utils.unregister_class(OALoad)
+
+
