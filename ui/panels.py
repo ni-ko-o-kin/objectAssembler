@@ -16,11 +16,10 @@ class OALoad(bpy.types.Panel):
         layout.label("OA-File:")
         layout.prop(settings, 'oa_file')
 
-        if not settings.models.simps or settings.models.impls:
-            layout.operator("oa.load_models")
-
-        else:
+        if settings.models.simps_impls:
             layout.operator("oa.load_models", text="Reload Models")
+        else:
+            layout.operator("oa.load_models")
 
         layout.operator("oa.enteroamode")
 

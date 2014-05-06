@@ -4,74 +4,23 @@ from ..common.common import get_tool_shelf_width
 DEBUG = False
 
 def construct_menu(settings):
-    models = settings.models
-    simps = models.simps
-    impls = models.impls
+    simps_impls = settings.models.simps_impls
 
-    # only continue if there is at least simps or impls, or both
-    if not simps and not impls:
+    if not simps_impls:
         return
 
-    simp_idx = 0
-    impl_idx = 0
     structured = [[]]
-
-    if simps:
-        min_simps_id = simps[0].oa_id
-    if impls:
-        min_impls_id = impls[0].oa_id
-
-    if not simps:
-        first_category = min_impls_id[1]
-    elif not impls:
-        first_category = min_simps_id[1]
-    elif simps and impls:    
-        first_category = min_simps_id[1] if min_simps_id[1] < min_impls_id[1] else min_impls_id[1]
+    first_category = simps_impls[0].oa_id[1]
     last_category = first_category
 
-    # only when simps and impls
-    while simp_idx < len(simps) and impl_idx < len(impls):
-        if simps[simp_idx].oa_id[1] < impls[impl_idx].oa_id[1]:
-            lower_category = simps[simp_idx].oa_id[1]
-        else:
-            lower_category = impls[impl_idx].oa_id[1]
-            
-        if last_category != lower_category: 
+    for model in simps_impls:
+        current_category = model.oa_id[1]
+        if last_category != current_category:
             structured.append([])
-            last_category = lower_category
-            
-        # check category
-        if simps[simp_idx].oa_id[1] == impls[impl_idx].oa_id[1]:
-            # check model
-            if simps[simp_idx].oa_id[2] < impls[impl_idx].oa_id[2]:
-                structured[-1].append(tuple(simps[simp_idx].oa_id))
-                simp_idx += 1
-            else:
-                structured[-1].append(tuple(impls[impl_idx].oa_id))
-                impl_idx += 1
-        elif simps[simp_idx].oa_id[1] < impls[impl_idx].oa_id[1]: 
-            structured[-1].append(tuple(simps[simp_idx].oa_id))
-            simp_idx += 1
-        else:
-            structured[-1].append(tuple(impls[impl_idx].oa_id))
-            impl_idx += 1
+            last_category = current_category
 
-    # fill rest with remaining ids (either simps or impls)
-    if simp_idx >= len(simps):
-        while impl_idx < len(impls):
-            if impls[impl_idx].oa_id[1] != last_category:
-                structured.append([])
-                last_category = impls[impl_idx].oa_id[1]
-            structured[-1].append(tuple(impls[impl_idx].oa_id))
-            impl_idx += 1
-    else:
-        while simp_idx < len(simps):
-            if simps[simp_idx].oa_id[1] != last_category:
-                structured.append([])
-                last_category = simps[simp_idx].oa_id[1]
-            structured[-1].append(tuple(simps[simp_idx].oa_id))
-            simp_idx += 1
-    
+        structured[-1].append(tuple(model.oa_id))
+
     ##########################
     ### generate geometry ###
     # oa_icons.png has to be square because of UV-precision
