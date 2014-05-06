@@ -25,42 +25,6 @@ class OBJECT_OT_oa_editor_collect_models(bpy.types.Operator):
             e = errors.add()
             e.text = i
         
-        
-        # # print them
-        # errors = context.scene.OAErrors
-        # errors.clear()
-
-        # e = errors.add()
-        # e.text = "Bases"
-        # for b in oa_groups['BASE']:
-        #     e = errors.add()
-        #     e.text = "    id: " + str(b)
-    
-        # e = errors.add()
-        # e.text = "Implementations"
-        # for k,v in oa_groups['IMPL'].items():
-        #     e = errors.add()
-        #     e.text = "    id: " + str(k[0]) + ", base: " + str(k[1])
-        #     for i in v:
-        #         e = errors.add()
-        #         e.text = "         |"
-        #         for n,m in i.items():
-        #             e = errors.add()
-        #             e.text = "        " + n + " : " + m
-
-        # e = errors.add()
-        # e.text = "Simple"
-        # for k,v in oa_groups['SIMP'].items():
-        #     e = errors.add()
-        #     e.text = "    id: " + str(k)
-        #     for i in v:
-        #         e = errors.add()
-        #         e.text = "         |"
-        #         for n,m in i.items():
-        #             e = errors.add()
-        #             e.text = "        " + n + " : " + m
-
-        # print(oa_groups)
         return {'FINISHED'}
 
 class OBJECT_OT_oa_editor_error_checking_same_tags(bpy.types.Operator):
