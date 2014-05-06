@@ -3,13 +3,19 @@ from bpy.props import (StringProperty, IntVectorProperty, BoolProperty, Collecti
                        FloatProperty, IntProperty, EnumProperty, PointerProperty)
 from bpy.types import PropertyGroup
 
+class OAModel(PropertyGroup):
+    marked = BoolProperty(default=False)
+    oa_id = IntVectorProperty(default=(0,0,0), size=3, min=0)
+    snap_point_obj = StringProperty(default="")
+    variation = StringProperty(default="")
+
 class OACollectTag(PropertyGroup):
     key = StringProperty(default="")
     value = StringProperty(default="")
 
 class OACollectVariation(PropertyGroup):
-    tags = CollectionProperty(type=OACollectTag)
     group_name = StringProperty(default="")
+    tags = CollectionProperty(type=OACollectTag)
     oa_type = EnumProperty(items=[
             ("SIMP", "Simple", "Simple", "", 0),
             ("IMPL", "Implementation", "Implementation", "", 1)],
@@ -29,6 +35,8 @@ class OACollectModels(PropertyGroup):
     simps_impls = CollectionProperty(type=OACollectSimpImpl)
 
 def register():
+    bpy.utils.register_class(OAModel)
+    bpy.types.Object.OAModel = bpy.props.PointerProperty(type=OAModel)
     bpy.utils.register_class(OACollectTag)
     bpy.utils.register_class(OACollectVariation)
     bpy.utils.register_class(OACollectSimpImpl)
@@ -41,4 +49,5 @@ def unregister():
     bpy.utils.unregister_class(OACollectSimpImpl)
     bpy.utils.unregister_class(OACollectVariation)
     bpy.utils.unregister_class(OACollectTag)
-
+    del bpy.types.Object.OAModel
+    bpy.utils.unregister_class(OAModel)

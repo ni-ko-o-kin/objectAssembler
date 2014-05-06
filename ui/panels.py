@@ -66,13 +66,57 @@ class OAModels(bpy.types.Panel):
     def draw(self, context):
         settings = context.scene.OASettings
         layout = self.layout
+        obj = context.object
 
+        if not (obj and obj.OAModel.marked):
+            return
 
+class OAModelSettings(bpy.types.Panel):
+    bl_label = "Model Settings"
+    bl_idname = "OBJECT_PT_OA_MODELS"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'TOOLS'
+    bl_category = "Object Assembler"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context):
+        settings = context.scene.OASettings
+        layout = self.layout
+        obj = context.object
+
+        if not (obj and obj.OAModel.marked):
+            return
+
+        model = next((model for model in settings.models.simps_impls if tuple(model.oa_id) == tuple(obj.OAModel.oa_id)), None)
+        if not model:
+            return
+        
+        for scene_tag_key in settings.tag_keys:
+            layout.label(scene_tag_key.name + ":")
+            values = set()
+            for var in model.variations:
+                for tag in var.tags:
+                    if tag.key == scene_tag_key.name:
+                        values.update({tag.value})
+            for value in values:
+                sub = layout.row()
+                op = sub.operator("oa.change_variation", text=value)
+                op.key = scene_tag_key.name
+                op.value = value
+                op.oa_id = model.oa_id
+                for t in obj.dupli_group['OAGroup']['tags']:
+                    if t['key'] == scene_tag_key.name and t['value'] == value:
+                        sub.enabled = False
+                
+
+       
 def register():
     bpy.utils.register_class(OALoad)
     bpy.utils.register_class(OAModels)
+    bpy.utils.register_class(OAModelSettings)
 
 def unregister():
+    bpy.utils.unregister_class(OAModelSettings)
     bpy.utils.unregister_class(OAModels)
     bpy.utils.unregister_class(OALoad)
 

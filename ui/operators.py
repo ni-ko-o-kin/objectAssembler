@@ -1,10 +1,44 @@
 import bpy
+from bpy.props import StringProperty, IntVectorProperty
 
 from ..common.debug import line
+from ..common.common import collect_models, get_collected_models_as_printables
 
 DEBUG = True
 
-from ..common.common import collect_models, get_collected_models_as_printables
+
+class OBJECT_OT_oa_change_variation(bpy.types.Operator):
+    bl_description = bl_label = "Change Variation"
+    bl_idname = "oa.change_variation"
+
+    oa_id = IntVectorProperty(default=(0,0,0), min=0)
+    key = StringProperty(default="")
+    value = StringProperty(default="")
+    
+    @classmethod
+    def poll(cls, context):
+        return context.object and context.object.OAModel.marked
+
+    def invoke(self, context, event):
+        obj = context.object
+        models = context.scene.OASettings.models.simps_impls
+
+        model = next((model for model in models if tuple(model.oa_id) == tuple(self.oa_id)), None)
+        if not model:
+            print("CANCELLED")
+            return {'CANCELLED'}
+        
+        print(tuple(self.oa_id), self.key, self.value)
+        for i in [[var.group_name for tag in var.tags if tag.key == self.key and tag.value == self.value] for var in model.variations]:
+            if len(i):
+                print(i[0])
+                obj.dupli_group = bpy.data.groups[i[0]]
+
+                ## todo proper implementation
+
+        
+        return {'FINISHED'}
+
 
 class OBJECT_OT_oa_load_models(bpy.types.Operator):
     bl_description = bl_label = "Load Models"
@@ -41,6 +75,9 @@ class OBJECT_OT_oa_load_models(bpy.types.Operator):
         # store settings and collect models
         for scene in data_to.scenes:
             if scene.OAEditorSettings.marked:
+                for tag in scene.OAEditorSettings.tags:
+                    new_key = settings.tag_keys.add()
+                    new_key.name = tag.name
                 settings.menu_icon_size = scene.OAEditorSettings.icon_size
                 settings.menu_icon_display_size = scene.OAEditorSettings.icon_display_size
                 collect_models(data_to.groups, settings.models)
@@ -107,7 +144,9 @@ class OBJECT_OT_oa_load_models(bpy.types.Operator):
 # Register
 ################
 def register():
+    bpy.utils.register_class(OBJECT_OT_oa_change_variation)
     bpy.utils.register_class(OBJECT_OT_oa_load_models)
 
 def unregister():
     bpy.utils.unregister_class(OBJECT_OT_oa_load_models)
+    bpy.utils.unregister_class(OBJECT_OT_oa_change_variation)

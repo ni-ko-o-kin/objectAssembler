@@ -6,10 +6,13 @@ from bpy.props import (StringProperty, IntVectorProperty, BoolProperty, Collecti
 
 from ..common.properties import OACollectModels
 
+class OATagKeys(bpy.types.PropertyGroup):
+    name = StringProperty(default="")
 
 class OASettings(bpy.types.PropertyGroup):
     oa_file = StringProperty(name = "", default = "", subtype = 'FILE_PATH')
     models = PointerProperty(type=OACollectModels)
+    tag_keys = CollectionProperty(type=OATagKeys)
 
     valid_icon_file = BoolProperty(name="", default = False)
     icon_clicked = IntVectorProperty(name = "", default = (0,0,0))
@@ -23,12 +26,13 @@ class OASettings(bpy.types.PropertyGroup):
     
 
 def register():
+    bpy.utils.register_class(OATagKeys)
     bpy.utils.register_class(OASettings)
     bpy.types.Scene.OASettings = bpy.props.PointerProperty(type=OASettings)
 
 def unregister():
     del bpy.types.Scene.OASettings
     bpy.utils.unregister_class(OASettings)
-
+    bpy.utils.unregister_class(OATagKeys)
 
     
