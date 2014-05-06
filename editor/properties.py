@@ -15,10 +15,10 @@ class OAModelTag(PropertyGroup):
 
 class OAGroup(PropertyGroup):
     oa_type = EnumProperty(items=[
-            ("NONE", "None", "None", "icon", 0),
-            ("SIMP", "Simple", "Simple", "icon", 1),
-            ("BASE", "Base", "Base", "icon", 2),
-            ("IMPL", "Implementation", "Implementation", "icon", 3)],
+            ("NONE", "None", "None", "", 0),
+            ("SIMP", "Simple", "Simple", "", 1),
+            ("BASE", "Base", "Base", "", 2),
+            ("IMPL", "Implementation", "Implementation", "", 3)],
                            default="NONE", name="Type")
     
     oa_id = IntVectorProperty(name="Id", default=(0,0,0), size=3, min=0)
