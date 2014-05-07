@@ -187,7 +187,7 @@ def powerset_without_empty_set(iterable):
     s = list(iterable)
     return chain.from_iterable(combinations(s, r) for r in range(1, len(s)+1))
 
-def collect_models(groups, models):
+def collect_models(groups, models, scene_tag_keys):
     bases = models.bases
     simps_impls = models.simps_impls
 
@@ -200,7 +200,7 @@ def collect_models(groups, models):
     all_bases = set(
         [tuple(group.OAGroup.oa_id) for group in groups if group.OAGroup.oa_type == 'BASE' and group.objects]
         )
-    
+
     for group in groups:
         if group.OAGroup.oa_type != 'NONE' and group.objects:
             oa_group = group.OAGroup
@@ -217,7 +217,9 @@ def collect_models(groups, models):
             elif oa_type in ('IMPL', 'SIMP'):
                 model = [model for model in simps_impls_unsorted if oa_id == model[0]]
                 new_tags = {tag.key: tag.value for tag in oa_group.tags if tag.key != '' and tag.value != ''}                
-                
+                for scene_tag_key in scene_tag_keys:
+                    if scene_tag_key not in new_tags:
+                        new_tags.update({scene_tag_key:'None'})
                 base_id = tuple(oa_group.base_id)
                 if oa_type == 'IMPL':
                     if base_id not in all_bases:

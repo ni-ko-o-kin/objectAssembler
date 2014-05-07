@@ -98,23 +98,36 @@ class OAModelSettings(bpy.types.Panel):
                     if tag.key == scene_tag_key.name:
                         values.update({tag.value})
             layout.label(scene_tag_key.name + ":")
-
+            
             col = layout.column(align=True)
+
+            # move None to end of list
+            if 'None' in values:
+                values = list(values)
+                values.remove('None')
+                values.append('None')
+
             for value in values:
                 row = col.row(align=True)
-                op = row.operator("oa.change_variation", text=value)
+                
+                chosen = False
+                var = next((var for var in model.variations if var.group_name == obj.dupli_group.name), None)
+                for t in var.tags:
+                    if t.key == scene_tag_key.name and t.value == value:
+                        chosen = True
+
+                if chosen:
+                    op = row.operator("oa.change_variation", text=value, icon='RADIOBUT_ON')
+                else:
+                    op = row.operator("oa.change_variation", text=value, icon='RADIOBUT_OFF')
                 op.key = scene_tag_key.name
                 op.value = value
                 op.oa_id = model.oa_id
-                for t in obj.dupli_group['OAGroup']['tags']:
-                    if t['key'] == scene_tag_key.name and t['value'] == value:
-                        row.enabled = False
-            row = col.row(align=True)
-            op = row.operator("oa.change_variation", text="None")
-            op.key = scene_tag_key.name
-            op.value = "None"
-            op.oa_id = model.oa_id
 
+
+                # for t in obj.dupli_group['OAGroup']['tags']:
+                #     if t['key'] == scene_tag_key.name and t['value'] == value:
+                #         row.enabled = False
        
 def register():
     bpy.utils.register_class(OALoad)

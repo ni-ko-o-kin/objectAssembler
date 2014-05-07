@@ -17,7 +17,7 @@ class OBJECT_OT_oa_editor_collect_models(bpy.types.Operator):
 
     def invoke(self, context, event):
         models = context.scene.OAEditorSettings.models
-        collect_models([group for group in bpy.data.groups if not group.library], models)
+        collect_models([group for group in bpy.data.groups if not group.library], models, [tag.name for tag in context.scene.OAEditorSettings.tags])
 
         errors = context.scene.OAErrors
         errors.clear()

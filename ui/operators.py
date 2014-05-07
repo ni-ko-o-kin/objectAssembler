@@ -25,9 +25,16 @@ class OBJECT_OT_oa_change_variation(bpy.types.Operator):
         best_var_group_name = None
         best_var_count = -1
         current_tags = {tag.key:tag.value for tag in current_variation.tags}
-        
+        for scene_tag_key in self.settings.tag_keys:
+            if scene_tag_key not in current_tags:
+                current_tags.update({scene_tag_key:'None'})
+
         for var in variations:
             tags = {tag.key:tag.value for tag in var.tags}
+            for scene_tag_key in self.settings.tag_keys:
+                if scene_tag_key not in current_tags:
+                    current_tags.update({scene_tag_key:'None'})
+
             if (self.key, self.value) in tags.items():
                 intersection_count = len(set(current_tags.items()) & set(tags.items()))
                 if  intersection_count > best_var_count:
@@ -39,6 +46,7 @@ class OBJECT_OT_oa_change_variation(bpy.types.Operator):
     def invoke(self, context, event):
         obj = context.object
         settings = context.scene.OASettings
+        self.settings = settings
         models = settings.models.simps_impls
         
         model = next((model for model in models if tuple(model.oa_id) == tuple(self.oa_id)), None)
@@ -96,7 +104,7 @@ class OBJECT_OT_oa_load_models(bpy.types.Operator):
                     new_key.name = tag.name
                 settings.menu_icon_size = scene.OAEditorSettings.icon_size
                 settings.menu_icon_display_size = scene.OAEditorSettings.icon_display_size
-                collect_models(data_to.groups, settings.models)
+                collect_models(data_to.groups, settings.models, [tag.name for tag in settings.tag_keys])
                 if DEBUG:
                     print("\nCollected Models:")
                     for i in get_collected_models_as_printables(settings.models):
