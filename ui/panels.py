@@ -98,15 +98,16 @@ class OAModelSettings(bpy.types.Panel):
                 for tag in var.tags:
                     if tag.key == scene_tag_key.name:
                         values.update({tag.value})
+            col = layout.column(align=True)
             for value in values:
-                sub = layout.row()
-                op = sub.operator("oa.change_variation", text=value)
+                row = col.row(align=True)
+                op = row.operator("oa.change_variation", text=value)
                 op.key = scene_tag_key.name
                 op.value = value
                 op.oa_id = model.oa_id
                 for t in obj.dupli_group['OAGroup']['tags']:
                     if t['key'] == scene_tag_key.name and t['value'] == value:
-                        sub.enabled = False
+                        row.enabled = False
                 
 
        

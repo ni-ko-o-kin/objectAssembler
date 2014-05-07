@@ -19,23 +19,38 @@ class OBJECT_OT_oa_change_variation(bpy.types.Operator):
     def poll(cls, context):
         return context.object and context.object.OAModel.marked
 
+    def get_best_match(self, variations, current_variation):
+        if not variations or not current_variation: return
+        
+        best_var_group_name = None
+        best_var_count = -1
+        current_tags = {tag.key:tag.value for tag in current_variation.tags}
+
+        for var in variations:
+            tags = {tag.key:tag.value for tag in var.tags}
+            if (self.key, self.value) in tags.items():
+                intersection_count = len(set(current_tags.items()) & set(tags.items()))
+                if  intersection_count > best_var_count:
+                    best_var_count = intersection_count
+                    best_var_group_name = var.group_name
+
+        return best_var_group_name
+
     def invoke(self, context, event):
         obj = context.object
-        models = context.scene.OASettings.models.simps_impls
-
+        settings = context.scene.OASettings
+        models = settings.models.simps_impls
+        
         model = next((model for model in models if tuple(model.oa_id) == tuple(self.oa_id)), None)
         if not model:
-            print("CANCELLED")
             return {'CANCELLED'}
         
-        print(tuple(self.oa_id), self.key, self.value)
-        for i in [[var.group_name for tag in var.tags if tag.key == self.key and tag.value == self.value] for var in model.variations]:
-            if len(i):
-                print(i[0])
-                obj.dupli_group = bpy.data.groups[i[0]]
+        best_match = self.get_best_match(
+            model.variations,
+            next((var for var in model.variations if var.group_name == obj.dupli_group.name), None)
+            )
 
-                ## todo proper implementation
-
+        obj.dupli_group = bpy.data.groups.get(best_match, settings.oa_file)
         
         return {'FINISHED'}
 
@@ -75,6 +90,7 @@ class OBJECT_OT_oa_load_models(bpy.types.Operator):
         # store settings and collect models
         for scene in data_to.scenes:
             if scene.OAEditorSettings.marked:
+                settings.tag_keys.clear()
                 for tag in scene.OAEditorSettings.tags:
                     new_key = settings.tag_keys.add()
                     new_key.name = tag.name
