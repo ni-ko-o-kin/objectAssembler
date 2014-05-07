@@ -137,22 +137,15 @@ class OAEnterOAMode(bpy.types.Operator):
                         # if mouse has been pressed over the same icon were it was released
                         if icon[0] == self.icon_last:
                             settings.icon_clicked =  icon[0]
-                            model = [model for model in settings.models.simps_impls if tuple(model.oa_id) ==  tuple(settings.icon_clicked)][0]
+                            model = next((model for model in settings.models.simps_impls if tuple(model.oa_id) ==  tuple(settings.icon_clicked)), None)
+                            variation = next((var for var in model.variations if var.default), None)
                             
-                            print("="*20)
-                            print(tuple(model.oa_id))
-                            # ts = model.set_of_tags[randint(0, len(model.set_of_tags) - 1)]
-                            # print(tuple(model.oa_id), ts.group_name)
-                            # for tag in ts.tag:
-                            #     print("    " + tag.key, tag.value)
-
-                            # bpy.ops.object.empty_add()
-                            # new_obj = bpy.context.scene.objects.active
-                            # new_obj.location.x = randint(0,20) - 10
-                            # new_obj.location.y = randint(0,20) - 10
-                            # new_obj.dupli_type = 'GROUP'
-                            # new_obj.dupli_group = [g for g in bpy.data.groups if g.name == ts.group_name and g.library and g.library.filepath == settings.oa_file][0]
-                            
+                            bpy.ops.object.empty_add()
+                            new_obj = context.scene.objects.active
+                            new_obj.location = context.scene.cursor_location.copy()
+                            new_obj.dupli_type = 'GROUP'
+                            new_obj.dupli_group = bpy.data.groups.get(variation.group_name, settings.oa_file)
+                            new_obj.OAModel.marked = True
                             # bpy.ops.oa.add('INVOKE_DEFAULT')
                             
                             settings.shift = event.shift

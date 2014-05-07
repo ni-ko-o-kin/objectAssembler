@@ -92,12 +92,12 @@ class OAModelSettings(bpy.types.Panel):
             return
         
         for scene_tag_key in settings.tag_keys:
-            layout.label(scene_tag_key.name + ":")
             values = set()
             for var in model.variations:
                 for tag in var.tags:
                     if tag.key == scene_tag_key.name:
                         values.update({tag.value})
+            if values: layout.label(scene_tag_key.name + ":")
             col = layout.column(align=True)
             for value in values:
                 row = col.row(align=True)

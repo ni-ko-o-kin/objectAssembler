@@ -245,8 +245,10 @@ def collect_models(groups, models):
         new_model = simps_impls.add()
         new_model.oa_id = model[0]
         
-        for variation in model[1]:
+        for idx, variation in enumerate(model[1]):
             new_variation = new_model.variations.add()
+            if idx == 0:
+                new_variation.default = True
             new_variation.group_name = variation[0]
             new_variation.oa_type = variation[1]
             new_variation.base_id = variation[2]
@@ -267,7 +269,10 @@ def get_collected_models_as_printables(models):
             ret = " "*8 + "Variation ("+ variation.group_name
             if variation.oa_type == 'IMPL':
                 ret += ", " + str(tuple(variation.base_id))
-            yield ret + ")"
+            ret += ")"
+            if variation.default:
+                ret += " - Default"
+            yield ret
             for tag in variation.tags:
                 yield "            " + tag.key + " : " + tag.value
 
