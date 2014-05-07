@@ -87,7 +87,7 @@ class OAModelSettings(bpy.types.Panel):
         if not (obj and obj.OAModel.marked):
             return
 
-        model = next((model for model in settings.models.simps_impls if tuple(model.oa_id) == tuple(obj.OAModel.oa_id)), None)
+        model = next((model for model in settings.models.simps_impls if tuple(model.oa_id) == tuple(obj.dupli_group.OAGroup.oa_id)), None)
         if not model:
             return
         
