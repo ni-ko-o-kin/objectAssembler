@@ -25,7 +25,7 @@ class OBJECT_OT_oa_change_variation(bpy.types.Operator):
         best_var_group_name = None
         best_var_count = -1
         current_tags = {tag.key:tag.value for tag in current_variation.tags}
-
+        
         for var in variations:
             tags = {tag.key:tag.value for tag in var.tags}
             if (self.key, self.value) in tags.items():
