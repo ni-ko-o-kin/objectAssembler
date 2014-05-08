@@ -20,10 +20,10 @@ class OASettings(bpy.types.PropertyGroup):
     shift = BoolProperty(name = "shift", default = False)
     file_valid = BoolProperty(default=False)
     rotation_angle = FloatProperty(default=pi/2, subtype='ANGLE')
+
     menu_columns = IntProperty(default=4, min=1, max=100)
     menu_icon_display_size = IntProperty(default=40, min=10, max=200)
     menu_icon_size = IntProperty(default=40, min=10, max=200)
-    
 
 def register():
     bpy.utils.register_class(OATagKeys)

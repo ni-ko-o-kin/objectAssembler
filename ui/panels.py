@@ -23,6 +23,16 @@ class OALoad(bpy.types.Panel):
 
         layout.operator("oa.enteroamode")
 
+        main_col = layout.column()
+        main_col.enabled = bool(settings.models.simps_impls)
+
+        row = main_col.row().split(0.7)
+        row.label("Icon Display Size:")
+        row.prop(settings, 'menu_icon_display_size', text="")
+
+        row = main_col.row().split(0.7)
+        row.label("Columns:")
+        row.prop(settings, 'menu_columns', text="")
 
         # for i in settings.valid_groups:
         #     row = layout.row()
@@ -43,17 +53,6 @@ class OALoad(bpy.types.Panel):
         # row = box.row()
         # row.label("Quality")
         # row.prop(settings, 'quality', text="")
-
-        # layout.label("Menu Options:")
-        # box = layout.box()
-
-        # row = box.row()
-        # row.label("Columns")
-        # row.prop(settings, 'menu_columns', text="")
-
-        # row = box.row()
-        # row.label("Icon Display Size")
-        # row.prop(settings, 'menu_icon_display_size', text="")
 
 class OAModelSettings(bpy.types.Panel):
     bl_label = "Model Settings"
