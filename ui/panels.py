@@ -34,6 +34,10 @@ class OALoad(bpy.types.Panel):
         row.label("Columns:")
         row.prop(settings, 'menu_columns', text="")
 
+        row = main_col.row()
+        row.prop(settings, 'insert_at_cursor_pos', text="Insert at Cursor")
+        
+
         # for i in settings.valid_groups:
         #     row = layout.row()
         #     row.label(text=str(list(i.group_id)))
@@ -43,16 +47,9 @@ class OALoad(bpy.types.Panel):
         # layout.prop(settings, 'more_objects')
         # layout.prop(settings, 'shift')
 
-        # layout.label("Defaults:")
-        # box = layout.box()
-
         # row = box.row()
         # row.label("Rotation Angle")
         # row.prop(settings, 'rotation_angle', text="")
-
-        # row = box.row()
-        # row.label("Quality")
-        # row.prop(settings, 'quality', text="")
 
 class OAModelSettings(bpy.types.Panel):
     bl_label = "Model Settings"

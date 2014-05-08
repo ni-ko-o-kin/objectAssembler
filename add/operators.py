@@ -4,9 +4,9 @@ import bpy, bgl
 from mathutils import Vector
 from bpy_extras import view3d_utils
 
-from . import mode_title
+from ..mode import mode_title
 from .align import rotate, align_groups
-from .common import ray, point_in_polygon, get_cursor_info, set_cursor_info, ALLOWED_NAVIGATION, MAX_ERROR_EQL
+from ..common.common import ray, point_in_polygon, get_cursor_info, set_cursor_info, ALLOWED_NAVIGATION, MAX_ERROR_EQL
 
 DEBUG = True
 
@@ -55,10 +55,32 @@ def check_alignment(self, context):
 
 
 def create_snap_list(self, context):
+    settings = context.scene.OASettings
+    
     # create list of all sp's and their snap point objects
     for oa_obj in self.oa_objects:
         oa_obj.dupli_list_create(context.scene)
-        
+        model = next((model for model in settings.models.simps_impls
+                      if tuple(model.oa_id) == tuple(oa_obj.dupli_group.OAGroup.oa_id)))
+        # if {tag.key:tag.value for tag in oa_obj.dupli_group.OAGroup.tags} == {tag.key:tag.value for tag in var.tags}
+        var = next((var for var in model.variations if var.group_name == oa_obj.dupli_group.name), None)
+
+        sp_obj = next((obj for obj in oa_obj.dupli_group.objects if obj.name == var.sp_obj), None)
+        print()
+        print()
+        print(sp_obj)
+        print(sp_obj.name)
+        print()
+        print()
+
+
+        # todo todo todo 
+        # todo todo todo 
+        # todo todo todo 
+        # todo todo todo 
+        # todo todo todo 
+
+
         for dupli_obj in oa_obj.dupli_list:
             if dupli_obj.object.OASnapPointsParameters.marked:
                 sp_obj = dupli_obj.object
@@ -404,12 +426,9 @@ class OAAdd(bpy.types.Operator):
         
         icon_id = settings.icon_clicked
 
-        ### create list of all oa-groups in scene, to test if any oa-objects exist
+        ### test whether any model exists in scene
         # add all oa-groups to list
-        self.oa_objects = [i for i in context.scene.objects if \
-                               i.dupli_type == 'GROUP' and \
-                               i.dupli_group and \
-                               bool([j for j in i.dupli_group.objects if j.OASnapPointsParameters.marked])]
+        self.oa_objects = [obj for obj in context.scene.objects if obj.OAModel.marked]
         
         # create and order list with all snap points for all oa-objects in the scene
         create_snap_list(self, context)

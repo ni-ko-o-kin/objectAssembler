@@ -90,7 +90,7 @@ class OBJECT_OT_oa_random_variation(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return any((m.OAModel.marked for m in context.selected_objects))
+        return any((o.OAModel.marked for o in context.selected_objects))
     
     def invoke(self, context, event):
         settings = context.scene.OASettings
@@ -203,6 +203,7 @@ class OBJECT_OT_oa_load_models(bpy.types.Operator):
             data_to.images = [name for name in data_from.images if name == "oa_icons.png"]
 
         # store settings and collect models
+        settings_scene_found = False
         for scene in data_to.scenes:
             if scene.OAEditorSettings.marked:
                 settings.tag_keys.clear()
@@ -216,7 +217,12 @@ class OBJECT_OT_oa_load_models(bpy.types.Operator):
                     print("\nCollected Models:")
                     for i in get_collected_models_as_printables(settings.models):
                         print(" "*4 + i)
-          
+                settings_scene_found = True
+                break
+
+        if not settings_scene_found:
+            print("No settings scene found")
+            
         # unlink scenes after settings saved to current file 
         for scene in data_to.scenes:
             bpy.data.scenes.remove(scene)

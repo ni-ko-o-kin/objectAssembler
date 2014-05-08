@@ -25,6 +25,8 @@ class OASettings(bpy.types.PropertyGroup):
     menu_icon_display_size = IntProperty(default=40, min=10, max=200)
     menu_icon_size = IntProperty(default=40, min=10, max=200)
 
+    insert_at_cursor_pos = BoolProperty(default=False)
+
 def register():
     bpy.utils.register_class(OATagKeys)
     bpy.utils.register_class(OASettings)

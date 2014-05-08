@@ -148,11 +148,14 @@ class OAEnterOAMode(bpy.types.Operator):
 
                             bpy.ops.object.empty_add()
                             new_obj = context.scene.objects.active
-                            new_obj.location = context.scene.cursor_location.copy()
                             new_obj.dupli_type = 'GROUP'
                             new_obj.dupli_group = bpy.data.groups.get(variation.group_name, settings.oa_file)
                             new_obj.OAModel.marked = True
-                            # bpy.ops.oa.add('INVOKE_DEFAULT')
+
+                            if not settings.insert_at_cursor_pos:
+                                print("add...")
+
+                            bpy.ops.oa.add('INVOKE_DEFAULT')
                             
                             settings.shift = event.shift
                             settings.more_objects = False

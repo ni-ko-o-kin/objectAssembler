@@ -1,6 +1,8 @@
-import bpy
 from math import pi
-from .common import select_and_active, get_cursor_info, set_cursor_info, MAX_ERROR_EQL, MAX_ERROR_DIST
+
+import bpy
+
+from ..common.common import select_and_active, get_cursor_info, set_cursor_info, MAX_ERROR_EQL, MAX_ERROR_DIST
 
 DEBUG = False
 

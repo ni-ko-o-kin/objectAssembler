@@ -5,9 +5,6 @@ from bpy.types import PropertyGroup
 
 class OAModel(PropertyGroup):
     marked = BoolProperty(default=False)
-    #oa_id = IntVectorProperty(default=(0,0,0), size=3, min=0)
-    #snap_point_obj = StringProperty(default="")
-    #variation = StringProperty(default="")
 
 class OACollectTag(PropertyGroup):
     key = StringProperty(default="")
@@ -22,10 +19,12 @@ class OACollectVariation(PropertyGroup):
                            default="SIMP", name="Type")
     base_id = IntVectorProperty(default=(0,0,0), size=3, min=0)
     default = BoolProperty(default=False)
+    sp_obj = StringProperty(default="")
 
 class OACollectBase(PropertyGroup):
     oa_id = IntVectorProperty(default=(0,0,0), size=3, min=0)
     group_name = StringProperty(default="")
+    sp_obj = StringProperty(default="")
 
 class OACollectSimpImpl(PropertyGroup):
     oa_id = IntVectorProperty(default=(0,0,0), size=3, min=0)

@@ -30,10 +30,9 @@ if "bpy" in locals():
 
     imp.reload(mode_operators)
     imp.reload(mode_menu)
-    # imp.reload(mode)
-    # imp.reload(add)
-    # imp.reload(mode_title)
-    # imp.reload(align)
+
+    imp.reload(add_operators)
+    imp.reload(add_align)
 
 else:
     from .editor import (properties as editor_properties,
@@ -51,6 +50,8 @@ else:
     from .mode import (operators as mode_operators,
                        menu as mode_menu
                        )
+    from .add import (operators as add_operators,
+                      align as add_align)
     import bpy
 
 def register():
@@ -67,7 +68,11 @@ def register():
 
     mode_operators.register()
 
+    add_operators.register()
+
 def unregister():
+    add_operators.unregister()
+
     mode_operators.unregister()
 
     ui_operators.unregister()
