@@ -1,4 +1,4 @@
-from random import randint
+from random import choice
 
 import bpy, bgl
 from .menu import construct_menu
@@ -139,7 +139,7 @@ class OAEnterOAMode(bpy.types.Operator):
                             settings.icon_clicked =  icon[0]
                             model = next((model for model in settings.models.simps_impls if tuple(model.oa_id) ==  tuple(settings.icon_clicked)), None)
                             if model.random:
-                                variation = model.variations[randint(0,len(model.variations)-1)]
+                                variation = choice(model.variations)
                             else:
                                 variation = next((var for var in model.variations if var.default), None)
 

@@ -73,6 +73,8 @@ class OAModelSettings(bpy.types.Panel):
         model = next((model for model in settings.models.simps_impls if tuple(model.oa_id) == tuple(obj.dupli_group.OAGroup.oa_id)), None)
         if not model:
             return
+
+        layout.operator("oa.random_variation").oa_id = model.oa_id
         
         for scene_tag_key in settings.tag_keys:
             # collect values from all variations for the scene-key
@@ -81,7 +83,12 @@ class OAModelSettings(bpy.types.Panel):
                 for tag in var.tags:
                     if tag.key == scene_tag_key.name:
                         values.update({tag.value})
-            layout.label(scene_tag_key.name + ":")
+            box = layout.box()
+            row = box.row()
+            row.label(scene_tag_key.name)
+            op = row.operator("oa.random_tag_value", text="Random")
+            op.oa_id = model.oa_id
+            op.key = scene_tag_key.name
             
             col = layout.column(align=True)
 

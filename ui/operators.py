@@ -1,3 +1,5 @@
+from random import choice
+
 import bpy
 from bpy.props import StringProperty, IntVectorProperty, IntProperty
 
@@ -5,6 +7,97 @@ from ..common.debug import line
 from ..common.common import collect_models, get_collected_models_as_printables, add_tag_value_none
 
 DEBUG = True
+
+def get_best_match(variations, current_variation, key, value, scene_keys):
+    if not variations or not current_variation: return
+    
+    best_var_group_name = None
+    best_var_count = -1
+    current_tags = {tag.key:tag.value for tag in current_variation.tags}
+    add_tag_value_none(scene_keys, current_tags)
+
+    for var in variations:
+        tags = {tag.key:tag.value for tag in var.tags}
+        add_tag_value_none(scene_keys, tags)
+
+        if (key, value) in tags.items():
+            intersection_count = len(set(current_tags.items()) & set(tags.items()))
+            if  intersection_count > best_var_count:
+                best_var_count = intersection_count
+                best_var_group_name = var.group_name
+
+    return best_var_group_name
+
+def get_current_variation(variations, obj):
+    return next((var for var in variations if var.group_name == obj.dupli_group.name), None)
+
+class OBJECT_OT_oa_random_tag_value(bpy.types.Operator):
+    bl_description = bl_label = "Choose Random Tag Value"
+    bl_idname = "oa.random_tag_value"
+    bl_options = {'INTERNAL'}
+
+    oa_id = IntVectorProperty(default=(0,0,0), min=0)
+    key = StringProperty(default="")
+    
+    @classmethod
+    def poll(cls, context):
+        return context.object and context.object.OAModel.marked
+    
+    def invoke(self, context, event):
+        obj = context.object
+        settings = context.scene.OASettings
+        models = settings.models.simps_impls
+        
+        model = next((model for model in models if tuple(model.oa_id) == tuple(self.oa_id)), None)
+        
+        if not model or len(model.variations) < 2:
+            return {'CANCELLED'}
+
+        values = set()
+        for var in model.variations:
+            for tag in var.tags:
+                if tag.key == self.key:
+                    values.update({tag.value})
+        
+        random_value = choice(tuple(values))
+        # print(get_current_variation(model.variations, obj).tags)
+
+        best_match = get_best_match(
+            model.variations,
+            get_current_variation(model.variations, obj),
+            self.key,
+            random_value,
+            settings.tag_keys
+            )
+        
+        obj.dupli_group = bpy.data.groups.get(best_match, settings.oa_file)
+        
+        return {'FINISHED'}
+
+class OBJECT_OT_oa_random_variation(bpy.types.Operator):
+    bl_description = bl_label = "Choose Random Variation"
+    bl_idname = "oa.random_variation"
+    bl_options = {'INTERNAL'}
+
+    oa_id = IntVectorProperty(default=(0,0,0), min=0)
+    
+    @classmethod
+    def poll(cls, context):
+        return context.object and context.object.OAModel.marked
+    
+    def invoke(self, context, event):
+        obj = context.object
+        settings = context.scene.OASettings
+        models = settings.models.simps_impls
+        
+        model = next((model for model in models if tuple(model.oa_id) == tuple(self.oa_id)), None)
+        if not model or len(model.variations) < 2:
+            return {'CANCELLED'}
+
+        variation = choice(model.variations)
+        obj.dupli_group = bpy.data.groups.get(variation.group_name, settings.oa_file)
+        
+        return {'FINISHED'}
 
 class OBJECT_OT_oa_change_default_variation(bpy.types.Operator):
     bl_description = bl_label = "Change Default Variation"
@@ -38,39 +131,21 @@ class OBJECT_OT_oa_change_variation(bpy.types.Operator):
     def poll(cls, context):
         return context.object and context.object.OAModel.marked
 
-    def get_best_match(self, variations, current_variation):
-        if not variations or not current_variation: return
-        
-        best_var_group_name = None
-        best_var_count = -1
-        current_tags = {tag.key:tag.value for tag in current_variation.tags}
-        add_tag_value_none(self.settings.tag_keys, current_tags)
-
-        for var in variations:
-            tags = {tag.key:tag.value for tag in var.tags}
-            add_tag_value_none(self.settings.tag_keys, tags)
-
-            if (self.key, self.value) in tags.items():
-                intersection_count = len(set(current_tags.items()) & set(tags.items()))
-                if  intersection_count > best_var_count:
-                    best_var_count = intersection_count
-                    best_var_group_name = var.group_name
-
-        return best_var_group_name
-
     def invoke(self, context, event):
         obj = context.object
         settings = context.scene.OASettings
-        self.settings = settings
         models = settings.models.simps_impls
         
         model = next((model for model in models if tuple(model.oa_id) == tuple(self.oa_id)), None)
         if not model:
             return {'CANCELLED'}
         
-        best_match = self.get_best_match(
+        best_match = get_best_match(
             model.variations,
-            next((var for var in model.variations if var.group_name == obj.dupli_group.name), None)
+            get_current_variation(model.variations, obj),
+            self.key,
+            self.value,
+            settings.tag_keys
             )
 
         obj.dupli_group = bpy.data.groups.get(best_match, settings.oa_file)
@@ -180,6 +255,8 @@ class OBJECT_OT_oa_load_models(bpy.types.Operator):
         return {'FINISHED'}
 
 def register():
+    bpy.utils.register_class(OBJECT_OT_oa_random_tag_value)
+    bpy.utils.register_class(OBJECT_OT_oa_random_variation)
     bpy.utils.register_class(OBJECT_OT_oa_change_default_variation)
     bpy.utils.register_class(OBJECT_OT_oa_change_variation)
     bpy.utils.register_class(OBJECT_OT_oa_load_models)
@@ -188,3 +265,5 @@ def unregister():
     bpy.utils.unregister_class(OBJECT_OT_oa_load_models)
     bpy.utils.unregister_class(OBJECT_OT_oa_change_variation)
     bpy.utils.unregister_class(OBJECT_OT_oa_change_default_variation)
+    bpy.utils.unregister_class(OBJECT_OT_oa_random_variation)
+    bpy.utils.unregister_class(OBJECT_OT_oa_random_tag_value)
