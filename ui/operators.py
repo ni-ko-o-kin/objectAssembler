@@ -88,6 +88,8 @@ class OBJECT_OT_oa_random_variation(bpy.types.Operator):
         models = settings.models.simps_impls
 
         for obj in context.selected_objects:
+            if not obj.OAModel.marked:
+                continue
             model = next((model for model in models if tuple(model.oa_id) == tuple(obj.dupli_group.OAGroup.oa_id)), None)
             if not model or len(model.variations) < 2:
                 continue
@@ -101,7 +103,6 @@ class OBJECT_OT_oa_change_variation(bpy.types.Operator):
     bl_description = bl_label = "Change Variation"
     bl_idname = "oa.change_variation"
 
-    oa_id = IntVectorProperty(default=(0,0,0), min=0)
     key = StringProperty(default="")
     value = StringProperty(default="")
     
@@ -114,7 +115,7 @@ class OBJECT_OT_oa_change_variation(bpy.types.Operator):
         settings = context.scene.OASettings
         models = settings.models.simps_impls
         
-        model = next((model for model in models if tuple(model.oa_id) == tuple(self.oa_id)), None)
+        model = next((model for model in models if tuple(model.oa_id) == tuple(obj.dupli_group.OAGroup.oa_id)), None)
         if not model:
             return {'CANCELLED'}
         
