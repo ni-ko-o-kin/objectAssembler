@@ -36,7 +36,6 @@ class OBJECT_OT_oa_random_tag_value(bpy.types.Operator):
     bl_idname = "oa.random_tag_value"
     bl_options = {'INTERNAL'}
 
-    oa_id = IntVectorProperty(default=(0,0,0), min=0)
     key = StringProperty(default="")
     
     @classmethod
@@ -48,7 +47,7 @@ class OBJECT_OT_oa_random_tag_value(bpy.types.Operator):
         settings = context.scene.OASettings
         models = settings.models.simps_impls
         
-        model = next((model for model in models if tuple(model.oa_id) == tuple(self.oa_id)), None)
+        model = next((model for model in models if tuple(model.oa_id) == tuple(obj.dupli_group.OAGroup.oa_id)), None)
         
         if not model or len(model.variations) < 2:
             return {'CANCELLED'}
@@ -102,32 +101,42 @@ class OBJECT_OT_oa_random_variation(bpy.types.Operator):
 class OBJECT_OT_oa_change_variation(bpy.types.Operator):
     bl_description = bl_label = "Change Variation"
     bl_idname = "oa.change_variation"
-
+    bl_options = {'INTERNAL'}
+    
     key = StringProperty(default="")
     value = StringProperty(default="")
     
-    @classmethod
-    def poll(cls, context):
-        return context.object and context.object.OAModel.marked
-
     def invoke(self, context, event):
-        obj = context.object
         settings = context.scene.OASettings
         models = settings.models.simps_impls
         
-        model = next((model for model in models if tuple(model.oa_id) == tuple(obj.dupli_group.OAGroup.oa_id)), None)
-        if not model:
-            return {'CANCELLED'}
-        
-        best_match = get_best_match(
-            model.variations,
-            get_current_variation(model.variations, obj),
-            self.key,
-            self.value,
-            settings.tag_keys
-            )
+        for obj in context.selected_objects:
+            if not obj.OAModel.marked:
+                continue
 
-        obj.dupli_group = bpy.data.groups.get(best_match, settings.oa_file)
+            model = next((model for model in models if tuple(model.oa_id) == tuple(obj.dupli_group.OAGroup.oa_id)), None)
+            if not model:
+                continue
+
+            # check whether the tag occures
+            found = False
+            for var in model.variations:
+                if (self.key, self.value) in ((tag.key, tag.value) for tag in var.tags):
+                    found = True
+                    break
+
+            if not found:
+                continue
+            
+            best_match = get_best_match(
+                model.variations,
+                get_current_variation(model.variations, obj),
+                self.key,
+                self.value,
+                settings.tag_keys
+                )
+    
+            obj.dupli_group = bpy.data.groups.get(best_match, settings.oa_file)
         
         return {'FINISHED'}
 

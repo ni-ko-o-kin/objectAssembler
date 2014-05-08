@@ -71,7 +71,7 @@ class OAModelSettings(bpy.types.Panel):
             return
         layout.operator("oa.random_variation")
                 
-        if True: #len(context.selected_objects) > 1:
+        if context.selected_objects:
             # collect tags from all variations of all selected objects
             # tags: {key_0: {val_0, val1, ...},
             #        key_1: {...}, ...}
@@ -128,52 +128,6 @@ class OAModelSettings(bpy.types.Panel):
                     op.value = value
                     row.label(value)
             
-        else:
-            model = next((model for model in settings.models.simps_impls if tuple(model.oa_id) == tuple(obj.dupli_group.OAGroup.oa_id)), None)
-            if not model:
-                return
-    
-            for scene_tag_key in settings.tag_keys:
-                # collect values from all variations for a scene-key
-                values = set()
-                for var in model.variations:
-                    for tag in var.tags:
-                        if tag.key == scene_tag_key.name:
-                            values.update({tag.value})
-                box = layout.box()
-                row = box.row()
-                row.label(scene_tag_key.name)
-                op = row.operator("oa.random_tag_value", text="Random")
-                op.key = scene_tag_key.name
-                
-                # move None to end of list
-                if 'None' in values:
-                    values = list(values)
-                    values.remove('None')
-                    values.append('None')
-    
-                # print according values from all variations under the key label
-                col = layout.column(align=True)
-                for value in values:
-                    row = col.row(align=True)
-    
-                    # figure out whether the current variation is the same as the selected object or not
-                    chosen = False
-                    var = next((var for var in model.variations if var.group_name == obj.dupli_group.name), None)
-                    for t in var.tags:
-                        if t.key == scene_tag_key.name and t.value == value:
-                            chosen = True
-                            break
-    
-                    if chosen:
-                        op = row.operator("oa.change_variation", text="", icon='RADIOBUT_ON')
-                    else:
-                        op = row.operator("oa.change_variation", text="", icon='RADIOBUT_OFF')
-                    op.key = scene_tag_key.name
-                    op.value = value
-                    row.label(value)
-
-                
 class OAModelDefaults(bpy.types.Panel):
     bl_label = "Model Defaults"
     bl_idname = "OBJECT_PT_OA_MODEL_DEFAULTS"
