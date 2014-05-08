@@ -74,7 +74,7 @@ class OAModelSettings(bpy.types.Panel):
         if not model:
             return
 
-        layout.operator("oa.random_variation").oa_id = model.oa_id
+        layout.operator("oa.random_variation")
         
         for scene_tag_key in settings.tag_keys:
             # collect values from all variations for the scene-key

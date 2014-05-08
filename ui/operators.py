@@ -75,48 +75,26 @@ class OBJECT_OT_oa_random_tag_value(bpy.types.Operator):
         return {'FINISHED'}
 
 class OBJECT_OT_oa_random_variation(bpy.types.Operator):
-    bl_description = bl_label = "Choose Random Variation"
+    bl_description = bl_label = "Random Variation"
     bl_idname = "oa.random_variation"
     bl_options = {'INTERNAL'}
 
-    oa_id = IntVectorProperty(default=(0,0,0), min=0)
-    
     @classmethod
     def poll(cls, context):
         return context.object and context.object.OAModel.marked
     
     def invoke(self, context, event):
-        obj = context.object
         settings = context.scene.OASettings
         models = settings.models.simps_impls
-        
-        model = next((model for model in models if tuple(model.oa_id) == tuple(self.oa_id)), None)
-        if not model or len(model.variations) < 2:
-            return {'CANCELLED'}
 
-        variation = choice(model.variations)
-        obj.dupli_group = bpy.data.groups.get(variation.group_name, settings.oa_file)
-        
-        return {'FINISHED'}
-
-class OBJECT_OT_oa_change_default_variation(bpy.types.Operator):
-    bl_description = bl_label = "Change Default Variation"
-    bl_idname = "oa.change_default_variation"
-    bl_options = {'INTERNAL'}
-
-    simp_impl_idx = IntProperty(default=0)
-    var_idx = IntProperty(default=0)
+        for obj in context.selected_objects:
+            model = next((model for model in models if tuple(model.oa_id) == tuple(obj.dupli_group.OAGroup.oa_id)), None)
+            if not model or len(model.variations) < 2:
+                continue
     
-    def invoke(self, context, event):
-        model = context.scene.OASettings.models.simps_impls[self.simp_impl_idx]
-        var = model.variations[self.var_idx]
+            variation = choice(model.variations)
+            obj.dupli_group = bpy.data.groups.get(variation.group_name, settings.oa_file)
         
-        for m_var in model.variations:
-            m_var.default = False
-
-        var.default = True
-        
-        return {'CANCELLED'}
         return {'FINISHED'}
 
 class OBJECT_OT_oa_change_variation(bpy.types.Operator):
@@ -152,6 +130,25 @@ class OBJECT_OT_oa_change_variation(bpy.types.Operator):
         
         return {'FINISHED'}
 
+class OBJECT_OT_oa_change_default_variation(bpy.types.Operator):
+    bl_description = bl_label = "Change Default Variation"
+    bl_idname = "oa.change_default_variation"
+    bl_options = {'INTERNAL'}
+
+    simp_impl_idx = IntProperty(default=0)
+    var_idx = IntProperty(default=0)
+    
+    def invoke(self, context, event):
+        model = context.scene.OASettings.models.simps_impls[self.simp_impl_idx]
+        var = model.variations[self.var_idx]
+        
+        for m_var in model.variations:
+            m_var.default = False
+
+        var.default = True
+        
+        return {'CANCELLED'}
+        return {'FINISHED'}
 
 class OBJECT_OT_oa_load_models(bpy.types.Operator):
     bl_description = bl_label = "Load Models"
@@ -257,13 +254,13 @@ class OBJECT_OT_oa_load_models(bpy.types.Operator):
 def register():
     bpy.utils.register_class(OBJECT_OT_oa_random_tag_value)
     bpy.utils.register_class(OBJECT_OT_oa_random_variation)
-    bpy.utils.register_class(OBJECT_OT_oa_change_default_variation)
     bpy.utils.register_class(OBJECT_OT_oa_change_variation)
+    bpy.utils.register_class(OBJECT_OT_oa_change_default_variation)
     bpy.utils.register_class(OBJECT_OT_oa_load_models)
 
 def unregister():
     bpy.utils.unregister_class(OBJECT_OT_oa_load_models)
-    bpy.utils.unregister_class(OBJECT_OT_oa_change_variation)
     bpy.utils.unregister_class(OBJECT_OT_oa_change_default_variation)
+    bpy.utils.unregister_class(OBJECT_OT_oa_change_variation)
     bpy.utils.unregister_class(OBJECT_OT_oa_random_variation)
     bpy.utils.unregister_class(OBJECT_OT_oa_random_tag_value)
