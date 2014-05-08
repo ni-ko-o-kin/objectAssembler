@@ -26,11 +26,11 @@ class OACollectVariation(PropertyGroup):
 class OACollectBase(PropertyGroup):
     oa_id = IntVectorProperty(default=(0,0,0), size=3, min=0)
     group_name = StringProperty(default="")
-    random = BoolProperty(default=False)
 
 class OACollectSimpImpl(PropertyGroup):
     oa_id = IntVectorProperty(default=(0,0,0), size=3, min=0)
     variations = CollectionProperty(type=OACollectVariation)
+    random = BoolProperty(default=False)
     
 class OACollectModels(PropertyGroup):
     bases = CollectionProperty(type=OACollectBase)

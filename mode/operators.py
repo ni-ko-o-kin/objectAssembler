@@ -138,8 +138,14 @@ class OAEnterOAMode(bpy.types.Operator):
                         if icon[0] == self.icon_last:
                             settings.icon_clicked =  icon[0]
                             model = next((model for model in settings.models.simps_impls if tuple(model.oa_id) ==  tuple(settings.icon_clicked)), None)
-                            variation = next((var for var in model.variations if var.default), None)
-                            
+                            if model.random:
+                                variation = model.variations[randint(0,len(model.variations)-1)]
+                            else:
+                                variation = next((var for var in model.variations if var.default), None)
+
+                            if not variation:
+                                variation = model.variations[0]
+
                             bpy.ops.object.empty_add()
                             new_obj = context.scene.objects.active
                             new_obj.location = context.scene.cursor_location.copy()

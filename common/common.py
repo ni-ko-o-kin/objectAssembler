@@ -278,3 +278,7 @@ def get_collected_models_as_printables(models):
             for tag in variation.tags:
                 yield "            " + tag.key + " : " + tag.value
 
+def add_none_tag(scene_keys, tags):
+    for scene_key in scene_keys:
+        if scene_key not in tags:
+            tags.update({scene_key:'None'})
