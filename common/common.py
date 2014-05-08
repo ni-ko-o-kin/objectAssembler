@@ -216,10 +216,9 @@ def collect_models(groups, models, scene_tag_keys):
 
             elif oa_type in ('IMPL', 'SIMP'):
                 model = [model for model in simps_impls_unsorted if oa_id == model[0]]
-                new_tags = {tag.key: tag.value for tag in oa_group.tags if tag.key != '' and tag.value != ''}                
-                for scene_tag_key in scene_tag_keys:
-                    if scene_tag_key not in new_tags:
-                        new_tags.update({scene_tag_key:'None'})
+                new_tags = {tag.key: tag.value for tag in oa_group.tags if tag.key != '' and tag.value != ''} 
+                add_tag_value_none(scene_tag_keys, new_tags)
+
                 base_id = tuple(oa_group.base_id)
                 if oa_type == 'IMPL':
                     if base_id not in all_bases:
@@ -278,7 +277,7 @@ def get_collected_models_as_printables(models):
             for tag in variation.tags:
                 yield "            " + tag.key + " : " + tag.value
 
-def add_none_tag(scene_keys, tags):
+def add_tag_value_none(scene_keys, tags):
     for scene_key in scene_keys:
         if scene_key not in tags:
             tags.update({scene_key:'None'})

@@ -1,11 +1,23 @@
 import bpy
-from bpy.props import StringProperty, IntVectorProperty
+from bpy.props import StringProperty, IntVectorProperty, IntProperty
 
 from ..common.debug import line
-from ..common.common import collect_models, get_collected_models_as_printables
+from ..common.common import collect_models, get_collected_models_as_printables, add_tag_value_none
 
 DEBUG = True
 
+class OBJECT_OT_oa_change_default_variation(bpy.types.Operator):
+    bl_description = bl_label = "Change Default Variation"
+    bl_idname = "oa.change_default_variation"
+    bl_options = {'INTERNAL'}
+
+    simp_impl_idx = IntProperty(default=0)
+    group_idx = IntProperty(default=0)
+    
+    def invoke(self, context, event):
+        
+        return {'CANCELLED'}
+        return {'FINISHED'}
 
 class OBJECT_OT_oa_change_variation(bpy.types.Operator):
     bl_description = bl_label = "Change Variation"
@@ -25,15 +37,11 @@ class OBJECT_OT_oa_change_variation(bpy.types.Operator):
         best_var_group_name = None
         best_var_count = -1
         current_tags = {tag.key:tag.value for tag in current_variation.tags}
-        for scene_tag_key in self.settings.tag_keys:
-            if scene_tag_key not in current_tags:
-                current_tags.update({scene_tag_key:'None'})
+        add_tag_value_none(self.settings.tag_keys, current_tags)
 
         for var in variations:
             tags = {tag.key:tag.value for tag in var.tags}
-            for scene_tag_key in self.settings.tag_keys:
-                if scene_tag_key not in current_tags:
-                    current_tags.update({scene_tag_key:'None'})
+            add_tag_value_none(self.settings.tag_keys, tags)
 
             if (self.key, self.value) in tags.items():
                 intersection_count = len(set(current_tags.items()) & set(tags.items()))
@@ -168,9 +176,11 @@ class OBJECT_OT_oa_load_models(bpy.types.Operator):
 # Register
 ################
 def register():
+    bpy.utils.register_class(OBJECT_OT_oa_change_default_variation)
     bpy.utils.register_class(OBJECT_OT_oa_change_variation)
     bpy.utils.register_class(OBJECT_OT_oa_load_models)
 
 def unregister():
     bpy.utils.unregister_class(OBJECT_OT_oa_load_models)
     bpy.utils.unregister_class(OBJECT_OT_oa_change_variation)
+    bpy.utils.unregister_class(OBJECT_OT_oa_change_default_variation)
