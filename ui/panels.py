@@ -66,9 +66,10 @@ class OAModelSettings(bpy.types.Panel):
         settings = context.scene.OASettings
         layout = self.layout
         obj = context.object
-
-        if not (obj and obj.OAModel.marked):
+        
+        if not any((m.OAModel.marked for m in context.selected_objects)):
             return
+        
         layout.operator("oa.random_variation")
                 
         if context.selected_objects:

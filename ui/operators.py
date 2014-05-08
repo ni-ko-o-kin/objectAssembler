@@ -40,37 +40,47 @@ class OBJECT_OT_oa_random_tag_value(bpy.types.Operator):
     
     @classmethod
     def poll(cls, context):
-        return context.object and context.object.OAModel.marked
+        return any((m.OAModel.marked for m in context.selected_objects))
     
     def invoke(self, context, event):
-        obj = context.object
         settings = context.scene.OASettings
         models = settings.models.simps_impls
         
-        model = next((model for model in models if tuple(model.oa_id) == tuple(obj.dupli_group.OAGroup.oa_id)), None)
-        
-        if not model or len(model.variations) < 2:
-            return {'CANCELLED'}
+        for obj in context.selected_objects:
+            if not obj.OAModel.marked:
+                continue
 
-        values = set()
-        for var in model.variations:
-            for tag in var.tags:
-                if tag.key == self.key:
-                    values.update({tag.value})
-        
-        random_value = choice(tuple(values))
-        # print(get_current_variation(model.variations, obj).tags)
+            model = next((model for model in models if tuple(model.oa_id) == tuple(obj.dupli_group.OAGroup.oa_id)), None)
+            if not model:
+                continue
 
-        best_match = get_best_match(
-            model.variations,
-            get_current_variation(model.variations, obj),
-            self.key,
-            random_value,
-            settings.tag_keys
-            )
-        
-        obj.dupli_group = bpy.data.groups.get(best_match, settings.oa_file)
-        
+            # check whether the tag occures
+            found = False
+            for var in model.variations:
+                if self.key in (tag.key for tag in var.tags):
+                    found = True
+                    break
+
+            if not found:
+                continue
+
+            # choose random value
+            values = set()
+            for var in model.variations:
+                for tag in var.tags:
+                    if tag.key == self.key:
+                        values.update({tag.value})
+            random_value = choice(tuple(values))
+
+            best_match = get_best_match(
+                model.variations,
+                get_current_variation(model.variations, obj),
+                self.key,
+                random_value,
+                settings.tag_keys
+                )
+    
+            obj.dupli_group = bpy.data.groups.get(best_match, settings.oa_file)
         return {'FINISHED'}
 
 class OBJECT_OT_oa_random_variation(bpy.types.Operator):
@@ -80,7 +90,7 @@ class OBJECT_OT_oa_random_variation(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.object and context.object.OAModel.marked
+        return any((m.OAModel.marked for m in context.selected_objects))
     
     def invoke(self, context, event):
         settings = context.scene.OASettings
