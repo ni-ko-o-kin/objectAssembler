@@ -102,14 +102,16 @@ class OAModelSettings(bpy.types.Panel):
                 for t in var.tags:
                     if t.key == scene_tag_key.name and t.value == value:
                         chosen = True
+                        break
 
                 if chosen:
-                    op = row.operator("oa.change_variation", text=value, icon='RADIOBUT_ON')
+                    op = row.operator("oa.change_variation", text="", icon='RADIOBUT_ON')
                 else:
-                    op = row.operator("oa.change_variation", text=value, icon='RADIOBUT_OFF')
+                    op = row.operator("oa.change_variation", text="", icon='RADIOBUT_OFF')
                 op.key = scene_tag_key.name
                 op.value = value
                 op.oa_id = model.oa_id
+                row.label(value)
 
                 
 class OAModelDefaults(bpy.types.Panel):
@@ -124,24 +126,23 @@ class OAModelDefaults(bpy.types.Panel):
         settings = context.scene.OASettings
         layout = self.layout
 
-        for model in settings.models.simps_impls:
+        for model_idx, model in enumerate(settings.models.simps_impls):
             box = layout.box()
             row = box.row()
             row.label(str(tuple(model.oa_id)))
             row.prop(model, "random", text="Random")
 
             col = layout.column(align=True)
-            for var in model.variations:
+            for var_idx, var in enumerate(model.variations):
                 row = col.row()
-                row.label(var.group_name + " " + 
-                          str([tag.value for tag in var.tags if tag.value != 'None']).replace('[','(').replace(']',')').replace('\'', ''))
-                subrow = row.row()
-                subrow.prop(var, "default", text="")
-                if model.random: subrow.enabled = False
-            
-
-
-       
+                var_text = var.group_name + " " + \
+                          str([tag.value for tag in var.tags if tag.value != 'None']).replace('[','(').replace(']',')').replace('\'', '')
+                op = row.operator('oa.change_default_variation', text="", icon='RADIOBUT_ON' if var.default else 'RADIOBUT_OFF')
+                op.simp_impl_idx = model_idx
+                op.var_idx = var_idx
+                row.label(var_text)
+                if model.random: row.enabled = False
+                
 def register():
     bpy.utils.register_class(OALoad)
     bpy.utils.register_class(OAModelSettings)

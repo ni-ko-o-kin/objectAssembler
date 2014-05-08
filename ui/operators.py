@@ -12,9 +12,16 @@ class OBJECT_OT_oa_change_default_variation(bpy.types.Operator):
     bl_options = {'INTERNAL'}
 
     simp_impl_idx = IntProperty(default=0)
-    group_idx = IntProperty(default=0)
+    var_idx = IntProperty(default=0)
     
     def invoke(self, context, event):
+        model = context.scene.OASettings.models.simps_impls[self.simp_impl_idx]
+        var = model.variations[self.var_idx]
+        
+        for m_var in model.variations:
+            m_var.default = False
+
+        var.default = True
         
         return {'CANCELLED'}
         return {'FINISHED'}
@@ -172,9 +179,6 @@ class OBJECT_OT_oa_load_models(bpy.types.Operator):
 
         return {'FINISHED'}
 
-################
-# Register
-################
 def register():
     bpy.utils.register_class(OBJECT_OT_oa_change_default_variation)
     bpy.utils.register_class(OBJECT_OT_oa_change_variation)
