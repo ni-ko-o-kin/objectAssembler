@@ -64,10 +64,20 @@ def create_snap_list(self, context):
         oa_obj.dupli_list_create(context.scene)
         model = next((model for model in settings.models.simps_impls
                       if tuple(model.oa_id) == tuple(oa_obj.dupli_group.OAGroup.oa_id)))
-        # if {tag.key:tag.value for tag in oa_obj.dupli_group.OAGroup.tags} == {tag.key:tag.value for tag in var.tags}
-        var = next((var for var in model.variations if var.group_name == oa_obj.dupli_group.name), None)
 
-        sp_obj = next((obj for obj in oa_obj.dupli_group.objects if obj.name == var.sp_obj), None)
+        if oa_obj.dupli_group.OAGroup.oa_type == 'IMPL':
+            base = next(base for base in settings.models.bases
+                        if tuple(base.oa_id) == tuple(oa_obj.dupli_group.OAGroup.base_id))
+            base_group = bpy.data.groups.get(base.group_name, settings.oa_file)
+            sp_obj = next((obj for obj in base_group.objects if obj.name == base.sp_obj), None)
+            # add offset from group
+            print("impl")
+        else:
+            var = next((var for var in model.variations if var.group_name == oa_obj.dupli_group.name), None)
+            sp_obj = next((obj for obj in oa_obj.dupli_group.objects if obj.name == var.sp_obj), None)
+
+
+
         
         for dupli_obj in oa_obj.dupli_list:
             if dupli_obj.object.OASnapPoints.marked:
@@ -195,7 +205,6 @@ class OAAdd(bpy.types.Operator):
     oa_id = IntVectorProperty(default=(0,0,0), min=0)
 
     def modal(self, context, event):
-        if DEBUG: print("OAAdd - modal")
         context.area.tag_redraw()
         settings = context.scene.OASettings
         last_index = -1
@@ -402,7 +411,6 @@ class OAAdd(bpy.types.Operator):
         return {'RUNNING_MODAL'}
 
     def invoke(self, context, event):
-        if DEBUG: print("OAAdd - Invoke")
         if context.space_data.type != 'VIEW_3D':
             self.report({'WARNING'}, "Active space must be a View3d")
             return {'CANCELLED'}
@@ -436,7 +444,6 @@ class OAAdd(bpy.types.Operator):
         new_obj.empty_draw_size = 0.001            
 
         if not self.oa_objects or settings.insert_at_cursor_pos:
-            if DEBUG: print("OAAdd - Finished")
             return {'FINISHED'}
 
         new_obj.hide = True

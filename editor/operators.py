@@ -292,7 +292,7 @@ class OBJECT_OT_oa_add_sp_obj(bpy.types.Operator):
 
     def invoke(self, context, event):
         obj = context.object
-
+        
         sp_mesh = bpy.data.meshes.new(name='oa_mesh')
         sp_obj = bpy.data.objects.new(name='oa_object', object_data=sp_mesh)
         context.scene.objects.link(sp_obj)

@@ -240,7 +240,8 @@ def collect_models(groups, models, scene_tag_keys):
         new_base = bases.add()
         new_base.oa_id = base[0]
         new_base.group_name = base[1]
-        # new_base.sp_obj = next((obj for obj in groups[base[1]].objects if obj.OASnapPoints.marked), "")
+        grp = next(grp for grp in groups if grp.name==base[1])
+        new_base.sp_obj = next((obj.name for obj in grp.objects if obj.OASnapPoints.marked), "")
 
     # insert sorted simps and impls
     for model in sorted(simps_impls_unsorted, key=lambda item: item[0]):
@@ -250,13 +251,9 @@ def collect_models(groups, models, scene_tag_keys):
         for idx, variation in enumerate(model[1]):
             new_variation = new_model.variations.add()
 
-            grp = next((grp for grp in groups if grp.name==variation[0]))
-            sp_obj_name = next((obj for obj in grp.objects if obj.OASnapPoints.marked), None)
-            if sp_obj_name:
-                new_variation.sp_obj = sp_obj_name.name
-            else:
-                new_variation.sp_obj = ""
-                
+            grp = next(grp for grp in groups if grp.name==variation[0])
+            new_variation.sp_obj = next((obj.name for obj in grp.objects if obj.OASnapPoints.marked), "")
+            
             if idx == 0:
                 new_variation.default = True
             new_variation.group_name = variation[0]
