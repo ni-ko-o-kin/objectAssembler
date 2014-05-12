@@ -233,11 +233,11 @@ class OBJECT_OT_oa_load_models(bpy.types.Operator):
         # # add oa-valid groups from current file to valid_groups
         # for group in [g for g in bpy.data.groups if g.library and g.library.filepath == settings.oa_file]:
         #     for obj in group.objects:
-        #         if obj.OASnapPointsParameters.marked:
+        #         if obj.OASnapPoints.marked:
         #             if DEBUG: print("  Found oa-group:", group.name)
         #             new_valid_group = settings.valid_groups.add()
-        #             new_valid_group.group_id = obj.OASnapPointsParameters.group_id
-        #             new_valid_group.quality = obj.OASnapPointsParameters.quality
+        #             new_valid_group.group_id = obj.OASnapPoints.group_id
+        #             new_valid_group.quality = obj.OASnapPoints.quality
         #             settings.file_valid = True
         #             break
     

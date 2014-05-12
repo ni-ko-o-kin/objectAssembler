@@ -31,11 +31,11 @@ def rect_round_corners(x1,y1, x2,y2):
     bgl.glEnd()
     
 def draw_callback_mode(self, context):
+    if DEBUG: print("draw_callback_mode")
     # draw mode_title
     mode_title(True, "Object Assembler Mode")
     
     bgl.glBindTexture(bgl.GL_TEXTURE_2D, self.img.bindcode)
-    
     bgl.glTexParameteri(bgl.GL_TEXTURE_2D, bgl.GL_TEXTURE_MIN_FILTER, bgl.GL_NEAREST)
     bgl.glTexParameteri(bgl.GL_TEXTURE_2D, bgl.GL_TEXTURE_MAG_FILTER, bgl.GL_NEAREST)
 
@@ -82,7 +82,7 @@ def draw_callback_mode(self, context):
     # restore opengl defaults
     bgl.glLineWidth(1)
     bgl.glColor4f(0.0, 0.0, 0.0, 1.0)
-
+    if DEBUG: print("end of draw_callback_mode")
 
 class OAEnterOAMode(bpy.types.Operator):
     bl_idname = "oa.enteroamode"
@@ -100,6 +100,7 @@ class OAEnterOAMode(bpy.types.Operator):
             # )
     
     def modal(self, context, event):
+        if DEBUG: print("OAEnterOAMode - Modal")
         context.area.tag_redraw()
         settings = bpy.context.scene.OASettings
 
@@ -136,27 +137,9 @@ class OAEnterOAMode(bpy.types.Operator):
                     if self.value_last == 'PRESS':
                         # if mouse has been pressed over the same icon were it was released
                         if icon[0] == self.icon_last:
-                            settings.icon_clicked =  icon[0]
-                            model = next((model for model in settings.models.simps_impls if tuple(model.oa_id) ==  tuple(settings.icon_clicked)), None)
-                            if model.random:
-                                variation = choice(model.variations)
-                            else:
-                                variation = next((var for var in model.variations if var.default), None)
+                            bpy.ops.oa.add('INVOKE_DEFAULT', oa_id=icon[0])
+                            if DEBUG: print("back from OAAdd")
 
-                            if not variation:
-                                variation = model.variations[0]
-
-                            bpy.ops.object.empty_add()
-                            new_obj = context.scene.objects.active
-                            new_obj.dupli_type = 'GROUP'
-                            new_obj.dupli_group = bpy.data.groups.get(variation.group_name, settings.oa_file)
-                            new_obj.OAModel.marked = True
-
-                            if not settings.insert_at_cursor_pos:
-                                print("add...")
-
-                            bpy.ops.oa.add('INVOKE_DEFAULT')
-                            
                             settings.shift = event.shift
                             settings.more_objects = False
 
@@ -182,6 +165,7 @@ class OAEnterOAMode(bpy.types.Operator):
         return {'RUNNING_MODAL'}
 
     def invoke(self, context, event):
+        if DEBUG: print("OAEnterOAMode - Invoke")
         if context.area.type == 'VIEW_3D':
             settings = bpy.context.scene.OASettings
             

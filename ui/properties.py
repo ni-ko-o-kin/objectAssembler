@@ -15,7 +15,6 @@ class OASettings(bpy.types.PropertyGroup):
     tag_keys = CollectionProperty(type=OATagKeys)
 
     valid_icon_file = BoolProperty(name="", default = False)
-    icon_clicked = IntVectorProperty(name = "", default = (0,0,0))
     more_objects = BoolProperty(name = "more_objects", default = False)
     shift = BoolProperty(name = "shift", default = False)
     file_valid = BoolProperty(default=False)

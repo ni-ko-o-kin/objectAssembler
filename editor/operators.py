@@ -1,5 +1,4 @@
 from math import pi, ceil
-from collections import namedtuple
 
 import bpy, bmesh, blf, bgl
 from bpy_extras import view3d_utils

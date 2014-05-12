@@ -76,7 +76,7 @@ def ray(self, context, obj_name_black_list = [], ray_max=10000.0):
 
     def visible_objects_and_duplis():
         for obj in context.visible_objects:
-            if (obj.type == 'MESH') and (obj.name not in obj_name_black_list) and (("OASnapPointsParameters" not in obj) and ("marked" not in obj.OASnapPointsParameters)):
+            if (obj.type == 'MESH') and (obj.name not in obj_name_black_list) and (("OASnapPoints" not in obj) and ("marked" not in obj.OASnapPoints)):
                 yield (obj, obj.matrix_world.copy(), obj)
 
             if obj.dupli_type == 'GROUP':

@@ -11,15 +11,15 @@ def get_snap_points(context, group, snap_point_nr):
     
     group.dupli_list_create(context.scene)
     
-    #sp_obj, dupli_matrix = [(dupli.object, dupli.matrix) for dupli in group.dupli_list if dupli.object.OASnapPointsParameters.marked][0]
+    #sp_obj, dupli_matrix = [(dupli.object, dupli.matrix) for dupli in group.dupli_list if dupli.object.OASnapPoints.marked][0]
     
     for i in group.dupli_list:
-       if i.object.OASnapPointsParameters.marked:
+       if i.object.OASnapPoints.marked:
            snap_obj = i.object
            matrix = i.matrix
     
-    # snap_point_active = sp_obj.OASnapPointsParameters.snap_points[snap_point_nr]
-           snap_point_active = snap_obj.OASnapPointsParameters.snap_points[snap_point_nr]
+    # snap_point_active = sp_obj.OASnapPoints.snap_points[snap_point_nr]
+           snap_point_active = snap_obj.OASnapPoints.snap_points[snap_point_nr]
     
     # a = dupli_matrix * sp_obj.data.vertices[snap_point_active.a].co
     # b = dupli_matrix * sp_obj.data.vertices[snap_point_active.b].co
