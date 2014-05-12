@@ -494,7 +494,7 @@ class OBJECT_OT_oa_ConstructAbc(bpy.types.Operator):
                 bm.to_mesh(sp_mesh)
                 bm.free()
                     
-                sp_obj = bpy.data.objects.new(name='oa_object', object_data=sp_mesh)
+                sp_obj = bpy.data.objects.new(name='oa_sp_object', object_data=sp_mesh)
                 context.scene.objects.link(sp_obj)
                 
 

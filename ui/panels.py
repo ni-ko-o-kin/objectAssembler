@@ -38,12 +38,6 @@ class OALoad(bpy.types.Panel):
         row.prop(settings, 'insert_at_cursor_pos', text="Insert at Cursor")
         
 
-        # for i in settings.valid_groups:
-        #     row = layout.row()
-        #     row.label(text=str(list(i.group_id)))
-        #     row.label(text=i.quality)
-        #     row.label(text=str(i.last_active_snap_point))
-
         # layout.prop(settings, 'more_objects')
         # layout.prop(settings, 'shift')
 

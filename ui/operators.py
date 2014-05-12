@@ -187,9 +187,6 @@ class OBJECT_OT_oa_load_models(bpy.types.Operator):
         # assume oa_icon.png is not valid
         settings.valid_icon_file = False
 
-        # # empty list of valid objects
-        # settings.valid_groups.clear()
-        
         if DEBUG: line()
 
         print()
@@ -227,29 +224,8 @@ class OBJECT_OT_oa_load_models(bpy.types.Operator):
         for scene in data_to.scenes:
             bpy.data.scenes.remove(scene)
         
-        
-        
-        
-        # # add oa-valid groups from current file to valid_groups
-        # for group in [g for g in bpy.data.groups if g.library and g.library.filepath == settings.oa_file]:
-        #     for obj in group.objects:
-        #         if obj.OASnapPoints.marked:
-        #             if DEBUG: print("  Found oa-group:", group.name)
-        #             new_valid_group = settings.valid_groups.add()
-        #             new_valid_group.group_id = obj.OASnapPoints.group_id
-        #             new_valid_group.quality = obj.OASnapPoints.quality
-        #             settings.file_valid = True
-        #             break
     
-        # if settings.file_valid:
-        #     print("  IDs of imported OA-Groups:")
-        #     for oa_group, quality in [(list(i.group_id), i.quality) for i in settings.valid_groups]:
-        #         print("    ", oa_group, quality)
-
-        #     # load oa_icons.png
-        #     with bpy.data.libraries.load(settings.oa_file, link=True) as (data_from, data_to):
-        #         data_to.images = [name for name in data_from.images if name == "oa_icons.png"]
-        
+        #     # check oa_icons.png
         #     imgs = [img for img in bpy.data.images if img.name == "oa_icons.png" and img.library and img.library.filepath == settings.oa_file]
 
         #     if len(imgs) > 1:
