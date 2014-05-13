@@ -61,31 +61,22 @@ def create_snap_list(self, context):
     
     # create list of all sp's and their snap point objects
     for oa_obj in self.oa_objects:
-        oa_obj.dupli_list_create(context.scene)
-        model = next((model for model in settings.models.simps_impls
-                      if tuple(model.oa_id) == tuple(oa_obj.dupli_group.OAGroup.oa_id)))
-
+        # switch group with base-group so the snap points can be calculated
         if oa_obj.dupli_group.OAGroup.oa_type == 'IMPL':
+            original_group = oa_obj.dupli_group
+            
             base = next(base for base in settings.models.bases
                         if tuple(base.oa_id) == tuple(oa_obj.dupli_group.OAGroup.base_id))
-            base_group = bpy.data.groups.get(base.group_name, settings.oa_file)
-            sp_obj = base_group.objects.get(base_sp_obj)
-            #sp_obj = next((obj for obj in base_group.objects if obj.name == base.sp_obj), None)
-            # add offset from group
-        else:
-            var = next((var for var in model.variations if var.group_name == oa_obj.dupli_group.name), None)
-            sp_obj = oa_obj.dupli_group.objects.get(var.sp_obj)
+            oa_obj.dupli_group = bpy.data.groups.get(base.group_name, settings.oa_file)
+        
+        oa_obj.dupli_list_create(context.scene)
+        dupli_sp = next(dl for dl in oa_obj.dupli_list if dl.object.OASnapPoints.marked)
 
-            
-        # for dupli_obj in oa_obj.dupli_list:
-            #if dupli_obj.object.OASnapPoints.marked:
-                #sp_obj = dupli_obj.object
-        for snap_point_nr, snap_point in enumerate(sp_obj.OASnapPoints.snap_points):
+        for snap_point_nr, snap_point in enumerate(dupli_sp.object.OASnapPoints.snap_points):
             self.snap_list.append(
                 (oa_obj,
                  snap_point_nr,
-                 # dupli_obj.matrix * sp_obj.data.vertices[snap_point.c].co,
-                 oa_obj.matrix_world * sp_obj.data.vertices[snap_point.c].co,
+                 dupli_sp.matrix * dupli_sp.object.data.vertices[snap_point.c].co,
                  snap_point.snap_size
                  ))
             # snap_list:  0: oa-object
@@ -95,6 +86,11 @@ def create_snap_list(self, context):
                 
         oa_obj.dupli_list_clear()
 
+        # switch back from base-group to original group
+        if oa_obj.dupli_group.OAGroup.oa_type == 'BASE':
+            oa_obj.dupli_group = original_group
+        
+        
 def order_snap_list(self, context):
     if DEBUG: print("Order snap list ...")
     region = context.region
@@ -210,7 +206,8 @@ class OAAdd(bpy.types.Operator):
             # if cursor is not over a snap point -> next sp
             if not point_in_polygon(self.mouse[0], self.mouse[1], sp[5]):
                 continue
-            
+         
+            # still on the snap point; no realignment necessary
             if self.last_snapped_to == (sp[0], sp[1]):
                 break
             
@@ -218,9 +215,22 @@ class OAAdd(bpy.types.Operator):
             self.old_obj = sp[0]
             self.new_obj.hide = False
 
-            new_sp_obj = next(obj for obj in self.new_obj.dupli_group.objects if obj.OASnapPoints.marked)
-            old_sp_obj = next(obj for obj in self.old_obj.dupli_group.objects if obj.OASnapPoints.marked)
+            if self.new_obj.dupli_group.OAGroup.oa_type == 'IMPL':
+                base = next(base for base in settings.models.bases
+                            if tuple(base.oa_id) == tuple(self.new_obj.dupli_group.OAGroup.base_id))
+                base_group = bpy.data.groups.get(base.group_name, settings.oa_file)
+                new_sp_obj =  next((o for o in base_group.objects if o.OASnapPoints.marked), None)
+            elif self.new_obj.dupli_group.OAGroup.oa_type == 'SIMP':
+                new_sp_obj = next(obj for obj in self.new_obj.dupli_group.objects if obj.OASnapPoints.marked)
 
+            if self.old_obj.dupli_group.OAGroup.oa_type == 'IMPL':
+                base = next(base for base in settings.models.bases
+                            if tuple(base.oa_id) == tuple(self.old_obj.dupli_group.OAGroup.base_id))
+                base_group = bpy.data.groups.get(base.group_name, settings.oa_file)
+                old_sp_obj =  next((o for o in base_group.objects if o.OASnapPoints.marked), None)
+            elif self.old_obj.dupli_group.OAGroup.oa_type == 'SIMP':
+                old_sp_obj = next(obj for obj in self.old_obj.dupli_group.objects if obj.OASnapPoints.marked)
+            
             new_sp_obj_params = new_sp_obj.OASnapPoints
             old_sp_obj_params = old_sp_obj.OASnapPoints
 
@@ -257,85 +267,6 @@ class OAAdd(bpy.types.Operator):
             #     )
             self.last_snapped_to = (self.old_obj, sp[1])
             break # use only the first (nearest)
-
-
-        # # if no snap point is under the cursor
-        # if not some_point_in_polygon:
-        #     # is an object under the cursor
-        #     under_cursor()
-
-        
-        # def snap():
-        #     def under_cursor():
-        #         obj_under_cursor = ray(self, context, [self.new_obj.name,])
-                
-        #         # if object is under cursor
-        #         if obj_under_cursor is not None and obj_under_cursor.dupli_type == 'GROUP' and obj_under_cursor.dupli_group:
-        #             # if object is in an oa-group
-        #             if [i for i in obj_under_cursor.dupli_group.objects if i.OASnapPoints.marked]:
-        #                 self.old_obj = obj_under_cursor
-        #                 self.snap_list = []
-
-        #                 obj_under_cursor.dupli_list_create(context.scene)
-        #                 dupli_objs = obj_under_cursor.dupli_list
-
-        #                 for i in dupli_objs:
-        #                     if i.object.OASnapPoints.marked:
-        #                         dupli_obj = i.object
-        #                         dupli_matrix = i.matrix
-        #                         dupli_snap_points = i.object.OASnapPoints.snap_points
-                                
-        #                 for snap_point_nr, snap_point in enumerate(dupli_snap_points):
-        #                     self.snap_list.append(
-        #                         (snap_point_nr, # snap_point nummer
-        #                          dupli_matrix * dupli_obj.data.vertices[snap_point.c].co, # c-coordinate
-        #                          snap_point.snap_size
-        #                          ))
-        #                 obj_under_cursor.dupli_list_clear()
-
-        #             # not a oa-group
-        #             else:
-        #                 self.snap_list = []
-
-
-        #     # if snap points are already being displayed
-        #     if self.snap_list:
-
-        #         # if cursor is over a snap point -> snap
-        #         some_point_in_polygon = False
-        #         for snaps in self.snap_list_ordered:
-        #             if point_in_polygon(self.mouse[0], self.mouse[1], snaps[4]):
-        #                 some_point_in_polygon = True
-                        
-        #                 # show and align
-        #                 self.new_obj.hide = False
-
-        #                 last_active_snap_point = [i.last_active_snap_point for i in settings.valid_groups if list(i.group_id) == list(self.current_group_id)][0]
-
-        #                 align_groups(
-        #                     self.old_obj, snaps[0],
-        #                     self.new_obj, last_active_snap_point,
-        #                     context
-        #                     )
-
-        #                 # use only the first (nearest)
-        #                 break
-
-        #         # if no snap point is under the cursor
-        #         if not some_point_in_polygon:
-        #             # is an object under the cursor
-        #             under_cursor()
-
-        #     # if no snap points are displayed yet, search for objects under the cursor
-        #     else:
-        #         under_cursor()
-
-
-        ## --> already checked - there are always oa_objects if modal is executed
-        # # if there are no oa-objects, quit op
-        # if not self.oa_objects:
-        #     bpy.types.SpaceView3D.draw_handler_remove(self._handle, 'WINDOW')
-        #     return {'FINISHED'}
 
         if event.type in ALLOWED_NAVIGATION and event.value == 'PRESS':
             self.viewport_changed = True
@@ -435,14 +366,14 @@ class OAAdd(bpy.types.Operator):
                 if obj.dupli_group.OAGroup.oa_type == 'SIMP':
                     if next((o for o in obj.dupli_group.objects if o.OASnapPoints.marked), None) != None:
                         self.oa_objects.append(obj)
+
                 elif obj.dupli_group.OAGroup.oa_type == 'IMPL':
                     base = next(base for base in settings.models.bases
                                 if tuple(base.oa_id) == tuple(obj.dupli_group.OAGroup.base_id))
                     base_group = bpy.data.groups.get(base.group_name, settings.oa_file)
-                    
                     if next((o for o in base_group.objects if o.OASnapPoints.marked), None) != None:
                         self.oa_objects.append(obj)
-                        
+
         # add oa-object to scene
         bpy.ops.object.empty_add()
         new_obj = context.scene.objects.active
@@ -455,12 +386,17 @@ class OAAdd(bpy.types.Operator):
         if new_obj.dupli_group.OAGroup.oa_type == 'SIMP':
             if next((obj for obj in new_obj.dupli_group.objects if obj.OASnapPoints.marked), None) != None:
                 sp_obj_exists = True
-            else:
-                pass # todo
+        elif new_obj.dupli_group.OAGroup.oa_type == 'IMPL':
+            base = next(base for base in settings.models.bases
+                        if tuple(base.oa_id) == tuple(new_obj.dupli_group.OAGroup.base_id))
+            base_group = bpy.data.groups.get(base.group_name, settings.oa_file)
+            if next((o for o in base_group.objects if o.OASnapPoints.marked), None) != None:
+                sp_obj_exists = True
+                
             
         if any((settings.insert_at_cursor_pos, not self.oa_objects, not sp_obj_exists)):
             return {'FINISHED'}
-        
+
         new_obj.hide = True
         bpy.context.scene.objects.active = None
         self.new_obj = new_obj
