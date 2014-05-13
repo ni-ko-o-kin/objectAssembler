@@ -69,33 +69,29 @@ def create_snap_list(self, context):
             base = next(base for base in settings.models.bases
                         if tuple(base.oa_id) == tuple(oa_obj.dupli_group.OAGroup.base_id))
             base_group = bpy.data.groups.get(base.group_name, settings.oa_file)
-            sp_obj = next((obj for obj in base_group.objects if obj.name == base.sp_obj), None)
+            sp_obj = base_group.objects.get(base_sp_obj)
+            #sp_obj = next((obj for obj in base_group.objects if obj.name == base.sp_obj), None)
             # add offset from group
-            print("impl")
         else:
             var = next((var for var in model.variations if var.group_name == oa_obj.dupli_group.name), None)
-            sp_obj = next((obj for obj in oa_obj.dupli_group.objects if obj.name == var.sp_obj), None)
+            sp_obj = oa_obj.dupli_group.objects.get(var.sp_obj)
 
-
-
-        
-        for dupli_obj in oa_obj.dupli_list:
-            if dupli_obj.object.OASnapPoints.marked:
-                sp_obj = dupli_obj.object
-                #sp_obj_matrix = dupli_obj.matrix
-                #sp_obj_snap_points = sp_obj.OASnapPoints.snap_points
-                
-                for snap_point_nr, snap_point in enumerate(sp_obj.OASnapPoints.snap_points):
-                    self.snap_list.append(
-                        (oa_obj,
-                         snap_point_nr,
-                         dupli_obj.matrix * sp_obj.data.vertices[snap_point.c].co,
-                         snap_point.snap_size
-                         ))
-                    # snap_list:  0: oa-object
-                    #             1: snap_point-number
-                    #             2: c-coordinate
-                    #             3: snap point size
+            
+        # for dupli_obj in oa_obj.dupli_list:
+            #if dupli_obj.object.OASnapPoints.marked:
+                #sp_obj = dupli_obj.object
+        for snap_point_nr, snap_point in enumerate(sp_obj.OASnapPoints.snap_points):
+            self.snap_list.append(
+                (oa_obj,
+                 snap_point_nr,
+                 # dupli_obj.matrix * sp_obj.data.vertices[snap_point.c].co,
+                 oa_obj.matrix_world * sp_obj.data.vertices[snap_point.c].co,
+                 snap_point.snap_size
+                 ))
+            # snap_list:  0: oa-object
+            #             1: snap_point-number
+            #             2: c-coordinate
+            #             3: snap point size
                 
         oa_obj.dupli_list_clear()
 
@@ -189,7 +185,7 @@ def draw_callback_add(self, context):
                 bgl.glVertex2f(x, y)
             bgl.glEnd()
             hue += 1/l
-            
+    
     # restore opengl defaults
     bgl.glDisable(bgl.GL_LINE_SMOOTH)
     bgl.glLineWidth(1)
@@ -221,10 +217,10 @@ class OAAdd(bpy.types.Operator):
             some_point_in_polygon = True
             self.old_obj = sp[0]
             self.new_obj.hide = False
-            
+
             new_sp_obj = next(obj for obj in self.new_obj.dupli_group.objects if obj.OASnapPoints.marked)
             old_sp_obj = next(obj for obj in self.old_obj.dupli_group.objects if obj.OASnapPoints.marked)
-            
+
             new_sp_obj_params = new_sp_obj.OASnapPoints
             old_sp_obj_params = old_sp_obj.OASnapPoints
 
@@ -431,10 +427,22 @@ class OAAdd(bpy.types.Operator):
         else:
             variation = next((var for var in model.variations if var.default), model.variations[0])
         
-        # test whether any model exists in scene
+        # test whether any model with snap_points exists in scene
         # add all oa-groups to list
-        self.oa_objects = [obj for obj in context.scene.objects if obj.OAModel.marked]
-
+        self.oa_objects = list()
+        for obj in context.scene.objects:
+            if obj.OAModel.marked:
+                if obj.dupli_group.OAGroup.oa_type == 'SIMP':
+                    if next((o for o in obj.dupli_group.objects if o.OASnapPoints.marked), None) != None:
+                        self.oa_objects.append(obj)
+                elif obj.dupli_group.OAGroup.oa_type == 'IMPL':
+                    base = next(base for base in settings.models.bases
+                                if tuple(base.oa_id) == tuple(obj.dupli_group.OAGroup.base_id))
+                    base_group = bpy.data.groups.get(base.group_name, settings.oa_file)
+                    
+                    if next((o for o in base_group.objects if o.OASnapPoints.marked), None) != None:
+                        self.oa_objects.append(obj)
+                        
         # add oa-object to scene
         bpy.ops.object.empty_add()
         new_obj = context.scene.objects.active
@@ -443,9 +451,16 @@ class OAAdd(bpy.types.Operator):
         new_obj.OAModel.marked = True
         new_obj.empty_draw_size = 0.001            
 
-        if not self.oa_objects or settings.insert_at_cursor_pos:
+        sp_obj_exists = False
+        if new_obj.dupli_group.OAGroup.oa_type == 'SIMP':
+            if next((obj for obj in new_obj.dupli_group.objects if obj.OASnapPoints.marked), None) != None:
+                sp_obj_exists = True
+            else:
+                pass # todo
+            
+        if any((settings.insert_at_cursor_pos, not self.oa_objects, not sp_obj_exists)):
             return {'FINISHED'}
-
+        
         new_obj.hide = True
         bpy.context.scene.objects.active = None
         self.new_obj = new_obj

@@ -125,6 +125,11 @@ class OBJECT_PT_oa_editor_oa_group(bpy.types.Panel):
                 row = box.row()
                 row.prop(params, "base_id", text="Base Id")
 
+            # default variation
+            if params.oa_type in ('SIMP', 'IMPL'):
+                row = box.row()
+                row.prop(params, "default", text="Default Variation")
+
             # orientation
             if params.oa_type in ('BASE','SIMP'):
                 row = box.row(align=True)

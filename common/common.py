@@ -207,6 +207,7 @@ def collect_models(groups, models, scene_tag_keys):
             oa_type = oa_group.oa_type
             oa_id = tuple(oa_group.oa_id)
             group_name = group.name
+            default = oa_group.default
             
             if oa_type == 'BASE':
                 if oa_id not in [base[0] for base in bases_unsorted]:
@@ -226,14 +227,14 @@ def collect_models(groups, models, scene_tag_keys):
                         continue
 
                 if not model:
-                    simps_impls_unsorted.append((oa_id, [(group_name, oa_type, base_id, new_tags)]))
+                    simps_impls_unsorted.append((oa_id, [(group_name, oa_type, base_id, new_tags, default)]))
                 else:
                     model = model[0]
                     # add new variation
                     if new_tags in [old_tags[3] for old_tags in model[1]]:
                         print("error, same set of tags found (" + oa_type + ", %s)" % group.name)
                     else:
-                        model[1].append((group_name, oa_type, base_id, new_tags))
+                        model[1].append((group_name, oa_type, base_id, new_tags, default))
                     
     # insert sorted bases
     for base in sorted(bases_unsorted, key=lambda item: item[0]):
@@ -263,7 +264,7 @@ def collect_models(groups, models, scene_tag_keys):
                 new_tag = new_variation.tags.add()
                 new_tag.key = key
                 new_tag.value = value
-
+            new_variation.default = variation[4]
 
 def get_collected_models_as_printables(models):
     yield "Bases"

@@ -38,6 +38,7 @@ class OAGroup(PropertyGroup):
     valid_vertical = BoolProperty(default=False)
 
     tags = CollectionProperty(type=OAModelTag)
+    default = BoolProperty(default=False)
 
 class OASnapPointsItem(PropertyGroup):
     name = StringProperty(name="", default="")
