@@ -18,6 +18,7 @@ if "bpy" in locals():
     imp.reload(common_common)
     imp.reload(common_debug)
 
+    imp.reload(editor_common)
     imp.reload(editor_properties)
     imp.reload(editor_uilists)
     imp.reload(editor_operators)
@@ -35,7 +36,8 @@ if "bpy" in locals():
     imp.reload(add_align)
 
 else:
-    from .editor import (properties as editor_properties,
+    from .editor import (common as editor_common,
+                         properties as editor_properties,
                          uilists as editor_uilists,
                          operators as editor_operators,
                          panels as editor_panels)
