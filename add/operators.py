@@ -13,19 +13,28 @@ from ..common.common import ray, point_in_polygon, get_cursor_info, set_cursor_i
 DEBUG = True
 
 
-def check_alignment(self, context, new_sp_obj, old_sp_obj, new_oa_obj_params, old_oa_obj_params):
+def check_alignment(self, context):
+    settings = context.scene.OASettings
     aligned_h = False
     aligned_v = False
-
-    # new_sp_obj = [obj for obj in self.new_obj.dupli_group.objects if obj.OASnapPoints.marked][0]
-    # old_sp_obj = [obj for obj in self.old_obj.dupli_group.objects if obj.OASnapPoints.marked][0]
     
-    new_sp_obj_params = new_sp_obj.OASnapPoints
-    old_sp_obj_params = old_sp_obj.OASnapPoints
+    # switch group with base-group for alignment
+    if self.new_obj.dupli_group.OAGroup.oa_type == 'IMPL':
+        new_original_group = self.new_obj.dupli_group
+        base = next(base for base in settings.models.bases
+                    if tuple(base.oa_id) == tuple(self.new_obj.dupli_group.OAGroup.base_id))
+        self.new_obj.dupli_group = bpy.data.groups.get(base.group_name, settings.oa_file)
 
+    # switch group with base-group for alignment
+    if self.old_obj.dupli_group.OAGroup.oa_type == 'IMPL':
+        old_original_group = self.old_obj.dupli_group
+        base = next(base for base in settings.models.bases
+                    if tuple(base.oa_id) == tuple(self.old_obj.dupli_group.OAGroup.base_id))
+        self.old_obj.dupli_group = bpy.data.groups.get(base.group_name, settings.oa_file)
+    
     if self.new_obj.dupli_group.OAGroup.valid_vertical and self.old_obj.dupli_group.OAGroup.valid_vertical:
-        new_v = self.new_obj.rotation_euler.to_matrix() * (Vector(new_oa_obj_params.upside) - Vector(new_oa_obj_params.downside)).normalized()
-        old_v = self.old_obj.rotation_euler.to_matrix() * (Vector(old_oa_obj_params.upside) - Vector(old_oa_obj_params.downside)).normalized()
+        new_v = self.new_obj.rotation_euler.to_matrix() * (Vector(self.new_obj.dupli_group.OAGroup.upside) - Vector(self.new_obj.dupli_group.OAGroup.downside)).normalized()
+        old_v = self.old_obj.rotation_euler.to_matrix() * (Vector(self.old_obj.dupli_group.OAGroup.upside) - Vector(self.old_obj.dupli_group.OAGroup.downside)).normalized()
         
         if (new_v - old_v).length < MAX_ERROR_EQL: # same or almost same
             aligned_v = True
@@ -39,8 +48,9 @@ def check_alignment(self, context, new_sp_obj, old_sp_obj, new_oa_obj_params, ol
         aligned_v = False
 
     if self.new_obj.dupli_group.OAGroup.valid_horizontal and self.old_obj.dupli_group.OAGroup.valid_horizontal:
-        new_h = self.new_obj.rotation_euler.to_matrix() * (Vector(new_oa_obj_params.outside) - Vector(new_oa_obj_params.inside)).normalized()
-        old_h = self.old_obj.rotation_euler.to_matrix() * (Vector(old_oa_obj_params.outside) - Vector(old_oa_obj_params.inside)).normalized()
+        print("valid horizontal")
+        new_h = self.new_obj.rotation_euler.to_matrix() * (Vector(self.new_obj.dupli_group.OAGroup.outside) - Vector(self.new_obj.dupli_group.OAGroup.inside)).normalized()
+        old_h = self.old_obj.rotation_euler.to_matrix() * (Vector(self.old_obj.dupli_group.OAGroup.outside) - Vector(self.old_obj.dupli_group.OAGroup.inside)).normalized()
         
         if (new_h - old_h).length < MAX_ERROR_EQL: # same or almost same
             aligned_h = True
@@ -52,7 +62,15 @@ def check_alignment(self, context, new_sp_obj, old_sp_obj, new_oa_obj_params, ol
             aligned_h = False
     else:
         aligned_h = False
-        
+
+    # switch back from base-group to original group
+    if self.new_obj.dupli_group.OAGroup.oa_type == 'BASE':
+        self.new_obj.dupli_group = new_original_group
+
+    # switch back from base-group to original group
+    if self.old_obj.dupli_group.OAGroup.oa_type == 'BASE':
+        self.old_obj.dupli_group = old_original_group
+
     return aligned_v and aligned_h
 
 
@@ -65,7 +83,6 @@ def create_snap_list(self, context):
         # switch group with base-group so the snap points can be calculated
         if oa_obj.dupli_group.OAGroup.oa_type == 'IMPL':
             original_group = oa_obj.dupli_group
-            
             base = next(base for base in settings.models.bases
                         if tuple(base.oa_id) == tuple(oa_obj.dupli_group.OAGroup.base_id))
             oa_obj.dupli_group = bpy.data.groups.get(base.group_name, settings.oa_file)
@@ -221,43 +238,61 @@ class OAAdd(bpy.types.Operator):
                             if tuple(base.oa_id) == tuple(self.new_obj.dupli_group.OAGroup.base_id))
                 base_group = bpy.data.groups.get(base.group_name, settings.oa_file)
                 new_sp_obj =  next((o for o in base_group.objects if o.OASnapPoints.marked), None)
+                new_valid_vertical = base_group.OAGroup.valid_vertical
+                new_valid_horizontal = base_group.OAGroup.valid_horizontal
+
             elif self.new_obj.dupli_group.OAGroup.oa_type == 'SIMP':
                 new_sp_obj = next(obj for obj in self.new_obj.dupli_group.objects if obj.OASnapPoints.marked)
+                new_valid_vertical = self.new_obj.dupli_group.OAGroup.valid_vertical
+                new_valid_horizontal = self.new_obj.dupli_group.OAGroup.valid_horizontal
 
             if self.old_obj.dupli_group.OAGroup.oa_type == 'IMPL':
                 base = next(base for base in settings.models.bases
                             if tuple(base.oa_id) == tuple(self.old_obj.dupli_group.OAGroup.base_id))
                 base_group = bpy.data.groups.get(base.group_name, settings.oa_file)
                 old_sp_obj =  next((o for o in base_group.objects if o.OASnapPoints.marked), None)
+                old_valid_vertical = base_group.OAGroup.valid_vertical
+                old_valid_horizontal = base_group.OAGroup.valid_horizontal
+
             elif self.old_obj.dupli_group.OAGroup.oa_type == 'SIMP':
                 old_sp_obj = next(obj for obj in self.old_obj.dupli_group.objects if obj.OASnapPoints.marked)
+                old_valid_vertical = self.old_obj.dupli_group.OAGroup.valid_vertical
+                old_valid_horizontal = self.old_obj.dupli_group.OAGroup.valid_horizontal
             
             new_sp_obj_params = new_sp_obj.OASnapPoints
             old_sp_obj_params = old_sp_obj.OASnapPoints
 
             new_oa_obj_params = self.new_obj.dupli_group.OAGroup
             old_oa_obj_params = self.old_obj.dupli_group.OAGroup
-            
-            if new_oa_obj_params.valid_vertical and old_oa_obj_params.valid_vertical:
+
+            if new_valid_vertical and old_valid_vertical:
                 # try sp without rotation first, then same sp with 180 degree rotation, then next sp
                 for new_sp in new_sp_obj_params.snap_points:
                     align_groups(
                         self.old_obj, sp[1],
                         self.new_obj, new_sp.index,
                         context)
-                    
-                    if check_alignment(self, context, new_sp_obj, old_sp_obj, new_oa_obj_params, old_oa_obj_params):
+                    if check_alignment(self, context):
                         break
                     else:
                         rotate(self.new_obj, new_sp.index, pi, context)
-                        if check_alignment(self, context, new_sp_obj, old_sp_obj, new_oa_obj_params, old_oa_obj_params):
+                        if check_alignment(self, context):
                             break
             else:
                 align_groups(
                     self.old_obj, sp[1],
                     self.new_obj, 0,
                     context)
- 
+            
+            # # switch back from base-group to original group
+            # if self.new_obj.dupli_group.OAGroup.oa_type == 'BASE':
+            #     self.new_obj.dupli_group = original_group
+
+            # # switch back from base-group to original group
+            # if self.old_obj.dupli_group.OAGroup.oa_type == 'BASE':
+            #     self.old_obj.dupli_group = original_group
+
+
             # last_active_snap_point = [i.last_active_snap_point for i in settings.valid_groups if \
             #                               list(i.group_id) == list(self.current_group_id)][0]
  
