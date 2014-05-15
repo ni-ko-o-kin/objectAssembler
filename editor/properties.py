@@ -21,7 +21,7 @@ class OAGroup(PropertyGroup):
             ("IMPL", "Implementation", "Implementation", "", 3)],
                            default="NONE", name="Type")
     
-    oa_id = IntVectorProperty(name="Id", default=(0,0,0), size=3, min=0)
+    oa_id = IntVectorProperty(name="Id", default=(0,0,0), size=3, min=0) # (series, category, model)
     base_id = IntVectorProperty(name="Base Id", default=(0,0,0), size=3, min=0)
     
     upside = FloatVectorProperty(default=(0,0,0))

@@ -49,7 +49,7 @@ def construct_menu(settings):
     # list of all icon-relevant information
     # [
     #  (
-    #   [group_id],
+    #   [oa_id],
     #   (icon_x1, icon_y1, icon_x2, icon_y2),
     #   ( -""- for frame)
     #   ( -""- for hover)
@@ -66,19 +66,19 @@ def construct_menu(settings):
     
     if DEBUG:
         print("\nMenu:")
-        group_ids_for_debug = ""
+        oa_ids_for_debug = ""
 
     # iterate over groups
     for groupings in structured:
         # iterate over obj
         col = 0
-        if DEBUG: group_ids_for_debug = str(groupings[0][0]) + "_" + str(groupings[0][1]) + "_"
-        for group_id in groupings:
+        if DEBUG: oa_ids_for_debug = str(groupings[0][0]) + "_" + str(groupings[0][1]) + "_"
+        for oa_id in groupings:
             if DEBUG:
-                if len(group_ids_for_debug) == 4:
-                    group_ids_for_debug += "{" + str(group_id[2])
+                if len(oa_ids_for_debug) == 4:
+                    oa_ids_for_debug += "{" + str(oa_id[2])
                 else:
-                    group_ids_for_debug = ', '.join((group_ids_for_debug, str(group_id[2])))
+                    oa_ids_for_debug = ', '.join((oa_ids_for_debug, str(oa_id[2])))
             if col >= COL_MAX:
                 pos_y -= (ICON_DISPLAY + PAD)
                 col = 0
@@ -87,15 +87,15 @@ def construct_menu(settings):
             
             icons.append(
                 (
-                    group_id, # id
+                    oa_id, # id
                     icon, # icon
                     (icon[0] - PAD, icon[1] - PAD, icon[2] + PAD, icon[3] + PAD), # frame
                     (icon[0] - HOVER, icon[1] - HOVER, icon[2] + HOVER, icon[3] + HOVER), # hover
                     (
-                        (group_id[2] * 1/subdivisions, group_id[1] * 1/subdivisions),
-                        (group_id[2] * 1/subdivisions, (group_id[1] + 1) * 1/subdivisions),
-                        ((group_id[2] + 1) * 1/subdivisions, (group_id[1] + 1) * 1/subdivisions),
-                        ((group_id[2] + 1) * 1/subdivisions, group_id[1] * 1/subdivisions)
+                        (oa_id[2] * 1/subdivisions, oa_id[1] * 1/subdivisions),
+                        (oa_id[2] * 1/subdivisions, (oa_id[1] + 1) * 1/subdivisions),
+                        ((oa_id[2] + 1) * 1/subdivisions, (oa_id[1] + 1) * 1/subdivisions),
+                        ((oa_id[2] + 1) * 1/subdivisions, oa_id[1] * 1/subdivisions)
                         )  # uv
                     )
                 )
@@ -105,7 +105,7 @@ def construct_menu(settings):
         # after every group add a PAD_GROUPS + ICON_DISPLAY
         pos_y -= (PAD_GROUPS + ICON_DISPLAY)
                         
-        if DEBUG: print("group_ids: " + group_ids_for_debug + "}")
+        if DEBUG: print("oa_ids: " + oa_ids_for_debug + "}")
 
     return icons # (pos_xy, frame)
 

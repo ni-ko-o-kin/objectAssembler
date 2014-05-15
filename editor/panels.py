@@ -119,7 +119,7 @@ class OBJECT_PT_oa_editor_oa_group(bpy.types.Panel):
             if params.oa_type != 'NONE':
                 row = box.row(align=True)
                 row.prop(params, "oa_id", text="Id")
-                row.operator("oa.editor_next_unused_group_id", text="", icon='NEXT_KEYFRAME').group_index = group_index
+                row.operator("oa.editor_next_unused_category_id", text="", icon='NEXT_KEYFRAME').group_index = group_index
                 row.operator("oa.editor_next_unused_model_id", text="", icon='FORWARD').group_index = group_index
 
             if params.oa_type == 'IMPL':

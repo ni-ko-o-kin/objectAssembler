@@ -294,7 +294,7 @@ class OAAdd(bpy.types.Operator):
                     context)
             
             # last_active_snap_point = [i.last_active_snap_point for i in settings.valid_groups if \
-            #                               list(i.group_id) == list(self.current_group_id)][0]
+            #                               list(i.oa_id) == list(self.current_oa_id)][0]
  
             # align_groups(
             #     self.old_obj, sp[1],
@@ -335,13 +335,13 @@ class OAAdd(bpy.types.Operator):
         # elif event.type == 'S' and event.value == 'RELEASE':
         #     if self.new_obj is not None:
         #         snap_points = [i.OASnapPoints.snap_points for i in self.new_obj.dupli_group.objects if i.OASnapPoints.marked][0]
-        #         self.current_group_id = [i.OASnapPoints.group_id for i in self.new_obj.dupli_group.objects if i.OASnapPoints.marked][0]
+        #         self.current_oa_id = [i.OASnapPoints.oa_id for i in self.new_obj.dupli_group.objects if i.OASnapPoints.marked][0]
 
-        #         last_active_snap_point = [i.last_active_snap_point for i in settings.valid_groups if list(i.group_id) == list(self.current_group_id)][0]
+        #         last_active_snap_point = [i.last_active_snap_point for i in settings.valid_groups if list(i.oa_id) == list(self.current_oa_id)][0]
 
-        #         # set last_active_snap_points for all groups of a group_id
+        #         # set last_active_snap_points for all groups of a oa_id
         #         for i in settings.valid_groups:
-        #             if list(i.group_id) == list(self.current_group_id):
+        #             if list(i.oa_id) == list(self.current_oa_id):
         #                 i.last_active_snap_point = (i.last_active_snap_point + 1) % len(snap_points)
 
         #         snap()
@@ -350,7 +350,7 @@ class OAAdd(bpy.types.Operator):
 
         # elif event.type == 'R' and event.value == 'RELEASE':
         #     for i in settings.valid_groups:
-        #         if list(i.group_id) == list(self.current_group_id):
+        #         if list(i.oa_id) == list(self.current_oa_id):
         #             # if event.shift:
         #             #     rotate(self.new_obj, i.last_active_snap_point, None, context)
         #             # else:

@@ -195,9 +195,9 @@ class OBJECT_OT_oa_editor_next_unused_model_id(bpy.types.Operator):
 
         return {'FINISHED'}
     
-class OBJECT_OT_oa_editor_next_unused_group_id(bpy.types.Operator):
+class OBJECT_OT_oa_editor_next_unused_category_id(bpy.types.Operator):
     bl_description = bl_label = "Apply next unused group Id, unless it is already unique."
-    bl_idname = "oa.editor_next_unused_group_id"
+    bl_idname = "oa.editor_next_unused_category_id"
     bl_options = {'INTERNAL'}
 
     group_index = IntProperty(default=0)
@@ -826,7 +826,7 @@ def register():
     bpy.utils.register_class(OBJECT_OT_oa_editor_add_tag_key)
     bpy.utils.register_class(OBJECT_OT_oa_editor_remove_tag_key)
     bpy.utils.register_class(OBJECT_OT_oa_editor_remove_tag_value)
-    bpy.utils.register_class(OBJECT_OT_oa_editor_next_unused_group_id)
+    bpy.utils.register_class(OBJECT_OT_oa_editor_next_unused_category_id)
     bpy.utils.register_class(OBJECT_OT_oa_editor_next_unused_model_id)
     bpy.utils.register_class(OBJECT_OT_oa_set_vertical_false)
     bpy.utils.register_class(OBJECT_OT_oa_set_horizontal_false)
@@ -861,7 +861,7 @@ def unregister():
     bpy.utils.unregister_class(OBJECT_OT_oa_set_horizontal_false)
     bpy.utils.unregister_class(OBJECT_OT_oa_set_vertical_false)
     bpy.utils.unregister_class(OBJECT_OT_oa_editor_next_unused_model_id)
-    bpy.utils.unregister_class(OBJECT_OT_oa_editor_next_unused_group_id)
+    bpy.utils.unregister_class(OBJECT_OT_oa_editor_next_unused_category_id)
     bpy.utils.unregister_class(OBJECT_OT_oa_editor_remove_tag_value)
     bpy.utils.unregister_class(OBJECT_OT_oa_editor_remove_tag_key)
     bpy.utils.unregister_class(OBJECT_OT_oa_editor_add_tag_key)
