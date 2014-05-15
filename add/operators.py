@@ -12,6 +12,16 @@ from ..common.common import ray, point_in_polygon, get_cursor_info, set_cursor_i
 
 DEBUG = True
 
+def get_group_with_its_sp_obj(oa_group, settings):
+    if oa_group.OAGroup.oa_type == 'SIMP':
+        return oa_group, next((obj for obj in oa_group.objects if obj.OASnapPoints.marked), None)
+
+    elif oa_group.OAGroup.oa_type == 'IMPL':
+        base = next(base for base in settings.models.bases
+                    if tuple(base.oa_id) == tuple(oa_group.OAGroup.base_id))
+        base_group = bpy.data.groups.get(base.group_name, settings.oa_file)
+        return base_group, next((obj for obj in base_group.objects if obj.OASnapPoints.marked), None)
+
 def switch_to_base_group(oa_obj, settings):
     original_group = oa_obj.dupli_group
 
@@ -26,7 +36,6 @@ def switch_to_base_group(oa_obj, settings):
 def switch_to_original_group(oa_obj, original_group):
     if oa_obj.dupli_group.OAGroup.oa_type == 'BASE':
         oa_obj.dupli_group = original_group
-
 
 def check_alignment(self, context):
     settings = context.scene.OASettings
@@ -237,41 +246,17 @@ class OAAdd(bpy.types.Operator):
             self.old_obj = sp[0]
             self.new_obj.hide = False
 
-            if self.new_obj.dupli_group.OAGroup.oa_type == 'IMPL':
-                base = next(base for base in settings.models.bases
-                            if tuple(base.oa_id) == tuple(self.new_obj.dupli_group.OAGroup.base_id))
-                base_group = bpy.data.groups.get(base.group_name, settings.oa_file)
-                new_sp_obj =  next((o for o in base_group.objects if o.OASnapPoints.marked), None)
-                new_valid_vertical = base_group.OAGroup.valid_vertical
-                new_valid_horizontal = base_group.OAGroup.valid_horizontal
+            sp_obj_group, new_sp_obj = get_group_with_its_sp_obj(self.new_obj.dupli_group, settings)
+            new_valid_vertical = sp_obj_group.OAGroup.valid_vertical
+            new_valid_horizontal = sp_obj_group.OAGroup.valid_horizontal
 
-            elif self.new_obj.dupli_group.OAGroup.oa_type == 'SIMP':
-                new_sp_obj = next(obj for obj in self.new_obj.dupli_group.objects if obj.OASnapPoints.marked)
-                new_valid_vertical = self.new_obj.dupli_group.OAGroup.valid_vertical
-                new_valid_horizontal = self.new_obj.dupli_group.OAGroup.valid_horizontal
-
-            if self.old_obj.dupli_group.OAGroup.oa_type == 'IMPL':
-                base = next(base for base in settings.models.bases
-                            if tuple(base.oa_id) == tuple(self.old_obj.dupli_group.OAGroup.base_id))
-                base_group = bpy.data.groups.get(base.group_name, settings.oa_file)
-                old_sp_obj =  next((o for o in base_group.objects if o.OASnapPoints.marked), None)
-                old_valid_vertical = base_group.OAGroup.valid_vertical
-                old_valid_horizontal = base_group.OAGroup.valid_horizontal
-
-            elif self.old_obj.dupli_group.OAGroup.oa_type == 'SIMP':
-                old_sp_obj = next(obj for obj in self.old_obj.dupli_group.objects if obj.OASnapPoints.marked)
-                old_valid_vertical = self.old_obj.dupli_group.OAGroup.valid_vertical
-                old_valid_horizontal = self.old_obj.dupli_group.OAGroup.valid_horizontal
-            
-            new_sp_obj_params = new_sp_obj.OASnapPoints
-            old_sp_obj_params = old_sp_obj.OASnapPoints
-
-            new_oa_obj_params = self.new_obj.dupli_group.OAGroup
-            old_oa_obj_params = self.old_obj.dupli_group.OAGroup
+            sp_obj_group, old_sp_obj = get_group_with_its_sp_obj(self.old_obj.dupli_group, settings)
+            old_valid_vertical = sp_obj_group.OAGroup.valid_vertical
+            old_valid_horizontal = sp_obj_group.OAGroup.valid_horizontal
 
             if new_valid_vertical and old_valid_vertical:
                 # try sp without rotation first, then same sp with 180 degree rotation, then next sp
-                for new_sp in new_sp_obj_params.snap_points:
+                for new_sp in new_sp_obj.OASnapPoints.snap_points:
                     align_groups(
                         self.old_obj, sp[1],
                         self.new_obj, new_sp.index,
@@ -413,18 +398,8 @@ class OAAdd(bpy.types.Operator):
         new_obj.OAModel.marked = True
         new_obj.empty_draw_size = 0.001            
 
-        sp_obj_exists = False
-        if new_obj.dupli_group.OAGroup.oa_type == 'SIMP':
-            if next((obj for obj in new_obj.dupli_group.objects if obj.OASnapPoints.marked), None) != None:
-                sp_obj_exists = True
-        elif new_obj.dupli_group.OAGroup.oa_type == 'IMPL':
-            base = next(base for base in settings.models.bases
-                        if tuple(base.oa_id) == tuple(new_obj.dupli_group.OAGroup.base_id))
-            base_group = bpy.data.groups.get(base.group_name, settings.oa_file)
-            if next((o for o in base_group.objects if o.OASnapPoints.marked), None) != None:
-                sp_obj_exists = True
-                
-            
+        sp_obj_exists = bool(get_group_with_its_sp_obj(new_obj.dupli_group, settings)[1])
+        
         if any((settings.insert_at_cursor_pos, not self.oa_objects, not sp_obj_exists)):
             return {'FINISHED'}
 
