@@ -24,7 +24,6 @@ if "bpy" in locals():
     imp.reload(editor_operators)
     imp.reload(editor_panels)
 
-    # imp.reload(object_editor)
     imp.reload(ui_properties)
     imp.reload(ui_panels)
     imp.reload(ui_operators)
