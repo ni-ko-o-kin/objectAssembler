@@ -379,17 +379,9 @@ class OAAdd(bpy.types.Operator):
         self.oa_objects = list()
         for obj in context.scene.objects:
             if obj.OAModel.marked:
-                if obj.dupli_group.OAGroup.oa_type == 'SIMP':
-                    if next((o for o in obj.dupli_group.objects if o.OASnapPoints.marked), None) != None:
-                        self.oa_objects.append(obj)
-
-                elif obj.dupli_group.OAGroup.oa_type == 'IMPL':
-                    base = next(base for base in settings.models.bases
-                                if tuple(base.oa_id) == tuple(obj.dupli_group.OAGroup.base_id))
-                    base_group = bpy.data.groups.get(base.group_name, settings.oa_file)
-                    if next((o for o in base_group.objects if o.OASnapPoints.marked), None) != None:
-                        self.oa_objects.append(obj)
-
+                if bool(get_group_with_its_sp_obj(obj.dupli_group, settings)[1]):
+                    self.oa_objects.append(obj)
+                    
         # add oa-object to scene
         bpy.ops.object.empty_add()
         new_obj = context.scene.objects.active
