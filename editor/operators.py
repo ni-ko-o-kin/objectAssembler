@@ -6,7 +6,7 @@ from mathutils import Matrix, Vector, Euler
 from bpy.props import IntProperty, CollectionProperty, StringProperty
 
 from ..common.common import (toggle, double_toggle, select_and_active, move_origin_to_geometry,
-                             get_oa_group, get_sp_obj, ALLOWED_NAVIGATION, get_sp_obj_from_base_id,
+                             get_sp_obj, ALLOWED_NAVIGATION, get_sp_obj_from_base_id,
                              powerset_without_empty_set, collect_models, get_collected_models_as_printables)
 
 class OBJECT_OT_oa_editor_collect_models(bpy.types.Operator):

@@ -146,18 +146,6 @@ def move_origin_to_geometry(obj):
     offset = old_origin - new_origin
     for v in obj.data.vertices: v.co += offset
 
-def get_oa_group(obj):
-    ''' get excatly one object assembler group or return None '''
-    if not obj: return None
-    oa_group = None
-    for group in obj.users_group:
-        if group.OAGroup.oa_type != 'NONE':
-            if oa_group is not None:
-                return None
-            oa_group = group
-            
-    return oa_group
-
 def get_sp_obj(obj):
     ''' get excatly one snap point object or return None '''
     # doesn't check for multiple sp_objs - error checking-ops should do that
