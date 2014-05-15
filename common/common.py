@@ -158,12 +158,25 @@ def get_sp_obj(obj):
     return sp_obj
 
 def get_sp_obj_from_base_id(base):
+    ''' for use in the oa-editor only because no OASettings are set yet '''
     for group in bpy.data.groups:
         if group.OAGroup.oa_type == 'BASE':
-            if tuple(group.OAGroup.oa_id) == base:
+            if tuple(group.OAGroup.oa_id) == tuple(base):
                 for obj in group.objects:
                     if obj.type == 'MESH' and obj.OASnapPoints.marked:
                         return obj
+
+def get_group_with_its_sp_obj(group, settings):
+    ''' for use in the oa only - not for editor'''
+    if group.OAGroup.oa_type == 'SIMP':
+        return group, next((obj for obj in group.objects if obj.OASnapPoints.marked), None)
+
+    elif group.OAGroup.oa_type == 'IMPL':
+        base = next(base for base in settings.models.bases
+                    if tuple(base.oa_id) == tuple(group.OAGroup.base_id))
+        base_group = bpy.data.groups.get(base.group_name, settings.oa_file)
+        return base_group, next((obj for obj in base_group.objects if obj.OASnapPoints.marked), None)
+    return None, None
 
 def powerset(iterable):
     "powerset([1,2,3]) --> () (1,) (2,) (3,) (1,2) (1,3) (2,3) (1,2,3)"

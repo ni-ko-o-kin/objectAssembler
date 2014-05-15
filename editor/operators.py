@@ -626,9 +626,17 @@ def draw_callback_abc(self, context):
         b_3d += offset
         c_3d += offset
 
-    a_2d = tuple(map(ceil, view3d_utils.location_3d_to_region_2d(region, rv3d, a_3d)))
-    b_2d = tuple(map(ceil, view3d_utils.location_3d_to_region_2d(region, rv3d, b_3d)))
-    c_2d = tuple(map(ceil, view3d_utils.location_3d_to_region_2d(region, rv3d, c_3d)))
+    a_3d_to_region_2d = view3d_utils.location_3d_to_region_2d(region, rv3d, a_3d)
+    b_3d_to_region_2d = view3d_utils.location_3d_to_region_2d(region, rv3d, b_3d)
+    c_3d_to_region_2d = view3d_utils.location_3d_to_region_2d(region, rv3d, c_3d)
+
+    # abort when viewport is to close or outside the 3d-view because location_3d_to_region_2d() returns None
+    if not all((a_3d_to_region_2d, b_3d_to_region_2d, c_3d_to_region_2d)):
+        return
+
+    a_2d = tuple(map(ceil, a_3d_to_region_2d))
+    b_2d = tuple(map(ceil, b_3d_to_region_2d))
+    c_2d = tuple(map(ceil, c_3d_to_region_2d))
 
     def draw_letter(x=10, y=10, letter="-"):
         bgl.glColor3f(0.1,0.1,0.1)

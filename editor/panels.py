@@ -90,7 +90,8 @@ class OBJECT_PT_oa_editor_oa_group(bpy.types.Panel):
     def draw(self, context):
         obj = context.object
         layout = self.layout
-
+        settings = context.scene.OASettings
+        
         row = layout.row(align=True)
         if bpy.data.groups:
             row.operator("object.group_link", text="Add to Group")
@@ -146,8 +147,7 @@ class OBJECT_PT_oa_editor_oa_group(bpy.types.Panel):
             
             # snap points
             if params.oa_type == 'IMPL':
-                base_id = group.OAGroup.base_id
-                sp_obj = get_sp_obj_from_base_id(base_id)
+                sp_obj = get_sp_obj_from_base_id(group.OAGroup.base_id)
 
                 if sp_obj:
                     snap_points = sp_obj.OASnapPoints.snap_points
