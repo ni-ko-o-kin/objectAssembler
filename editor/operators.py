@@ -221,6 +221,28 @@ class OBJECT_OT_oa_editor_next_unused_group_id(bpy.types.Operator):
 
         return {'FINISHED'}
 
+class OBJECT_OT_oa_set_horizontal_false(bpy.types.Operator):
+    bl_description = bl_label = "Set Horizontal False"
+    bl_idname = "oa.set_horizontal_false"
+
+    group_index = IntProperty(default=0)
+
+    def invoke(self, context, event):
+        params = context.object.users_group[self.group_index].OAGroup
+        params.valid_horizontal = False
+        return {'FINISHED'}
+
+class OBJECT_OT_oa_set_vertical_false(bpy.types.Operator):
+    bl_description = bl_label = "Set Vertical False"
+    bl_idname = "oa.set_vertical_false"
+
+    group_index = IntProperty(default=0)
+
+    def invoke(self, context, event):
+        params = context.object.users_group[self.group_index].OAGroup
+        params.valid_vertical = False
+        return {'FINISHED'}
+
 class OBJECT_OT_oa_set_outside(bpy.types.Operator):
     bl_description = bl_label = "Set Outside"
     bl_idname = "oa.set_outside"
@@ -796,6 +818,8 @@ def register():
     bpy.utils.register_class(OBJECT_OT_oa_editor_remove_tag_value)
     bpy.utils.register_class(OBJECT_OT_oa_editor_next_unused_group_id)
     bpy.utils.register_class(OBJECT_OT_oa_editor_next_unused_model_id)
+    bpy.utils.register_class(OBJECT_OT_oa_set_vertical_false)
+    bpy.utils.register_class(OBJECT_OT_oa_set_horizontal_false)
     bpy.utils.register_class(OBJECT_OT_oa_set_downside)
     bpy.utils.register_class(OBJECT_OT_oa_set_upside)
     bpy.utils.register_class(OBJECT_OT_oa_set_inside)
@@ -824,6 +848,8 @@ def unregister():
     bpy.utils.unregister_class(OBJECT_OT_oa_set_inside)
     bpy.utils.unregister_class(OBJECT_OT_oa_set_upside)
     bpy.utils.unregister_class(OBJECT_OT_oa_set_downside)
+    bpy.utils.unregister_class(OBJECT_OT_oa_set_horizontal_false)
+    bpy.utils.unregister_class(OBJECT_OT_oa_set_vertical_false)
     bpy.utils.unregister_class(OBJECT_OT_oa_editor_next_unused_model_id)
     bpy.utils.unregister_class(OBJECT_OT_oa_editor_next_unused_group_id)
     bpy.utils.unregister_class(OBJECT_OT_oa_editor_remove_tag_value)

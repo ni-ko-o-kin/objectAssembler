@@ -135,13 +135,15 @@ class OBJECT_PT_oa_editor_oa_group(bpy.types.Panel):
                 row = box.row(align=True)
                 row.operator("oa.set_upside", text="Set Upside").group_index = group_index
                 row.operator("oa.set_downside", text="Set Downside").group_index = group_index
+                row.operator("oa.set_vertical_false", text="", icon='X').group_index = group_index
                 row.label("", icon='FILE_TICK' if params.valid_vertical else 'PANEL_CLOSE')
-
+                
                 row = box.row(align=True)
                 row.operator("oa.set_inside", text="Set Inside").group_index = group_index
                 row.operator("oa.set_outside", text="Set Outside").group_index = group_index
+                row.operator("oa.set_horizontal_false", text="", icon='X').group_index = group_index
                 row.label("", icon='FILE_TICK' if params.valid_horizontal else 'PANEL_CLOSE')
-
+            
             # snap points
             if params.oa_type == 'IMPL':
                 base_id = group.OAGroup.base_id
