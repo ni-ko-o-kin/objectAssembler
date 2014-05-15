@@ -21,7 +21,7 @@ def get_group_with_its_sp_obj(oa_group, settings):
                     if tuple(base.oa_id) == tuple(oa_group.OAGroup.base_id))
         base_group = bpy.data.groups.get(base.group_name, settings.oa_file)
         return base_group, next((obj for obj in base_group.objects if obj.OASnapPoints.marked), None)
-
+    return None, None
 
 def switch_to_base_group(oa_obj, settings):
     original_group = oa_obj.dupli_group
