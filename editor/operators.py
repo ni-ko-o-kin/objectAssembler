@@ -185,9 +185,10 @@ class OBJECT_OT_oa_editor_next_unused_model_id(bpy.types.Operator):
 
         model_ids = [group.OAGroup.oa_id[2]
                      for group in bpy.data.groups
-                     if group.OAGroup.oa_type in oa_type and \
-                         group.OAGroup.oa_id[0] == params.oa_id[0] and \
-                         group.OAGroup.oa_id[1] == params.oa_id[1]]
+                     if all((group.OAGroup.oa_type in oa_type,
+                             group.objects,
+                             group.OAGroup.oa_id[0] == params.oa_id[0],
+                             group.OAGroup.oa_id[1] == params.oa_id[1]))]
         
         max_model_id = max(model_ids)
         if model_ids.count(params.oa_id[2]) != 1:
@@ -214,9 +215,10 @@ class OBJECT_OT_oa_editor_next_unused_category_id(bpy.types.Operator):
 
         category_ids = [group.OAGroup.oa_id[1]
                         for group in bpy.data.groups
-                        if group.OAGroup.oa_type in oa_type and \
-                            group.OAGroup.oa_id[0] == params.oa_id[0]]
-
+                        if all((group.OAGroup.oa_type in oa_type,
+                                group.objects,
+                                group.OAGroup.oa_id[0] == params.oa_id[0]))]
+        
         max_category_id = max(category_ids)
         if category_ids.count(params.oa_id[1]) != 1:
             params.oa_id[1] = 1 + max_category_id
