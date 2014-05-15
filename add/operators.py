@@ -92,7 +92,7 @@ def check_alignment(self, context):
     switch_to_original_group(self.new_obj, new_original_group)
     switch_to_original_group(self.old_obj, old_original_group)
     
-    return aligned_v and aligned_h
+    return aligned_v, aligned_h
 
 
 def create_snap_list(self, context):
@@ -254,19 +254,48 @@ class OAAdd(bpy.types.Operator):
             old_valid_vertical = sp_obj_group.OAGroup.valid_vertical
             old_valid_horizontal = sp_obj_group.OAGroup.valid_horizontal
 
-            if new_valid_vertical and old_valid_vertical:
+            if (new_valid_vertical and old_valid_vertical) or (new_valid_horizontal and old_valid_horizontal):
                 # try sp without rotation first, then same sp with 180 degree rotation, then next sp
+                vert_or_hort_ok_matrix = None
+                current = (False, False)
                 for new_sp in new_sp_obj.OASnapPoints.snap_points:
                     align_groups(
                         self.old_obj, sp[1],
                         self.new_obj, new_sp.index,
                         context)
-                    if check_alignment(self, context):
+                    current = check_alignment(self, context)
+                    if all(current):
+                        print("break: perfect match")
                         break
-                    else:
-                        rotate(self.new_obj, new_sp.index, pi, context)
-                        if check_alignment(self, context):
+                    elif any(current):
+                        print("at least one found")
+                        if (new_valid_vertical and old_valid_vertical) != (new_valid_horizontal and old_valid_horizontal):
+                            # if only one is set then the best is either (True, False) or (False, True)
+                            print("break: only one is set")
                             break
+                        vert_or_hort_ok_matrix = self.new_obj.matrix_world.copy()
+                    
+                    rotate(self.new_obj, new_sp.index, pi, context)
+                    current = check_alignment(self, context)
+                    if all(current):
+                        print("break: perfect match after rotation")
+                        break
+                    elif any(current):
+                        print("at least one found after rotation")
+                        if (new_valid_vertical and old_valid_vertical) != (new_valid_horizontal and old_valid_horizontal):
+                            # if only one is set then the best is either (True, False) or (False, True)
+                            print("break: only one is set")
+                            break
+                        vert_or_hort_ok_matrix = self.new_obj.matrix_world.copy()
+                    
+                if not any(current):
+                    # at this point vert and hort were not found, so use the best found if any
+                    if vert_or_hort_ok_matrix:
+                        print("found:", current)
+                        self.new_obj.matrix_world = vert_or_hort_ok_matrix
+                    else:
+                        print("none found")
+
             else:
                 align_groups(
                     self.old_obj, sp[1],
