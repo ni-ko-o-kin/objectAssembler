@@ -395,6 +395,10 @@ class OAAdd(bpy.types.Operator):
         # add all oa-groups to list
         self.oa_objects = list()
         for obj in context.scene.objects:
+            if obj.hide:
+                print("ignored", obj.name)
+                continue
+            
             if obj.OAModel.marked:
                 if bool(get_group_with_its_sp_obj(obj.dupli_group, settings)[1]):
                     self.oa_objects.append(obj)
