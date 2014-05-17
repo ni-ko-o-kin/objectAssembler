@@ -99,18 +99,21 @@ def create_snap_list(self, context):
 
         for snap_point_nr, snap_point in enumerate(dupli_sp.object.OASnapPoints.snap_points):
             self.snap_list.append(
-                (oa_obj,
+                [oa_obj,
                  snap_point_nr,
                  dupli_sp.matrix * dupli_sp.object.data.vertices[snap_point.c].co,
-                 snap_point.snap_size
-                 ))
+                 snap_point.snap_size,
+                 0,
+                 None
+                 ])
             # snap_list:  0: oa-object
             #             1: snap_point-number
             #             2: c-coordinate
             #             3: snap point size
+            #             4: distance to viewport
+            #             5: polygon around snap point
                 
         oa_obj.dupli_list_clear()
-
         switch_to_original_group(oa_obj, original_group)
         
 def order_snap_list(self, context):
@@ -127,9 +130,6 @@ def order_snap_list(self, context):
     else:
         view_vector = view3d_utils.region_2d_to_vector_3d(region, rv3d, coord)
         ray_origin = view3d_utils.region_2d_to_origin_3d(region, rv3d, coord)
-        
-    self.snap_list_unordered = []
-    self.snap_list_ordered = [] # nearest sp first
     
     for sp in self.snap_list:
         # try to get center_x and center_y; if None move on to next snap point
@@ -155,13 +155,11 @@ def order_snap_list(self, context):
             polygon.append((x,y))
             
         dist_squared = round((sp[2] - ray_origin).length_squared)
-        
-        self.snap_list_unordered.append(sp + (dist_squared, polygon))
-        # same as snap_list but aditional keys:
-        #             4: distance to viewport
-        #             5: polygon around snap point
-    
-    self.snap_list_ordered = sorted(self.snap_list_unordered, key=lambda k: k[4], reverse=False)
+
+        sp[4] = dist_squared
+        sp[5] = polygon
+
+    self.snap_list.sort(key=lambda k: k[4], reverse=False)
 
 def draw_callback_add(self, context):
     bgl.glLineWidth(1)
@@ -171,10 +169,9 @@ def draw_callback_add(self, context):
     # draw add-mode-title
     mode_title.mode_title(False, "Add")
     
-    if self.snap_list_ordered:
-        
+    if self.snap_list:
         hue = 0
-        old_obj_snap_points = [sp for sp in self.snap_list_ordered if sp[0] == self.old_obj]
+        old_obj_snap_points = [sp for sp in self.snap_list if sp[0] == self.old_obj]
         l = len(old_obj_snap_points) - 1
         for sp in reversed(old_obj_snap_points):
             
@@ -224,7 +221,7 @@ class OAAdd(bpy.types.Operator):
         last_index = -1
         some_point_in_polygon = False
         
-        for sp in self.snap_list_ordered:
+        for sp in self.snap_list:
             # if cursor is not over a snap point -> next sp
             if not point_in_polygon(self.mouse[0], self.mouse[1], sp[5]):
                 continue
