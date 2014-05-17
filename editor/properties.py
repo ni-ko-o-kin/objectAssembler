@@ -6,8 +6,6 @@ from bpy.types import PropertyGroup
 
 from ..common.properties import OACollectModels
 
-class OAError(PropertyGroup):
-    text = StringProperty(default="")
 
 class OAModelTag(PropertyGroup):
     key = StringProperty()
@@ -73,8 +71,6 @@ class OAEditorSettings(PropertyGroup):
 # Register
 ################
 def register():
-    bpy.utils.register_class(OAError)
-    
     bpy.utils.register_class(OAModelTag)
     bpy.utils.register_class(OAGroup)
     bpy.utils.register_class(OASnapPointsItem)
@@ -87,10 +83,8 @@ def register():
     bpy.types.Group.OAGroup = PointerProperty(type=OAGroup)
     bpy.types.Object.OASnapPoints = PointerProperty(type=OASnapPoints)
     bpy.types.Scene.OAEditorSettings = PointerProperty(type=OAEditorSettings)
-    bpy.types.Scene.OAErrors = CollectionProperty(type=OAError)
 
 def unregister():
-    del bpy.types.Scene.OAErrors
     del bpy.types.Scene.OAEditorSettings
     del bpy.types.Object.OASnapPoints
     del bpy.types.Group.OAGroup
@@ -103,5 +97,3 @@ def unregister():
     bpy.utils.unregister_class(OASnapPointsItem)
     bpy.utils.unregister_class(OAGroup)
     bpy.utils.unregister_class(OAModelTag)
-
-    bpy.utils.unregister_class(OAError)

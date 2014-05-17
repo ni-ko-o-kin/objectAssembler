@@ -72,13 +72,9 @@ class OBJECT_PT_oa_editor_error_checking(bpy.types.Panel):
     def draw(self, context):
         obj = context.object
         layout = self.layout
-        errors = context.scene.OAErrors
         
         layout.operator("oa.editor_error_checking_same_tags")
         layout.operator("oa.editor_collect_models")
-
-        for error in errors:
-            layout.label(error.text)
 
 class OBJECT_PT_oa_editor_oa_group(bpy.types.Panel):
     bl_label = "Model"

@@ -36,34 +36,34 @@ class OBJECT_OT_oa_editor_error_checking_same_tags(bpy.types.Operator):
     bl_idname = "oa.editor_error_checking_same_tags"
     bl_options = {'INTERNAL'}
 
-    def invoke(self, context, event):
-        errors = context.scene.OAErrors
-        errors.clear()
 
-        groups = []
-        for obj in context.scene.objects:
-            for group in obj.users_group:
-                if group.OAGroup.oa_type in ('IMPL', 'SIMP'):
-                   groups.append(group)
+    # todo --> move to collect models
+
+    # def invoke(self, context, event):
+    #     groups = []
+    #     for obj in context.scene.objects:
+    #         for group in obj.users_group:
+    #             if group.OAGroup.oa_type in ('IMPL', 'SIMP'):
+    #                groups.append(group)
         
-        multiple = []
-        for group in set(groups):
-            tags = []
-            for tag in group.OAGroup.tags:
-                tags.append((tag.key, tag.value))
-                if tags.count((tag.key, tag.value)) > 1:
-                    if not errors:
-                        item = errors.add()
-                        item.text = "Tag found multiple times Error:"
-                    multiple.append((group.name, tag))
-        multiple = set(multiple)
-        for group, tag in multiple:
-            item = errors.add()
-            item.text = "    " + tag.key + "/" + tag.value + " in " + group
+    #     multiple = []
+    #     for group in set(groups):
+    #         tags = []
+    #         for tag in group.OAGroup.tags:
+    #             tags.append((tag.key, tag.value))
+    #             if tags.count((tag.key, tag.value)) > 1:
+    #                 if not errors:
+    #                     item = errors.add()
+    #                     item.text = "Tag found multiple times Error:"
+    #                 multiple.append((group.name, tag))
+    #     multiple = set(multiple)
+    #     for group, tag in multiple:
+    #         item = errors.add()
+    #         item.text = "    " + tag.key + "/" + tag.value + " in " + group
 
-        if not errors:
-            item = errors.add()
-            item.text = "No errors found"
+    #     if not errors:
+    #         item = errors.add()
+    #         item.text = "No errors found"
         return {'FINISHED'}
 
         
@@ -72,30 +72,29 @@ class OBJECT_OT_oa_editor_error_checking_multiple_oa_group(bpy.types.Operator):
     bl_description = bl_label = "Check Objects for multiple OA-Groups"
     bl_idname = "oa.editor_error_checking_multiple_oa_group"
     bl_options = {'INTERNAL'}
-
-    def invoke(self, context, event):
-        errors = context.scene.OAErrors
-        errors.clear()
-        
-        for obj in context.scene.objects:
-            oa_group = None
-            multiple_groups = []
-            for group in obj.users_group:
-                if group.OAGroup.oa_type != 'NONE':
-                    if oa_group is not None:
-                        multiple_groups.append(group.name)
-                    else:
-                        multiple_groups.append(obj.name + " in: ")
-                        multiple_groups.append(group.name)
-                    oa_group = group
-            if len(multiple_groups) > 2:
-                item = errors.add()
-                item.text = "Multiple OA-Groups Error:"
-                item = errors.add()
-                item.text = "    " + multiple_groups[0] + ', '.join(multiple_groups[1:])
-        if not errors:
-            item = errors.add()
-            item.text = "No errors found"
+    
+    # todo --> move to collect_models
+    
+    # def invoke(self, context, event):
+    #     for obj in context.scene.objects:
+    #         oa_group = None
+    #         multiple_groups = []
+    #         for group in obj.users_group:
+    #             if group.OAGroup.oa_type != 'NONE':
+    #                 if oa_group is not None:
+    #                     multiple_groups.append(group.name)
+    #                 else:
+    #                     multiple_groups.append(obj.name + " in: ")
+    #                     multiple_groups.append(group.name)
+    #                 oa_group = group
+    #         if len(multiple_groups) > 2:
+    #             item = errors.add()
+    #             item.text = "Multiple OA-Groups Error:"
+    #             item = errors.add()
+    #             item.text = "    " + multiple_groups[0] + ', '.join(multiple_groups[1:])
+    #     if not errors:
+    #         item = errors.add()
+    #         item.text = "No errors found"
         return {'FINISHED'}
 
 class OBJECT_OT_oa_editor_add_model_tag(bpy.types.Operator):
