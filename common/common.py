@@ -243,6 +243,15 @@ def collect_models(groups, models, scene_tag_keys):
                         return "ERROR", "Simple and Implementation found in same model: %s (%s)" % (group.name, str(tuple(group.OAGroup.oa_id))[1:-1])
                     impl_found = True
 
+    # check for multiple sp-objects in one oa_group
+    for oa_group in [group for group in groups if group.OAGroup.oa_type in ('BASE', 'SIMP') and group.objects]:
+        found = False
+        for obj in oa_group.objects:
+            if obj.OASnapPoints.marked:
+                if found:
+                    return "ERROR", "Multiple Snap Point Objects found in: %s (%s)" % (oa_group.name, str(tuple(oa_group.OAGroup.oa_id))[1:-1])
+                found = True    
+
     # insert sorted bases
     for base in sorted(bases_unsorted, key=lambda item: item[0]):
         new_base = bases.add()
