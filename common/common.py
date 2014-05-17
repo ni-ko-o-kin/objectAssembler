@@ -168,7 +168,20 @@ def powerset_without_empty_set(iterable):
     s = list(iterable)
     return chain.from_iterable(combinations(s, r) for r in range(1, len(s)+1))
 
-def collect_models(groups, models, scene_tag_keys):
+def get_editor_tags(settings):
+    tags = dict()
+    for tag in settings.tags:
+        tags.update({tag.name: list()})
+        for value in tag.values:
+            tags[tag.name].append(value.name)
+    return tags
+
+def add_tag_value_none(scene_tags, tags):
+    for scene_key, _ in scene_tags.items():
+        if scene_key not in tags:
+            tags.update({scene_key:'None'})
+
+def collect_models(groups, models, scene_tags):
     ''' returns report_type, report_msg for self.report ''' 
     
     bases = models.bases
@@ -203,7 +216,7 @@ def collect_models(groups, models, scene_tag_keys):
             elif oa_type in ('IMPL', 'SIMP'):
                 model = [model for model in simps_impls_unsorted if oa_id == model[0]]
                 new_tags = {tag.key: tag.value for tag in oa_group.tags if tag.key != '' and tag.value != ''} 
-                add_tag_value_none(scene_tag_keys, new_tags)
+                add_tag_value_none(scene_tags, new_tags)
 
                 base_id = tuple(oa_group.base_id)
                 if oa_type == 'IMPL':
@@ -301,7 +314,3 @@ def get_collected_models_as_printables(models):
             for tag in variation.tags:
                 yield "            " + tag.key + " : " + tag.value
 
-def add_tag_value_none(scene_keys, tags):
-    for scene_key in scene_keys:
-        if scene_key not in tags:
-            tags.update({scene_key:'None'})

@@ -7,7 +7,7 @@ from bpy.props import IntProperty, CollectionProperty, StringProperty
 
 from ..common.common import (toggle, double_toggle, select_and_active, move_origin_to_geometry,
                              ALLOWED_NAVIGATION, powerset_without_empty_set, collect_models,
-                             get_collected_models_as_printables)
+                             get_collected_models_as_printables, get_editor_tags)
 from .common import get_sp_obj, get_sp_obj_from_base_id
 
 
@@ -17,11 +17,12 @@ class OBJECT_OT_oa_editor_collect_models(bpy.types.Operator):
     bl_options = {'INTERNAL'}
 
     def invoke(self, context, event):
-        models = context.scene.OAEditorSettings.models
+        settings = context.scene.OAEditorSettings
+        models = settings.models
         report = collect_models(
             [group for group in bpy.data.groups if not group.library],
             models,
-            [tag.name for tag in context.scene.OAEditorSettings.tags])
+            get_editor_tags(settings))
 
         if report[0] == 'INFO':
             for line in get_collected_models_as_printables(models):

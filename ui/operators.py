@@ -210,7 +210,7 @@ class OBJECT_OT_oa_load_models(bpy.types.Operator):
                     new_key.name = tag.name
                 settings.menu_icon_size = scene.OAEditorSettings.icon_size
                 settings.menu_icon_display_size = scene.OAEditorSettings.icon_display_size
-                report = collect_models(data_to.groups, settings.models, [tag.name for tag in settings.tag_keys])
+                report = collect_models(data_to.groups, settings.models, {tag.name:None for tag in settings.tag_keys})
 
                 if report[0] == 'INFO':
                     for line in get_collected_models_as_printables(settings.models):
