@@ -600,8 +600,8 @@ class OBJECT_OT_oa_switch_ab(bpy.types.Operator):
 
 def draw_callback_abc(self, context):
     font_id = 0
-
-    base_dupli_offset = [group.dupli_offset for group in self.sp_obj.users_group if group.OAGroup.oa_type in ('BASE','SIMP')][0]
+    
+    base_dupli_offset = next((group.dupli_offset for group in self.sp_obj.users_group if group.OAGroup.oa_type in ('BASE','SIMP')))
     impl_dupli_offset = context.object.users_group[self.group_index].dupli_offset
     oa_type = context.object.users_group[self.group_index].OAGroup.oa_type
     
