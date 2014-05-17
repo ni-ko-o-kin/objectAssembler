@@ -82,8 +82,7 @@ def align_groups(oa_obj_a, oa_obj_a_snap_point_nr, oa_obj_b, oa_obj_b_snap_point
     # rotate, so cross product is possible; for Ba-roation important
     if ((Aa - Ab) + (Bb - Ba)).length < MAX_ERROR_EQL:
         bpy.ops.transform.rotate(value=2, axis=(1,1,1))
-        if DEBUG:
-            print("rotated 0", vec_diff(context, oa_obj_a, oa_obj_a_snap_point_nr, oa_obj_b, oa_obj_b_snap_point_nr))
+        if DEBUG: print("rotated 0", vec_diff(context, oa_obj_a, oa_obj_a_snap_point_nr, oa_obj_b, oa_obj_b_snap_point_nr))
         
         # calculate new abc for B
         Ba,Bb,Bc = get_adjusted_snap_points((Aa, Ab, Ac), get_snap_points(context, oa_obj_b, oa_obj_b_snap_point_nr))

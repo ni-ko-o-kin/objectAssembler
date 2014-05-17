@@ -18,14 +18,17 @@ class OBJECT_OT_oa_editor_collect_models(bpy.types.Operator):
 
     def invoke(self, context, event):
         models = context.scene.OAEditorSettings.models
-        collect_models([group for group in bpy.data.groups if not group.library], models, [tag.name for tag in context.scene.OAEditorSettings.tags])
+        report = collect_models(
+            [group for group in bpy.data.groups if not group.library],
+            models,
+            [tag.name for tag in context.scene.OAEditorSettings.tags])
 
-        errors = context.scene.OAErrors
-        errors.clear()
-        for i in get_collected_models_as_printables(models):
-            e = errors.add()
-            e.text = i
-        
+        if report[0] == 'INFO':
+            for line in get_collected_models_as_printables(models):
+                self.report({report[0]}, line)
+
+        self.report({report[0]}, report[1])
+
         return {'FINISHED'}
 
 class OBJECT_OT_oa_editor_error_checking_same_tags(bpy.types.Operator):

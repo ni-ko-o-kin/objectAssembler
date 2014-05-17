@@ -253,36 +253,36 @@ class OAAdd(bpy.types.Operator):
                         context)
                     current = check_alignment(self, context)
                     if all(current):
-                        print("break: perfect match")
+                        if DEBUG: print("break: perfect match")
                         break
                     elif any(current):
-                        print("at least one found")
+                        if DEBUG: print("at least one found")
                         if (new_valid_vertical and old_valid_vertical) != (new_valid_horizontal and old_valid_horizontal):
                             # if only one is set then the best is either (True, False) or (False, True)
-                            print("break: only one is set")
+                            if DEBUG: print("break: only one is set")
                             break
                         vert_or_hort_ok_matrix = self.new_obj.matrix_world.copy()
                     
                     rotate(self.new_obj, new_sp.index, pi, context)
                     current = check_alignment(self, context)
                     if all(current):
-                        print("break: perfect match after rotation")
+                        if DEBUG: print("break: perfect match after rotation")
                         break
                     elif any(current):
-                        print("at least one found after rotation")
+                        if DEBUG: print("at least one found after rotation")
                         if (new_valid_vertical and old_valid_vertical) != (new_valid_horizontal and old_valid_horizontal):
                             # if only one is set then the best is either (True, False) or (False, True)
-                            print("break: only one is set")
+                            if DEBUG: print("break: only one is set")
                             break
                         vert_or_hort_ok_matrix = self.new_obj.matrix_world.copy()
                     
                 if not any(current):
                     # at this point vert and hort were not found, so use the best found if any
                     if vert_or_hort_ok_matrix:
-                        print("found:", current)
+                        if DEBUG: print("found:", current)
                         self.new_obj.matrix_world = vert_or_hort_ok_matrix
                     else:
-                        print("none found")
+                        if DEBUG: print("none found")
 
             else:
                 align_groups(
@@ -396,7 +396,6 @@ class OAAdd(bpy.types.Operator):
         self.oa_objects = list()
         for obj in context.scene.objects:
             if obj.hide:
-                print("ignored", obj.name)
                 continue
             
             if obj.OAModel.marked:

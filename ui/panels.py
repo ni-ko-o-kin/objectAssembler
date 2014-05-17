@@ -1,5 +1,6 @@
 import bpy
 
+
 class OALoad(bpy.types.Panel):
     bl_label = "Object Assembler"
     bl_idname = "OBJECT_PT_OA_LOAD"
@@ -147,7 +148,8 @@ class OAModelDefaults(bpy.types.Panel):
                 op.simp_impl_idx = model_idx
                 op.var_idx = var_idx
                 row.label(var_text)
-                if model.random: row.enabled = False
+                if model.random:
+                    row.enabled = False
                 
 def register():
     bpy.utils.register_class(OALoad)

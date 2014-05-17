@@ -187,11 +187,9 @@ class OBJECT_OT_oa_load_models(bpy.types.Operator):
         # assume oa_icon.png is not valid
         settings.valid_icon_file = False
 
-        if DEBUG: line()
-
-        print()
-        print("Loading Object Assembler File:")
-        print("==============================")
+        self.report({'INFO'}, "")
+        self.report({'INFO'}, "Loading Object Assembler File:")
+        self.report({'INFO'}, "==============================")
 
         # link scenes to current file 
         with bpy.data.libraries.load(settings.oa_file, link=True) as (data_from, data_to):
@@ -203,22 +201,31 @@ class OBJECT_OT_oa_load_models(bpy.types.Operator):
         settings_scene_found = False
         for scene in data_to.scenes:
             if scene.OAEditorSettings.marked:
+                if settings_scene_found:
+                    self.report({'ERROR'}, "Multiple settings scenes found")
+                    break
                 settings.tag_keys.clear()
                 for tag in scene.OAEditorSettings.tags:
                     new_key = settings.tag_keys.add()
                     new_key.name = tag.name
                 settings.menu_icon_size = scene.OAEditorSettings.icon_size
                 settings.menu_icon_display_size = scene.OAEditorSettings.icon_display_size
-                collect_models(data_to.groups, settings.models, [tag.name for tag in settings.tag_keys])
-                if DEBUG:
-                    print("\nCollected Models:")
-                    for i in get_collected_models_as_printables(settings.models):
-                        print(" "*4 + i)
+                report = collect_models(data_to.groups, settings.models, [tag.name for tag in settings.tag_keys])
+
+                if report[0] == 'INFO':
+                    for line in get_collected_models_as_printables(settings.models):
+                        self.report({report[0]}, line)
+                
+                self.report({report[0]}, report[1])
+
+                if report[0] == 'ERROR':
+                    break
+
                 settings_scene_found = True
                 break
 
         if not settings_scene_found:
-            print("No settings scene found")
+            self.report({'ERROR'}, "No settings scene found")
             
         # unlink scenes after settings saved to current file 
         for scene in data_to.scenes:

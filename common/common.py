@@ -169,6 +169,8 @@ def powerset_without_empty_set(iterable):
     return chain.from_iterable(combinations(s, r) for r in range(1, len(s)+1))
 
 def collect_models(groups, models, scene_tag_keys):
+    ''' returns report_type, report_msg for self.report ''' 
+    
     bases = models.bases
     simps_impls = models.simps_impls
 
@@ -194,7 +196,7 @@ def collect_models(groups, models, scene_tag_keys):
                 if oa_id not in [base[0] for base in bases_unsorted]:
                     bases_unsorted.append((oa_id, group.name))
                 else:
-                    print("error: duplicate found (base, %s)" % group.name)
+                    return "ERROR", "Duplicate base found for %s (%s)." % (group.name, str(oa_id)[1:-1])
 
             elif oa_type in ('IMPL', 'SIMP'):
                 model = [model for model in simps_impls_unsorted if oa_id == model[0]]
@@ -204,8 +206,9 @@ def collect_models(groups, models, scene_tag_keys):
                 base_id = tuple(oa_group.base_id)
                 if oa_type == 'IMPL':
                     if base_id not in all_bases:
-                        print("error, base_id not found (impl, %s)" % str(base_id))
-                        continue
+                        return "ERROR", "Base-Id %s for implementation %s (%s) not found." % (str(base_id)[1:-1],
+                                                                                              group.name,
+                                                                                              str(oa_id)[1:-1])
 
                 if not model:
                     simps_impls_unsorted.append((oa_id, [(group_name, oa_type, base_id, new_tags, default)]))
@@ -213,7 +216,7 @@ def collect_models(groups, models, scene_tag_keys):
                     model = model[0]
                     # add new variation
                     if new_tags in [old_tags[3] for old_tags in model[1]]:
-                        print("error, same set of tags found (" + oa_type + ", %s)" % group.name)
+                        return "ERROR", "Same set of tags found for %s (%s)." % (group.name, str(oa_id)[1:-1])
                     else:
                         model[1].append((group_name, oa_type, base_id, new_tags, default))
                     
@@ -246,6 +249,7 @@ def collect_models(groups, models, scene_tag_keys):
                 new_tag.key = key
                 new_tag.value = value
             new_variation.default = variation[4]
+    return 'INFO', "OA-Models successfully collected."
 
 def get_collected_models_as_printables(models):
     yield "Bases"
