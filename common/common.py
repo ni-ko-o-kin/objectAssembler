@@ -180,10 +180,12 @@ def collect_models(groups, models, scene_tag_keys):
     bases_unsorted = []
     simps_impls_unsorted = []
 
+    # collect base oa_id's in temporary list
     all_bases = set(
         [tuple(group.OAGroup.oa_id) for group in groups if group.OAGroup.oa_type == 'BASE' and group.objects]
         )
-
+    
+    # collect simps and impls to temporary list
     for group in groups:
         if group.OAGroup.oa_type != 'NONE' and group.objects:
             oa_group = group.OAGroup
@@ -219,7 +221,28 @@ def collect_models(groups, models, scene_tag_keys):
                         return "ERROR", "Same set of tags found for %s (%s)." % (group.name, str(oa_id)[1:-1])
                     else:
                         model[1].append((group_name, oa_type, base_id, new_tags, default))
-                    
+
+    # check for simp and impl in same group
+    all_objects_in_oa_groups = set()
+    for oa_group in [group for group in groups if group.OAGroup.oa_type in ('IMPL', 'SIMP') and group.objects]:
+        for obj in oa_group.objects:
+            all_objects_in_oa_groups.update({obj})
+    for obj in all_objects_in_oa_groups:
+        if len(obj.users_group) > 1:
+            simp_found = False
+            impl_found = False
+            for group in obj.users_group:
+                if not group.objects:
+                    continue
+                if group.OAGroup.oa_type in 'SIMP':
+                    if impl_found:
+                        return "ERROR", "Simple and Implementation found in same model: %s (%s)" % (group.name, str(tuple(group.OAGroup.oa_id))[1:-1])
+                    simp_found = True
+                elif group.OAGroup.oa_type in 'IMPL':
+                    if simp_found:
+                        return "ERROR", "Simple and Implementation found in same model: %s (%s)" % (group.name, str(tuple(group.OAGroup.oa_id))[1:-1])
+                    impl_found = True
+
     # insert sorted bases
     for base in sorted(bases_unsorted, key=lambda item: item[0]):
         new_base = bases.add()
