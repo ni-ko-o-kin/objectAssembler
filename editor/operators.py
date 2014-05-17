@@ -31,43 +31,6 @@ class OBJECT_OT_oa_editor_collect_models(bpy.types.Operator):
 
         return {'FINISHED'}
 
-class OBJECT_OT_oa_editor_error_checking_same_tags(bpy.types.Operator):
-    bl_description = bl_label = "Check Model for same Tags"
-    bl_idname = "oa.editor_error_checking_same_tags"
-    bl_options = {'INTERNAL'}
-
-
-    # todo --> move to collect models
-
-    # def invoke(self, context, event):
-    #     groups = []
-    #     for obj in context.scene.objects:
-    #         for group in obj.users_group:
-    #             if group.OAGroup.oa_type in ('IMPL', 'SIMP'):
-    #                groups.append(group)
-        
-    #     multiple = []
-    #     for group in set(groups):
-    #         tags = []
-    #         for tag in group.OAGroup.tags:
-    #             tags.append((tag.key, tag.value))
-    #             if tags.count((tag.key, tag.value)) > 1:
-    #                 if not errors:
-    #                     item = errors.add()
-    #                     item.text = "Tag found multiple times Error:"
-    #                 multiple.append((group.name, tag))
-    #     multiple = set(multiple)
-    #     for group, tag in multiple:
-    #         item = errors.add()
-    #         item.text = "    " + tag.key + "/" + tag.value + " in " + group
-
-    #     if not errors:
-    #         item = errors.add()
-    #         item.text = "No errors found"
-        return {'FINISHED'}
-
-        
-
 class OBJECT_OT_oa_editor_error_checking_multiple_oa_group(bpy.types.Operator):
     bl_description = bl_label = "Check Objects for multiple OA-Groups"
     bl_idname = "oa.editor_error_checking_multiple_oa_group"
@@ -823,7 +786,6 @@ class OBJECT_OT_oa_show_snap_point_from_base(bpy.types.Operator):
 ################
 def register():
     bpy.utils.register_class(OBJECT_OT_oa_editor_collect_models)
-    bpy.utils.register_class(OBJECT_OT_oa_editor_error_checking_same_tags)
     bpy.utils.register_class(OBJECT_OT_oa_editor_add_model_tag)
     bpy.utils.register_class(OBJECT_OT_oa_editor_remove_model_tag)
     bpy.utils.register_class(OBJECT_OT_oa_editor_add_tag_value)
@@ -842,7 +804,6 @@ def register():
     bpy.utils.register_class(OBJECT_OT_oa_remove_snap_point)
     bpy.utils.register_class(OBJECT_OT_oa_move_snap_point_down)
     bpy.utils.register_class(OBJECT_OT_oa_move_snap_point_up)
-    #bpy.utils.register_class(OBJECT_OT_oa_apply_id)
     bpy.utils.register_class(OBJECT_OT_oa_ConstructAbc)
     bpy.utils.register_class(OBJECT_OT_oa_switch_ab)
     bpy.utils.register_class(OBJECT_OT_oa_show_snap_point)
@@ -853,7 +814,6 @@ def unregister():
     bpy.utils.unregister_class(OBJECT_OT_oa_remove_snap_point)
     bpy.utils.unregister_class(OBJECT_OT_oa_move_snap_point_down)
     bpy.utils.unregister_class(OBJECT_OT_oa_move_snap_point_up)
-    #bpy.utils.unregister_class(OBJECT_OT_oa_apply_id)
     bpy.utils.unregister_class(OBJECT_OT_oa_ConstructAbc)
     bpy.utils.unregister_class(OBJECT_OT_oa_switch_ab)
     bpy.utils.unregister_class(OBJECT_OT_oa_show_snap_point)
@@ -872,4 +832,4 @@ def unregister():
     bpy.utils.unregister_class(OBJECT_OT_oa_editor_add_tag_value)
     bpy.utils.unregister_class(OBJECT_OT_oa_editor_remove_model_tag)
     bpy.utils.unregister_class(OBJECT_OT_oa_editor_add_model_tag)
-    bpy.utils.unregister_class(OBJECT_OT_oa_editor_error_checking_same_tags)
+    bpy.utils.unregister_class(OBJECT_OT_oa_editor_collect_models)
