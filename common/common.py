@@ -215,9 +215,24 @@ def collect_models(groups, models, scene_tags):
 
             elif oa_type in ('IMPL', 'SIMP'):
                 model = [model for model in simps_impls_unsorted if oa_id == model[0]]
-                new_tags = {tag.key: tag.value for tag in oa_group.tags if tag.key != '' and tag.value != ''} 
+                new_tags = dict()
+                for tag in oa_group.tags:
+                    if tag.key == '':
+                        return "ERROR", "Empty Tag-Key found in %s (%s)." % (group.name, str(oa_id)[1:-1])
+                    if tag.value == '':
+                        return "ERROR", "Empty Tag-Value found in %s (%s)." % (group.name, str(oa_id)[1:-1])
+                    if tag.key not in scene_tags:
+                        return "ERROR", "Tag not set in scene-settings: %s." % tag.key
+                    if scene_tags:
+                        # check whether the function is called from editor or oa
+                        # tag-values are only present only in the editor-settings but not in oa-settings
+                        if scene_tags[tag.key] is not None:
+                            if tag.value not in scene_tags[tag.key]:
+                                return "ERROR", "Tag-Value not set in scene-settings: %s - %s." % (tag.key, tag.value)
+                    new_tags.update({tag.key: tag.value})
+                
                 add_tag_value_none(scene_tags, new_tags)
-
+                
                 base_id = tuple(oa_group.base_id)
                 if oa_type == 'IMPL':
                     if base_id not in all_bases:
