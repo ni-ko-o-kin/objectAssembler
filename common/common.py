@@ -249,7 +249,7 @@ def collect_models(groups, models, scene_tag_keys):
                 new_tag.key = key
                 new_tag.value = value
             new_variation.default = variation[4]
-    return 'INFO', "OA-Models successfully collected."
+    return 'INFO', "OA-Models successfully loaded."
 
 def get_collected_models_as_printables(models):
     yield "Bases"
