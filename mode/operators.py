@@ -41,8 +41,8 @@ def draw_callback_mode(self, context):
     bgl.glLineWidth(1)
 
     # draw frame
+    bgl.glColor3f(0.1, 0.1, 0.1)
     for icon in self.menu:
-        bgl.glColor3f(0.1, 0.1, 0.1)
         bgl.glRecti(
             icon[2][0],icon[2][1],icon[2][2],icon[2][3]
             )
