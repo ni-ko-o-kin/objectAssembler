@@ -86,6 +86,8 @@ class OAEnterOAMode(bpy.types.Operator):
     bl_idname = "oa.enteroamode"
     bl_label = "Object Assembler Mode"
 
+    _handle = None
+
     @classmethod
     def poll(cls, context):
         settings = context.scene.OASettings
@@ -98,19 +100,22 @@ class OAEnterOAMode(bpy.types.Operator):
             # )
     
     def modal(self, context, event):
-        context.area.tag_redraw()
+        if context.area:
+            context.area.tag_redraw()
+        
         settings = bpy.context.scene.OASettings
 
+        if not settings.oa_mode_started and self._handle is not None:
+            bpy.types.SpaceView3D.draw_handler_remove(self._handle, 'WINDOW')
+            return {'CANCELLED'}
+
         if settings.more_objects == True:
-            bpy.ops.oa.add('INVOKE_DEFAULT')
+            bpy.ops.oa.add('INVOKE_DEFAULT', oa_id=icon[0])
             settings.more_objects = False
 
         if event.type == 'MOUSEMOVE':
             self.mouse = (event.mouse_region_x, event.mouse_region_y)
             self.value = event.value
-
-        elif event.type in ALLOWED_NAVIGATION:
-            return {'PASS_THROUGH'}
 
         elif event.type == 'LEFTMOUSE' and event.value == 'PRESS':
             for icon in self.menu:
@@ -119,14 +124,6 @@ class OAEnterOAMode(bpy.types.Operator):
                     self.value_last = 'PRESS'
                     self.icon_last = icon[0]
 
-            if self.icon_last == []:
-                bpy.types.SpaceView3D.draw_handler_remove(self._handle, 'WINDOW')
-
-                if DEBUG: print("FINISHED")
-                return {'FINISHED'}
-            else:
-                return {'RUNNING_MODAL'}
-            
         elif event.type == 'LEFTMOUSE' and event.value == 'RELEASE':
             for icon in self.menu:
                 # mouse hover icon
@@ -142,7 +139,7 @@ class OAEnterOAMode(bpy.types.Operator):
                         self.value_last = ''
                         self.icon_last = []
 
-            return {'RUNNING_MODAL'}
+            return {'PASS_THROUGH'}
 
         # elif event.type == 'D' and event.value == 'RELEASE':
         #     obj_to_unlink = ray(self, context)
@@ -152,13 +149,7 @@ class OAEnterOAMode(bpy.types.Operator):
                 
         #     return {'RUNNING_MODAL'}
 
-        elif (event.type == 'RIGHTMOUSE' and event.value == 'PRESS') or event.type == 'ESC':
-            bpy.types.SpaceView3D.draw_handler_remove(self._handle, 'WINDOW')
-
-            if DEBUG: print("CANCELLED")
-            return {'CANCELLED'}
-
-        return {'RUNNING_MODAL'}
+        return {'PASS_THROUGH'}
 
     def invoke(self, context, event):
         if context.area.type == 'VIEW_3D':
@@ -167,22 +158,22 @@ class OAEnterOAMode(bpy.types.Operator):
             # settings.more_objects = False
             # settings.shift = False
             
-            context.window_manager.modal_handler_add(self)
-            
-            self._handle = bpy.types.SpaceView3D.draw_handler_add(draw_callback_mode, (self, context), 'WINDOW', 'POST_PIXEL')
-            
+            if settings.oa_mode_started:
+                settings.oa_mode_started = False
+                return {'RUNNING_MODAL'}
+
+            settings.oa_mode_started = True
             self.mouse = ()      # (event.mouse_region_x, event.mouse_region_y)
             self.value_last = "" # last event.value
             self.icon_last = []  # icon on event.value==press
-            
             self.img = bpy.data.images["oa_icons.png", settings.oa_file]
-            
-            # generate menu-positions
             self.menu = construct_menu(settings)
-            
-            # opengl
             self.img.gl_load()
-
+            
+            # handler
+            self._handle = bpy.types.SpaceView3D.draw_handler_add(draw_callback_mode, (self, context), 'WINDOW', 'POST_PIXEL')
+            context.window_manager.modal_handler_add(self)
+            
             return {'RUNNING_MODAL'}
         else:
             self.report({'ERROR'}, "View3D not found, cannot run operator")

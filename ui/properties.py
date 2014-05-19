@@ -11,6 +11,7 @@ class OATagKeys(bpy.types.PropertyGroup):
 
 class OASettings(bpy.types.PropertyGroup):
     oa_file = StringProperty(name = "", default = "", subtype = 'FILE_PATH')
+    oa_mode_started = BoolProperty(default=False)
     models = PointerProperty(type=OACollectModels)
     tag_keys = CollectionProperty(type=OATagKeys)
 
