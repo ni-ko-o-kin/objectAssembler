@@ -313,7 +313,7 @@ class OAAdd(bpy.types.Operator):
         elif event.type == 'MOUSEMOVE':
             self.mouse = (event.mouse_region_x, event.mouse_region_y)
 
-        elif event.type == 'LEFTMOUSE':
+        elif event.type == 'LEFTMOUSE' and event.value == 'RELEASE':
             if self.last_snapped_to != (None, None):
                 self.new_obj.hide = False
             else:
@@ -326,7 +326,7 @@ class OAAdd(bpy.types.Operator):
                 settings.more_objects = True
             else:
                 settings.more_objects = False
-            
+
             return {'FINISHED'}
         
         # elif event.type == 'S' and event.value == 'RELEASE':
@@ -364,13 +364,14 @@ class OAAdd(bpy.types.Operator):
             # don't create same object again
             settings.more_objects = False
             settings.shift = False
-            
+
             return {'CANCELLED'}
 
-
+        
         return {'RUNNING_MODAL'}
 
     def invoke(self, context, event):
+        if DEBUG: print("add: invoke")
         if context.space_data.type != 'VIEW_3D':
             self.report({'WARNING'}, "Active space must be a View3d")
             return {'CANCELLED'}
