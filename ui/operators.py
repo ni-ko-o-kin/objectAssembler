@@ -230,33 +230,19 @@ class OBJECT_OT_oa_load_models(bpy.types.Operator):
         # unlink scenes after settings saved to current file 
         for scene in data_to.scenes:
             bpy.data.scenes.remove(scene)
-        
-    
-        #     # check oa_icons.png
-        #     imgs = [img for img in bpy.data.images if img.name == "oa_icons.png" and img.library and img.library.filepath == settings.oa_file]
-
-        #     if len(imgs) > 1:
-        #         settings.valid_icon_file = False
-        #         print("  Error: Multiple oa_icons.png-Files found!")
-
-        #     elif len(imgs) == 0:
-        #         settings.valid_icon_file = False
-        #         print("  Error: No oa_icons.png-File found!")
-
-        #     else:
-        #         print("  OK: Found oa_icons.png-File")
-        #         size = bpy.data.images["oa_icons.png", settings.oa_file].size
-        #         if size[0] != size[1]: 
-        #             settings.valid_icon_file = False
-        #             print("  Error: Wrong dimensions of oa_icons.png-File: width(%s) != height(%s)" % (
-        #                     size[0], size[1]))
-                    
-        #         else:
-        #             print("  OK: oa_icons.png-File is valid")
-        #             settings.valid_icon_file = True
-    
-        # else:
-        #     print("  Error: No valid OA-Group found")
+            
+        # check oa_icons.png
+        img = next((img for img in data_to.images if img.name == "oa_icons.png"), None)
+        if not img:
+            self.report({'WARNING'}, "No oa_icons.png found.")
+        else:
+            if img.size[0] == img.size[1] and img.size[0] in (2**x for x in range(16)):
+                self.report({'INFO'}, "Valid oa_icons.png-File found.")
+                settings.valid_icon_file = True
+            else:
+                self.report({'WARNING'}, "oa_icons.png-File not valid. Wrong dimensions:" + \
+                                "width(%s) != height(%s) or width and height not in %s" % (
+                        img.size[0], img.size[1], str(tuple(2**x for x in range(16)))))
 
         return {'FINISHED'}
 
