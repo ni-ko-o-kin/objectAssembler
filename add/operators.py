@@ -371,7 +371,6 @@ class OAAdd(bpy.types.Operator):
         return {'RUNNING_MODAL'}
 
     def invoke(self, context, event):
-        if DEBUG: print("add: invoke")
         if context.space_data.type != 'VIEW_3D':
             self.report({'WARNING'}, "Active space must be a View3d")
             return {'CANCELLED'}

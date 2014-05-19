@@ -1,6 +1,8 @@
 from random import choice
 
 import bpy, bgl
+from bpy.props import IntVectorProperty
+
 from .menu import construct_menu
 from .mode_title import mode_title
 from ..common.common import ray, ALLOWED_NAVIGATION
@@ -87,7 +89,8 @@ class OAEnterOAMode(bpy.types.Operator):
     bl_label = "Object Assembler Mode"
 
     _handle = None
-
+    last_oa_id = IntVectorProperty(default=(0,0,0), min=0)
+    
     @classmethod
     def poll(cls, context):
         settings = context.scene.OASettings
@@ -110,9 +113,9 @@ class OAEnterOAMode(bpy.types.Operator):
             return {'CANCELLED'}
 
         if settings.more_objects == True:
-            bpy.ops.oa.add('INVOKE_DEFAULT', oa_id=icon[0])
+            bpy.ops.oa.add('INVOKE_DEFAULT', oa_id=self.last_oa_id)
             settings.more_objects = False
-
+            
         if event.type == 'MOUSEMOVE':
             self.mouse = (event.mouse_region_x, event.mouse_region_y)
             self.value = event.value
@@ -136,6 +139,9 @@ class OAEnterOAMode(bpy.types.Operator):
                             settings.shift = event.shift
                             settings.more_objects = False
 
+                            # settings.more_objects = event.shift
+                            self.last_oa_id = icon[0]
+                            
                         self.value_last = ''
                         self.icon_last = []
 
@@ -155,8 +161,8 @@ class OAEnterOAMode(bpy.types.Operator):
         if context.area.type == 'VIEW_3D':
             settings = bpy.context.scene.OASettings
             
-            # settings.more_objects = False
-            # settings.shift = False
+            settings.more_objects = False
+            settings.shift = False
             
             if settings.oa_mode_started:
                 settings.oa_mode_started = False
