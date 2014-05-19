@@ -36,8 +36,11 @@ def construct_menu(settings):
     col_max = settings.menu_columns                # maximum number of columns
     icon_pixel = settings.menu_icon_size           # height and width of the icons in oa_icons.png    
 
-    img = bpy.data.images["oa_icons.png", settings.oa_file]
-    subdivisions = img.size[0] / icon_pixel
+    if settings.valid_icon_file:
+        img = bpy.data.images["oa_icons.png", settings.oa_file]
+        subdivisions = img.size[0] / icon_pixel
+    else:
+        subdivisions = 2048 / icon_pixel
 
     # get the tool shelf width
     tool_shelf_width = get_tool_shelf_width(bpy.context)

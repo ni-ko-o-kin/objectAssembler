@@ -280,6 +280,10 @@ def collect_models(groups, models, scene_tags):
                     return "ERROR", "Multiple Snap Point Objects found in: %s (%s)" % (oa_group.name, str(tuple(oa_group.OAGroup.oa_id))[1:-1])
                 found = True    
 
+    # check if at least one simp or impl exists
+    if not simps_impls_unsorted:
+        return "ERROR", "No OA-Models found."
+
     # insert sorted bases
     for base in sorted(bases_unsorted, key=lambda item: item[0]):
         new_base = bases.add()

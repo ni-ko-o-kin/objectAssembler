@@ -1,6 +1,6 @@
 from random import choice
 
-import bpy, bgl
+import bpy, bgl, blf
 from bpy.props import IntVectorProperty
 
 from .menu import construct_menu
@@ -35,11 +35,7 @@ def rect_round_corners(x1,y1, x2,y2):
 def draw_callback_mode(self, context):
     # draw mode_title
     mode_title(True, "Object Assembler Mode")
-    
-    bgl.glBindTexture(bgl.GL_TEXTURE_2D, self.img.bindcode)
-    bgl.glTexParameteri(bgl.GL_TEXTURE_2D, bgl.GL_TEXTURE_MIN_FILTER, bgl.GL_NEAREST)
-    bgl.glTexParameteri(bgl.GL_TEXTURE_2D, bgl.GL_TEXTURE_MAG_FILTER, bgl.GL_NEAREST)
-
+    settings = context.scene.OASettings
     bgl.glLineWidth(1)
 
     # draw frame
@@ -49,28 +45,50 @@ def draw_callback_mode(self, context):
             icon[2][0],icon[2][1],icon[2][2],icon[2][3]
             )
 
-    # icon zeichnen
-    for icon in self.menu:
-        bgl.glEnable(bgl.GL_TEXTURE_2D)
-        bgl.glTexEnvf(bgl.GL_TEXTURE_ENV,bgl.GL_TEXTURE_ENV_MODE, bgl.GL_REPLACE)
+    # draw icons
+    if settings.valid_icon_file:
+        bgl.glBindTexture(bgl.GL_TEXTURE_2D, self.img.bindcode)
+        bgl.glTexParameteri(bgl.GL_TEXTURE_2D, bgl.GL_TEXTURE_MIN_FILTER, bgl.GL_NEAREST)
+        bgl.glTexParameteri(bgl.GL_TEXTURE_2D, bgl.GL_TEXTURE_MAG_FILTER, bgl.GL_NEAREST)
 
-        bgl.glBegin(bgl.GL_QUADS)
+        for icon in self.menu:
+            bgl.glEnable(bgl.GL_TEXTURE_2D)
+            bgl.glTexEnvf(bgl.GL_TEXTURE_ENV,bgl.GL_TEXTURE_ENV_MODE, bgl.GL_REPLACE)
+    
+            bgl.glBegin(bgl.GL_QUADS)
+    
+            bgl.glTexCoord2f(icon[4][0][0], icon[4][0][1])
+            bgl.glVertex2f(icon[1][0], icon[1][1])
+            
+            bgl.glTexCoord2f(icon[4][1][0], icon[4][1][1])
+            bgl.glVertex2f(icon[1][0], icon[1][3])
+            
+            bgl.glTexCoord2f(icon[4][2][0], icon[4][2][1])
+            bgl.glVertex2f(icon[1][2], icon[1][3])
+    
+            bgl.glTexCoord2f(icon[4][3][0], icon[4][3][1])
+            bgl.glVertex2f(icon[1][2], icon[1][1])
+    
+            bgl.glEnd()
+    
+            bgl.glDisable(bgl.GL_TEXTURE_2D)
+            
+    else:
+        # draw category and model_id if no icon file is provided
+        # draw background
+        bgl.glColor3f(0.2, 0.2, 0.2)
+        for icon in self.menu:
+            bgl.glRecti(
+                icon[2][0] + 2, icon[2][1] + 2, icon[2][2] - 2, icon[2][3] - 2
+                )
 
-        bgl.glTexCoord2f(icon[4][0][0], icon[4][0][1])
-        bgl.glVertex2f(icon[1][0], icon[1][1])
-        
-        bgl.glTexCoord2f(icon[4][1][0], icon[4][1][1])
-        bgl.glVertex2f(icon[1][0], icon[1][3])
-        
-        bgl.glTexCoord2f(icon[4][2][0], icon[4][2][1])
-        bgl.glVertex2f(icon[1][2], icon[1][3])
-
-        bgl.glTexCoord2f(icon[4][3][0], icon[4][3][1])
-        bgl.glVertex2f(icon[1][2], icon[1][1])
-
-        bgl.glEnd()
-
-        bgl.glDisable(bgl.GL_TEXTURE_2D)
+        font_id = 0
+        bgl.glColor4f(1,1,1,1)
+        for icon in self.menu:
+            blf.position(font_id, icon[1][0] + 1 , icon[1][1] + 8, 0)
+            blf.size(font_id, int(settings.menu_icon_display_size / 3) ,72)
+            # blf.draw(font_id, "{0: >2}".format(icon[0][1]) + "," + "{0: >2}".format(icon[0][2]))
+            blf.draw(font_id, "{0: >2}".format("11") + "," + "{0: >2}".format(icon[0][2]))
 
     # draw hover effekt
     for icon in self.menu:
@@ -172,9 +190,10 @@ class OAEnterOAMode(bpy.types.Operator):
             self.mouse = ()      # (event.mouse_region_x, event.mouse_region_y)
             self.value_last = "" # last event.value
             self.icon_last = []  # icon on event.value==press
-            self.img = bpy.data.images["oa_icons.png", settings.oa_file]
+            if settings.valid_icon_file:
+                self.img = bpy.data.images["oa_icons.png", settings.oa_file]
+                self.img.gl_load()
             self.menu = construct_menu(settings)
-            self.img.gl_load()
             
             # handler
             self._handle = bpy.types.SpaceView3D.draw_handler_add(draw_callback_mode, (self, context), 'WINDOW', 'POST_PIXEL')
