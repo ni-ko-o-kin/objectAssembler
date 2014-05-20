@@ -27,6 +27,15 @@ class OASettings(bpy.types.PropertyGroup):
 
     insert_at_cursor_pos = BoolProperty(default=False)
 
+    order_models_start = StringProperty(default="")
+    order_models_end = StringProperty(default="")
+    order_function = EnumProperty(items=[
+            ("Lin", "Lin","","",0),
+            ("Quad", "Quad","","",0),
+            ("Expo", "Expo","","",0),
+            ], name="")
+
+
 def register():
     bpy.utils.register_class(OATagKeys)
     bpy.utils.register_class(OASettings)

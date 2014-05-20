@@ -8,6 +8,7 @@ from ..common.common import collect_models, get_collected_models_as_printables, 
 
 DEBUG = True
 
+
 def get_best_match(variations, current_variation, key, value, scene_keys):
     if not variations or not current_variation: return
     
@@ -30,6 +31,70 @@ def get_best_match(variations, current_variation, key, value, scene_keys):
 
 def get_current_variation(variations, obj):
     return next((var for var in variations if var.group_name == obj.dupli_group.name), None)
+
+class OBJECT_OT_oa_order_models(bpy.types.Operator):
+    bl_description = bl_label = "Order Models"
+    bl_idname = "oa.order_models"
+    bl_options = {'INTERNAL'}
+    
+    @classmethod
+    def poll(cls, context):
+        settings = context.scene.OASettings
+        return all((settings.order_models_start != '', settings.order_models_end != ''))
+    
+    def invoke(self, context, event):
+        settings = context.scene.OASettings
+        models = settings.models.simps_impls
+
+        if len(context.selected_objects) < 1:
+            self.report({'ERROR'}, "Select at least one object")
+            return {'CANCELLED'}
+
+        objs_in_scene = [obj.name for obj in context.scene.objects]
+        if not settings.order_models_start in objs_in_scene:
+            self.report({'ERROR'}, "Start Object not found.")
+            return {'CANCELLED'}
+        if not settings.order_models_end in objs_in_scene:
+            self.report({'ERROR'}, "End Object not found.")
+            return {'CANCELLED'}
+        
+        start = context.scene.objects.get(settings.order_models_start).location.copy()
+        end = context.scene.objects.get(settings.order_models_end).location.copy()
+        distance = (start - end).length
+
+        def linear(x):
+            return x
+
+        def hard(x):
+            return x**(1/0.5)
+
+        for obj in context.selected_objects:
+            if not obj.OAModel.marked:
+                continue
+            
+            # map between 0 to 1; 0 is at the start-objects and 1 is at the end-object
+            obj_distance = (start - obj.location).length / distance
+            
+            # object outside of range
+            if obj_distance > 1:
+                continue
+            
+            model = next((model for model in models if tuple(model.oa_id) == tuple(obj.dupli_group.OAGroup.oa_id)), None)
+            if not model:
+                continue
+            
+            current_variation = get_current_variation(model.variations, obj)
+            variations = [var for var in model.variations]
+
+            # todo; use linear for testing
+            # todo; use 3 variations for testing
+            VARS = 3
+            for v in range(1, VARS + 1):
+                if linear(obj_distance) < (1/VARS)*v:
+                    obj.dupli_group = bpy.data.groups.get(variations[v-1].group_name, settings.oa_file)
+                    break
+            
+        return {'FINISHED'}
 
 class OBJECT_OT_oa_random_tag_value(bpy.types.Operator):
     bl_description = bl_label = "Choose Random Tag Value"
@@ -246,6 +311,7 @@ class OBJECT_OT_oa_load_models(bpy.types.Operator):
         return {'FINISHED'}
 
 def register():
+    bpy.utils.register_class(OBJECT_OT_oa_order_models)
     bpy.utils.register_class(OBJECT_OT_oa_random_tag_value)
     bpy.utils.register_class(OBJECT_OT_oa_random_variation)
     bpy.utils.register_class(OBJECT_OT_oa_change_variation)
@@ -258,3 +324,4 @@ def unregister():
     bpy.utils.unregister_class(OBJECT_OT_oa_change_variation)
     bpy.utils.unregister_class(OBJECT_OT_oa_random_variation)
     bpy.utils.unregister_class(OBJECT_OT_oa_random_tag_value)
+    bpy.utils.unregister_class(OBJECT_OT_oa_order_models)

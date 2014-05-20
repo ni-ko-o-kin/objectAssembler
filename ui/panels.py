@@ -150,13 +150,32 @@ class OAModelDefaults(bpy.types.Panel):
                 row.label(var_text)
                 if model.random:
                     row.enabled = False
-                
+
+class OAOrderModels(bpy.types.Panel):
+    bl_label = "Order Models"
+    bl_idname = "OBJECT_PT_OA_ORDER_MODELS"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'TOOLS'
+    bl_category = "Object Assembler"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context):
+        settings = context.scene.OASettings
+        layout = self.layout
+
+        layout.prop_search(settings, "order_models_start", bpy.context.scene, "objects", text="Start")
+        layout.prop_search(settings, "order_models_end", bpy.context.scene, "objects", text="End")
+        layout.prop(settings, "order_function")
+        layout.operator("oa.order_models")
+
 def register():
     bpy.utils.register_class(OALoad)
     bpy.utils.register_class(OAModelSettings)
     bpy.utils.register_class(OAModelDefaults)
+    bpy.utils.register_class(OAOrderModels)
 
 def unregister():
+    bpy.utils.unregister_class(OAOrderModels)
     bpy.utils.unregister_class(OAModelDefaults)
     bpy.utils.unregister_class(OAModelSettings)
     bpy.utils.unregister_class(OALoad)
