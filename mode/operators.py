@@ -160,14 +160,6 @@ class OAEnterOAMode(bpy.types.Operator):
 
             return {'PASS_THROUGH'}
 
-        # elif event.type == 'D' and event.value == 'RELEASE':
-        #     obj_to_unlink = ray(self, context)
-            
-        #     if obj_to_unlink:
-        #         context.scene.objects.unlink(obj_to_unlink)
-                
-        #     return {'RUNNING_MODAL'}
-
         return {'PASS_THROUGH'}
 
     def invoke(self, context, event):
