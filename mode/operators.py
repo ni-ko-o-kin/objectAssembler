@@ -87,8 +87,7 @@ def draw_callback_mode(self, context):
         for icon in self.menu:
             blf.position(font_id, icon[1][0] + 1 , icon[1][1] + 8, 0)
             blf.size(font_id, int(settings.menu_icon_display_size / 3) ,72)
-            # blf.draw(font_id, "{0: >2}".format(icon[0][1]) + "," + "{0: >2}".format(icon[0][2]))
-            blf.draw(font_id, "{0: >2}".format("11") + "," + "{0: >2}".format(icon[0][2]))
+            blf.draw(font_id, "{0: >2}".format(icon[0][1]) + "," + "{0: >2}".format(icon[0][2]))
 
     # draw hover effekt
     for icon in self.menu:
