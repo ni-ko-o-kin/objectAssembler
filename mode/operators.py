@@ -5,7 +5,7 @@ from bpy.props import IntVectorProperty
 
 from .menu import construct_menu
 from .mode_title import mode_title
-from ..common.common import ray, ALLOWED_NAVIGATION
+from ..common.common import ALLOWED_NAVIGATION
 
 DEBUG = True
 

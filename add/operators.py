@@ -8,7 +8,7 @@ from bpy.props import IntVectorProperty, IntProperty
 
 from ..mode import mode_title
 from .align import rotate, align_groups
-from ..common.common import (ray, point_in_polygon, get_cursor_info, set_cursor_info,
+from ..common.common import (point_in_polygon, get_cursor_info, set_cursor_info,
                              ALLOWED_NAVIGATION, MAX_ERROR_EQL, get_group_with_its_sp_obj)
 
 DEBUG = True
