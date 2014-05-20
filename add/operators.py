@@ -214,7 +214,8 @@ class OAAdd(bpy.types.Operator):
     bl_options = {'INTERNAL'}
 
     oa_id = IntVectorProperty(default=(0,0,0), min=0)
-    last_snap_point_index = IntProperty(default=0, min=0)
+    new_last_snap_point_index = IntProperty(default=0, min=0)
+    old_last_snap_point_index = IntProperty(default=0, min=0)
     
     def modal(self, context, event):
         context.area.tag_redraw()
@@ -226,7 +227,9 @@ class OAAdd(bpy.types.Operator):
             # if cursor is not over a snap point -> next sp
             if not point_in_polygon(self.mouse[0], self.mouse[1], sp[5]):
                 continue
-         
+            
+            self.old_last_snap_point_index = sp[1]
+            
             # still on the snap point; no realignment necessary
             if self.last_snapped_to == (sp[0], sp[1]):
                 break
@@ -255,11 +258,11 @@ class OAAdd(bpy.types.Operator):
                     current = check_alignment(self, context)
                     if all(current):
                         if DEBUG: print("break: perfect match")
-                        self.last_snap_point_index = new_sp.index
+                        self.new_last_snap_point_index = new_sp.index
                         break
                     elif any(current):
                         if DEBUG: print("at least one found")
-                        self.last_snap_point_index = new_sp.index
+                        self.new_last_snap_point_index = new_sp.index
                         if (new_valid_vertical and old_valid_vertical) != (new_valid_horizontal and old_valid_horizontal):
                             # if only one is set then the best is either (True, False) or (False, True)
                             if DEBUG: print("break: only one is set")
@@ -270,11 +273,11 @@ class OAAdd(bpy.types.Operator):
                     current = check_alignment(self, context)
                     if all(current):
                         if DEBUG: print("break: perfect match after rotation")
-                        self.last_snap_point_index = new_sp.index
+                        self.new_last_snap_point_index = new_sp.index
                         break
                     elif any(current):
                         if DEBUG: print("at least one found after rotation")
-                        self.last_snap_point_index = new_sp.index
+                        self.new_last_snap_point_index = new_sp.index
                         if (new_valid_vertical and old_valid_vertical) != (new_valid_horizontal and old_valid_horizontal):
                             # if only one is set then the best is either (True, False) or (False, True)
                             if DEBUG: print("break: only one is set")
@@ -334,27 +337,38 @@ class OAAdd(bpy.types.Operator):
 
             return {'FINISHED'}
         
-        # elif event.type == 'S' and event.value == 'RELEASE':
-        #     if self.new_obj is not None:
-        #         snap_points = [i.OASnapPoints.snap_points for i in self.new_obj.dupli_group.objects if i.OASnapPoints.marked][0]
-        #         self.current_oa_id = [i.OASnapPoints.oa_id for i in self.new_obj.dupli_group.objects if i.OASnapPoints.marked][0]
+        elif event.type == 'S' and event.value == 'RELEASE':
+            if self.new_obj is not None and not self.new_obj.hide:
+                # snap_points = [i.OASnapPoints.snap_points for i in self.new_obj.dupli_group.objects if i.OASnapPoints.marked][0]
+                # self.current_oa_id = [i.OASnapPoints.oa_id for i in self.new_obj.dupli_group.objects if i.OASnapPoints.marked][0]
 
-        #         last_active_snap_point = [i.last_active_snap_point for i in settings.valid_groups if list(i.oa_id) == list(self.current_oa_id)][0]
+                # last_active_snap_point = [i.last_active_snap_point for i in settings.valid_groups if list(i.oa_id) == list(self.current_oa_id)][0]
 
-        #         # set last_active_snap_points for all groups of a oa_id
-        #         for i in settings.valid_groups:
-        #             if list(i.oa_id) == list(self.current_oa_id):
-        #                 i.last_active_snap_point = (i.last_active_snap_point + 1) % len(snap_points)
+                # # set last_active_snap_points for all groups of a oa_id
+                # for i in settings.valid_groups:
+                #     if list(i.oa_id) == list(self.current_oa_id):
+                #         i.last_active_snap_point = (i.last_active_snap_point + 1) % len(snap_points)
 
-        #         snap()
+                # snap()
+                
+                sp_obj_group, new_sp_obj = get_group_with_its_sp_obj(self.new_obj.dupli_group, settings)
+                
+                self.new_last_snap_point_index += 1
+                self.new_last_snap_point_index %= len(new_sp_obj.OASnapPoints.snap_points)
+                
+                align_groups(
+                    self.old_obj, self.old_last_snap_point_index,
+                    self.new_obj, self.new_last_snap_point_index,
+                    context)
 
-        #     return {'RUNNING_MODAL'}
+
+            return {'RUNNING_MODAL'}
 
         elif event.type == 'R' and event.value == 'RELEASE':
             
             
             # rotate(self.new_obj, i.last_active_snap_point, settings.rotation_angle, context) 
-            rotate(self.new_obj, 0, settings.rotation_angle, context) 
+            rotate(self.new_obj, self.new_last_snap_point_index, settings.rotation_angle, context) 
 
             # for i in settings.valid_groups:
             #     if list(i.oa_id) == list(self.current_oa_id):
