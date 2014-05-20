@@ -4,7 +4,7 @@ from random import choice
 import bpy, bgl
 from mathutils import Vector
 from bpy_extras import view3d_utils
-from bpy.props import IntVectorProperty
+from bpy.props import IntVectorProperty, IntProperty
 
 from ..mode import mode_title
 from .align import rotate, align_groups
@@ -214,7 +214,8 @@ class OAAdd(bpy.types.Operator):
     bl_options = {'INTERNAL'}
 
     oa_id = IntVectorProperty(default=(0,0,0), min=0)
-
+    last_snap_point_index = IntProperty(default=0, min=0)
+    
     def modal(self, context, event):
         context.area.tag_redraw()
         settings = context.scene.OASettings
@@ -254,9 +255,11 @@ class OAAdd(bpy.types.Operator):
                     current = check_alignment(self, context)
                     if all(current):
                         if DEBUG: print("break: perfect match")
+                        self.last_snap_point_index = new_sp.index
                         break
                     elif any(current):
                         if DEBUG: print("at least one found")
+                        self.last_snap_point_index = new_sp.index
                         if (new_valid_vertical and old_valid_vertical) != (new_valid_horizontal and old_valid_horizontal):
                             # if only one is set then the best is either (True, False) or (False, True)
                             if DEBUG: print("break: only one is set")
@@ -267,9 +270,11 @@ class OAAdd(bpy.types.Operator):
                     current = check_alignment(self, context)
                     if all(current):
                         if DEBUG: print("break: perfect match after rotation")
+                        self.last_snap_point_index = new_sp.index
                         break
                     elif any(current):
                         if DEBUG: print("at least one found after rotation")
+                        self.last_snap_point_index = new_sp.index
                         if (new_valid_vertical and old_valid_vertical) != (new_valid_horizontal and old_valid_horizontal):
                             # if only one is set then the best is either (True, False) or (False, True)
                             if DEBUG: print("break: only one is set")
@@ -287,7 +292,7 @@ class OAAdd(bpy.types.Operator):
             else:
                 align_groups(
                     self.old_obj, sp[1],
-                    self.new_obj, 0,
+                    self.new_obj, self.last_active_snap_point,
                     context)
             
             # last_active_snap_point = [i.last_active_snap_point for i in settings.valid_groups if \
@@ -345,17 +350,22 @@ class OAAdd(bpy.types.Operator):
 
         #     return {'RUNNING_MODAL'}
 
-        # elif event.type == 'R' and event.value == 'RELEASE':
-        #     for i in settings.valid_groups:
-        #         if list(i.oa_id) == list(self.current_oa_id):
-        #             # if event.shift:
-        #             #     rotate(self.new_obj, i.last_active_snap_point, None, context)
-        #             # else:
-        #             #     rotate(self.new_obj, i.last_active_snap_point, settings.rotation_angle, context)
-        #             rotate(self.new_obj, i.last_active_snap_point, settings.rotation_angle, context)              
+        elif event.type == 'R' and event.value == 'RELEASE':
+            
+            
+            # rotate(self.new_obj, i.last_active_snap_point, settings.rotation_angle, context) 
+            rotate(self.new_obj, 0, settings.rotation_angle, context) 
+
+            # for i in settings.valid_groups:
+            #     if list(i.oa_id) == list(self.current_oa_id):
+            #         # if event.shift:
+            #         #     rotate(self.new_obj, i.last_active_snap_point, None, context)
+            #         # else:
+            #         #     rotate(self.new_obj, i.last_active_snap_point, settings.rotation_angle, context)
+            #         rotate(self.new_obj, i.last_active_snap_point, settings.rotation_angle, context)              
                         
                         
-        #     return {'RUNNING_MODAL'}
+            return {'RUNNING_MODAL'}
 
         elif event.type in {'RIGHTMOUSE', 'ESC'}:
             bpy.types.SpaceView3D.draw_handler_remove(self._handle, 'WINDOW')
