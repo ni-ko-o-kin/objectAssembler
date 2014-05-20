@@ -113,12 +113,7 @@ class OAEnterOAMode(bpy.types.Operator):
     def poll(cls, context):
         settings = context.scene.OASettings
         
-        return settings.models.simps_impls
-    # (
-            # context.scene.OASettings.file_valid and
-            # context.mode == 'OBJECT' and
-            # context.scene.OASettings.valid_icon_file
-            # )
+        return settings.file_valid
     
     def modal(self, context, event):
         if context.area:

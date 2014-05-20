@@ -204,6 +204,7 @@ class OBJECT_OT_oa_load_models(bpy.types.Operator):
                 if settings_scene_found:
                     self.report({'ERROR'}, "Multiple settings scenes found")
                     break
+                settings_scene_found = True
                 settings.tag_keys.clear()
                 for tag in scene.OAEditorSettings.tags:
                     new_key = settings.tag_keys.add()
@@ -217,16 +218,14 @@ class OBJECT_OT_oa_load_models(bpy.types.Operator):
                         self.report({report[0]}, line)
                 
                 self.report({report[0]}, report[1])
-
-                if report[0] == 'ERROR':
-                    break
-
-                settings_scene_found = True
                 break
 
         if not settings_scene_found:
             self.report({'ERROR'}, "No settings scene found")
-            
+
+        if settings_scene_found and settings.models.simps_impls:
+            settings.file_valid = True
+    
         # unlink scenes after settings saved to current file 
         for scene in data_to.scenes:
             bpy.data.scenes.remove(scene)
