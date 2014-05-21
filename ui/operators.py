@@ -32,6 +32,38 @@ def get_best_match(variations, current_variation, key, value, scene_tags):
 def get_current_variation(variations, obj):
     return next((var for var in variations if var.group_name == obj.dupli_group.name), None)
 
+class OBJECT_OT_oa_order_add_tag(bpy.types.Operator):
+    bl_description = bl_label = "Add Tag"
+    bl_idname = "oa.order_add_tag"
+    bl_options = {'INTERNAL'}
+
+    @classmethod
+    def poll(cls, context):
+        settings = context.scene.OASettings
+        return settings.models.simps_impls
+
+    def invoke(self, context, event):
+        settings = context.scene.OASettings
+        settings.order_tags.add()
+        return {'FINISHED'}
+
+class OBJECT_OT_oa_order_remove_tag(bpy.types.Operator):
+    bl_description = bl_label = "Remove Tag"
+    bl_idname = "oa.order_remove_tag"
+    bl_options = {'INTERNAL'}
+
+    tag_idx = IntProperty(default=0, min=0)
+
+    @classmethod
+    def poll(cls, context):
+        settings = context.scene.OASettings
+        return settings.models.simps_impls
+
+    def invoke(self, context, event):
+        settings = context.scene.OASettings
+        settings.order_tags.remove(self.tag_idx)
+        return {'FINISHED'}
+
 class OBJECT_OT_oa_order_models(bpy.types.Operator):
     bl_description = bl_label = "Order Models"
     bl_idname = "oa.order_models"
@@ -314,6 +346,8 @@ class OBJECT_OT_oa_load_models(bpy.types.Operator):
         return {'FINISHED'}
 
 def register():
+    bpy.utils.register_class(OBJECT_OT_oa_order_remove_tag)
+    bpy.utils.register_class(OBJECT_OT_oa_order_add_tag)
     bpy.utils.register_class(OBJECT_OT_oa_order_models)
     bpy.utils.register_class(OBJECT_OT_oa_random_tag_value)
     bpy.utils.register_class(OBJECT_OT_oa_random_variation)
@@ -328,3 +362,5 @@ def unregister():
     bpy.utils.unregister_class(OBJECT_OT_oa_random_variation)
     bpy.utils.unregister_class(OBJECT_OT_oa_random_tag_value)
     bpy.utils.unregister_class(OBJECT_OT_oa_order_models)
+    bpy.utils.unregister_class(OBJECT_OT_oa_order_add_tag)
+    bpy.utils.unregister_class(OBJECT_OT_oa_order_remove_tag)

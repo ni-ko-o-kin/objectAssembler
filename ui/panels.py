@@ -164,6 +164,16 @@ class OAOrderModels(bpy.types.Panel):
         layout = self.layout
 
         layout.prop_search(settings, "order_models_start", bpy.context.scene, "objects", text="Start")
+        layout.operator("oa.order_add_tag")
+        for idx, tag in enumerate(settings.order_tags):
+            row = layout.row(align=True)
+            row.prop_search(tag, "key", settings, "tags", text="")
+            if tag.key != '':
+                row.prop_search(tag, "value", settings.tags[tag.key], "values", text="")
+            else:
+                row.label("")
+            row.operator("oa.order_remove_tag", icon="ZOOMOUT", text="").tag_idx = idx
+        
         layout.prop_search(settings, "order_models_end", bpy.context.scene, "objects", text="End")
         layout.prop(settings, "order_function")
         layout.operator("oa.order_models")

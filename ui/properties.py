@@ -33,7 +33,7 @@ class OASettings(bpy.types.PropertyGroup):
             ("Quad", "Quad","","",0),
             ("Expo", "Expo","","",0),
             ], name="")
-    order_items = CollectionProperty(type=OAModelTag)
+    order_tags = CollectionProperty(type=OAModelTag)
 
 def register():
     bpy.utils.register_class(OATagKeys)
