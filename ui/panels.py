@@ -89,16 +89,16 @@ class OAModelSettings(bpy.types.Panel):
                     tags[k].append('None')
             
             # print keys
-            for scene_tag_key in settings.tag_keys:
+            for scene_key in settings.tags:
                 box = layout.box()
                 row = box.row()
-                row.label(scene_tag_key.name)
+                row.label(scene_key.name)
                 op = row.operator("oa.random_tag_value", text="Random")
-                op.key = scene_tag_key.name
+                op.key = scene_key.name
 
                 # print values
                 col = layout.column(align=True)
-                for value in tags[scene_tag_key.name]:
+                for value in tags[scene_key.name]:
                     row = col.row(align=True)
 
                     if len(context.selected_objects) == 1:
@@ -106,7 +106,7 @@ class OAModelSettings(bpy.types.Panel):
                         chosen = False
                         var = next((var for var in model.variations if var.group_name == obj.dupli_group.name), None)
                         for t in var.tags:
-                            if t.key == scene_tag_key.name and t.value == value:
+                            if t.key == scene_key.name and t.value == value:
                                 chosen = True
                                 break
         
@@ -117,7 +117,7 @@ class OAModelSettings(bpy.types.Panel):
                     else:
                         op = row.operator("oa.change_variation", text="", icon='RADIOBUT_OFF')
 
-                    op.key = scene_tag_key.name
+                    op.key = scene_key.name
                     op.value = value
                     row.label(value)
             

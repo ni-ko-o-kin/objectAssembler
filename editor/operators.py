@@ -7,7 +7,7 @@ from bpy.props import IntProperty, CollectionProperty, StringProperty
 
 from ..common.common import (toggle, double_toggle, select_and_active, move_origin_to_geometry,
                              ALLOWED_NAVIGATION, powerset_without_empty_set, collect_models,
-                             get_collected_models_as_printables, get_editor_tags)
+                             get_collected_models_as_printables, get_tags_as_dict)
 from .common import get_sp_obj, get_sp_obj_from_base_id
 
 
@@ -22,7 +22,7 @@ class OBJECT_OT_oa_editor_collect_models(bpy.types.Operator):
         report = collect_models(
             [group for group in bpy.data.groups if not group.library],
             models,
-            get_editor_tags(settings))
+            get_tags_as_dict(settings.tags))
 
         if report[0] == 'INFO':
             for line in get_collected_models_as_printables(models):

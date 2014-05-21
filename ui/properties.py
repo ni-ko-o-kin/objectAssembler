@@ -5,15 +5,14 @@ from bpy.props import (StringProperty, IntVectorProperty, BoolProperty, Collecti
                        FloatProperty, IntProperty, EnumProperty, PointerProperty)
 
 from ..common.properties import OACollectModels
+from ..editor.properties import OAModelTag, OATagKey
 
-class OATagKeys(bpy.types.PropertyGroup):
-    name = StringProperty(default="")
 
 class OASettings(bpy.types.PropertyGroup):
     oa_file = StringProperty(name = "", default = "", subtype = 'FILE_PATH')
     oa_mode_started = BoolProperty(default=False)
     models = PointerProperty(type=OACollectModels)
-    tag_keys = CollectionProperty(type=OATagKeys)
+    tags = CollectionProperty(type=OATagKey)
 
     valid_icon_file = BoolProperty(name="", default = False)
     more_objects = BoolProperty(name = "more_objects", default = False)
@@ -34,7 +33,7 @@ class OASettings(bpy.types.PropertyGroup):
             ("Quad", "Quad","","",0),
             ("Expo", "Expo","","",0),
             ], name="")
-
+    order_items = CollectionProperty(type=OAModelTag)
 
 def register():
     bpy.utils.register_class(OATagKeys)

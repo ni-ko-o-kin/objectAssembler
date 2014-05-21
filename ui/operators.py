@@ -4,22 +4,22 @@ import bpy
 from bpy.props import StringProperty, IntVectorProperty, IntProperty
 
 from ..common.debug import line
-from ..common.common import collect_models, get_collected_models_as_printables, add_tag_value_none
+from ..common.common import collect_models, get_collected_models_as_printables, add_tag_value_none, get_tags_as_dict
 
 DEBUG = True
 
 
-def get_best_match(variations, current_variation, key, value, scene_keys):
+def get_best_match(variations, current_variation, key, value, scene_tags):
     if not variations or not current_variation: return
     
     best_var_group_name = None
     best_var_count = -1
     current_tags = {tag.key:tag.value for tag in current_variation.tags}
-    add_tag_value_none(scene_keys, current_tags)
+    add_tag_value_none(scene_tags, current_tags)
 
     for var in variations:
         tags = {tag.key:tag.value for tag in var.tags}
-        add_tag_value_none(scene_keys, tags)
+        add_tag_value_none(scene_tags, tags)
 
         if (key, value) in tags.items():
             intersection_count = len(set(current_tags.items()) & set(tags.items()))
@@ -142,7 +142,7 @@ class OBJECT_OT_oa_random_tag_value(bpy.types.Operator):
                 get_current_variation(model.variations, obj),
                 self.key,
                 random_value,
-                settings.tag_keys
+                settings.tags
                 )
     
             obj.dupli_group = bpy.data.groups.get(best_match, settings.oa_file)
@@ -208,7 +208,7 @@ class OBJECT_OT_oa_change_variation(bpy.types.Operator):
                 get_current_variation(model.variations, obj),
                 self.key,
                 self.value,
-                settings.tag_keys
+                settings.tags
                 )
     
             obj.dupli_group = bpy.data.groups.get(best_match, settings.oa_file)
@@ -270,13 +270,16 @@ class OBJECT_OT_oa_load_models(bpy.types.Operator):
                     self.report({'ERROR'}, "Multiple settings scenes found")
                     break
                 settings_scene_found = True
-                settings.tag_keys.clear()
+                settings.tags.clear()
                 for tag in scene.OAEditorSettings.tags:
-                    new_key = settings.tag_keys.add()
+                    new_key = settings.tags.add()
                     new_key.name = tag.name
+                    for value in tag.values:
+                        new_value = new_key.values.add()
+                        new_value.name = value.name
                 settings.menu_icon_size = scene.OAEditorSettings.icon_size
                 settings.menu_icon_display_size = scene.OAEditorSettings.icon_display_size
-                report = collect_models(data_to.groups, settings.models, {tag.name:None for tag in settings.tag_keys})
+                report = collect_models(data_to.groups, settings.models, get_tags_as_dict(settings.tags))
 
                 if report[0] == 'INFO':
                     for line in get_collected_models_as_printables(settings.models):

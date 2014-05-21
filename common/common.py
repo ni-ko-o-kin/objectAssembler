@@ -104,18 +104,21 @@ def powerset_without_empty_set(iterable):
     s = list(iterable)
     return chain.from_iterable(combinations(s, r) for r in range(1, len(s)+1))
 
-def get_editor_tags(settings):
-    tags = dict()
-    for tag in settings.tags:
-        tags.update({tag.name: list()})
-        for value in tag.values:
-            tags[tag.name].append(value.name)
+def get_tags_as_dict(tags):
+    return {key.name: {val.name
+                       for val in key.values} 
+            for key in tags}
+    # tags = dict()
+    # for tag in settings.tags:
+    #     tags.update({tag.name: list()})
+    #     for value in tag.values:
+    #         tags[tag.name].append(value.name)
     return tags
 
 def add_tag_value_none(scene_tags, tags):
-    for scene_key, _ in scene_tags.items():
-        if scene_key not in tags:
-            tags.update({scene_key:'None'})
+    for key in scene_tags:
+        if key not in tags:
+            tags.update({key:'None'})
 
 def collect_models(groups, models, scene_tags):
     ''' returns report_type, report_msg for self.report ''' 
@@ -159,12 +162,9 @@ def collect_models(groups, models, scene_tags):
                         return "ERROR", "Empty Tag-Value found in %s (%s)." % (group.name, str(oa_id)[1:-1])
                     if tag.key not in scene_tags:
                         return "ERROR", "Tag not set in scene-settings: %s." % tag.key
-                    if scene_tags:
-                        # check whether the function is called from editor or oa
-                        # tag-values are only present only in the editor-settings but not in oa-settings
-                        if scene_tags[tag.key] is not None:
-                            if tag.value not in scene_tags[tag.key]:
-                                return "ERROR", "Tag-Value not set in scene-settings: %s - %s." % (tag.key, tag.value)
+                    else:
+                        if tag.value not in scene_tags[tag.key]:
+                            return "ERROR", "Tag-Value not set in scene-settings: %s - %s." % (tag.key, tag.value)
                     new_tags.update({tag.key: tag.value})
                 
                 add_tag_value_none(scene_tags, new_tags)
