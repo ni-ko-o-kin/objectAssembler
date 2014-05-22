@@ -165,6 +165,8 @@ def collect_models(groups, models, scene_tags):
                     else:
                         if tag.value not in scene_tags[tag.key]:
                             return "ERROR", "Tag-Value not set in scene-settings: %s - %s." % (tag.key, tag.value)
+                    if tag.key in new_tags:
+                        return "ERROR", "Tag-Key (%s) used multiple times in the same model (%s, %s)." % (tag.key, group.name, str(oa_id)[1:-1])
                     new_tags.update({tag.key: tag.value})
                 
                 add_tag_value_none(scene_tags, new_tags)
