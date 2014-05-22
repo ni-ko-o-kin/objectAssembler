@@ -27,29 +27,24 @@ class OALoad(bpy.types.Panel):
         main_col = layout.column()
         main_col.enabled = bool(settings.models.simps_impls)
 
-        row = main_col.row().split(0.7)
+        row = main_col.row().split(0.65)
         row.label("Icon Display Size:")
         row.prop(settings, 'menu_icon_display_size', text="")
 
-        row = main_col.row().split(0.7)
+        row = main_col.row().split(0.65)
         row.label("Columns:")
         row.prop(settings, 'menu_columns', text="")
 
+        row = main_col.row().split(0.65)
+        row.label("Rotation Angle")
+        row.prop(settings, 'rotation_angle', text="")
+
         row = main_col.row().split(0.7)
-        # row.label("Columns:")
         row.prop(settings, 'draw_snap_points', text="Draw Snap Points")
 
         row = main_col.row()
         row.prop(settings, 'insert_at_cursor_pos', text="Insert at Cursor Position")
         
-
-        # layout.prop(settings, 'more_objects')
-        # layout.prop(settings, 'shift')
-
-        # row = box.row()
-        # row.label("Rotation Angle")
-        # row.prop(settings, 'rotation_angle', text="")
-
 class OAModelSettings(bpy.types.Panel):
     bl_label = "Model Settings"
     bl_idname = "OBJECT_PT_OA_MODEL_SETTINGS"
