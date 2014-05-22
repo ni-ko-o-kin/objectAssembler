@@ -29,9 +29,10 @@ class OASettings(bpy.types.PropertyGroup):
     order_models_start = StringProperty(default="")
     order_models_end = StringProperty(default="")
     order_function = EnumProperty(items=[
-            ("Lin", "Lin","","",0),
-            ("Quad", "Quad","","",0),
-            ("Expo", "Expo","","",0),
+            ("(((10**4)**x)-1)/((10**4)-1)", "Exponential", "", "", 0),
+            ("x**(1/0.2)", "Hard", "", "", 1),
+            ("x**(1/0.5)", "Soft", "", "", 2),
+            ("x", "Linear", "", "", 3),
             ], name="")
     order_tags = CollectionProperty(type=OAModelTag)
 

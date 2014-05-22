@@ -121,9 +121,10 @@ class OBJECT_OT_oa_order_models(bpy.types.Operator):
             
             current_variation = get_current_variation(model.variations, obj)
             variations = [var for var in model.variations]
-            
+
             for v in range(1, order_tags_count + 1):
-                if linear(obj_distance) < (1/order_tags_count)*v:
+                x = obj_distance
+                if eval(settings.order_function) < (1/order_tags_count)*v:
                     key = settings.order_tags[v-1].key
                     value = settings.order_tags[v-1].value
                     best_var_group_name = get_best_match(variations, current_variation, key, value, settings.tags)
