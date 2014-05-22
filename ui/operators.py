@@ -10,13 +10,14 @@ DEBUG = True
 
 
 def get_best_match(variations, current_variation, key, value, scene_tags):
-    if not variations or not current_variation: return
-    
-    best_var_group_name = None
-    best_var_count = -1
     current_tags = {tag.key:tag.value for tag in current_variation.tags}
+    if key not in current_tags:
+        return current_variation.group_name
+    
     add_tag_value_none(scene_tags, current_tags)
 
+    best_var_group_name = None
+    best_var_count = -1
     for var in variations:
         tags = {tag.key:tag.value for tag in var.tags}
         add_tag_value_none(scene_tags, tags)
@@ -75,9 +76,16 @@ class OBJECT_OT_oa_order_models(bpy.types.Operator):
         return all((settings.order_models_start != '', settings.order_models_end != ''))
     
     def invoke(self, context, event):
+        def linear(x):
+            ''' this is linear '''
+            return x
+
+        def hard(x):
+            return x**(1/0.5)
+        
         settings = context.scene.OASettings
         models = settings.models.simps_impls
-
+        
         if len(context.selected_objects) < 1:
             self.report({'ERROR'}, "Select at least one object")
             return {'CANCELLED'}
@@ -94,11 +102,7 @@ class OBJECT_OT_oa_order_models(bpy.types.Operator):
         end = context.scene.objects.get(settings.order_models_end).location.copy()
         distance = (start - end).length
 
-        def linear(x):
-            return x
-
-        def hard(x):
-            return x**(1/0.5)
+        order_tags_count = len(settings.order_tags)        
 
         for obj in context.selected_objects:
             if not obj.OAModel.marked:
@@ -117,13 +121,13 @@ class OBJECT_OT_oa_order_models(bpy.types.Operator):
             
             current_variation = get_current_variation(model.variations, obj)
             variations = [var for var in model.variations]
-
-            # todo; use linear for testing
-            # todo; use 3 variations for testing
-            VARS = 3
-            for v in range(1, VARS + 1):
-                if linear(obj_distance) < (1/VARS)*v:
-                    obj.dupli_group = bpy.data.groups.get(variations[v-1].group_name, settings.oa_file)
+            
+            for v in range(1, order_tags_count + 1):
+                if linear(obj_distance) < (1/order_tags_count)*v:
+                    key = settings.order_tags[v-1].key
+                    value = settings.order_tags[v-1].value
+                    best_var_group_name = get_best_match(variations, current_variation, key, value, settings.tags)
+                    obj.dupli_group = bpy.data.groups.get(best_var_group_name, settings.oa_file)
                     break
             
         return {'FINISHED'}
@@ -225,16 +229,6 @@ class OBJECT_OT_oa_change_variation(bpy.types.Operator):
             if not model:
                 continue
 
-            # check whether the tag occures
-            found = False
-            for var in model.variations:
-                if (self.key, self.value) in ((tag.key, tag.value) for tag in var.tags):
-                    found = True
-                    break
-
-            if not found:
-                continue
-            
             best_match = get_best_match(
                 model.variations,
                 get_current_variation(model.variations, obj),
@@ -242,7 +236,7 @@ class OBJECT_OT_oa_change_variation(bpy.types.Operator):
                 self.value,
                 settings.tags
                 )
-    
+            
             obj.dupli_group = bpy.data.groups.get(best_match, settings.oa_file)
         
         return {'FINISHED'}

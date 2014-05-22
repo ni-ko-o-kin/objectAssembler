@@ -36,13 +36,13 @@ class OASettings(bpy.types.PropertyGroup):
     order_tags = CollectionProperty(type=OAModelTag)
 
 def register():
-    bpy.utils.register_class(OATagKeys)
+    # bpy.utils.register_class(OATagKeys)
     bpy.utils.register_class(OASettings)
     bpy.types.Scene.OASettings = bpy.props.PointerProperty(type=OASettings)
 
 def unregister():
     del bpy.types.Scene.OASettings
     bpy.utils.unregister_class(OASettings)
-    bpy.utils.unregister_class(OATagKeys)
+    # bpy.utils.unregister_class(OATagKeys)
 
     
