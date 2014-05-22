@@ -36,14 +36,22 @@ class OASettings(bpy.types.PropertyGroup):
             ], name="")
     order_tags = CollectionProperty(type=OAModelTag)
 
+    select_type = EnumProperty(items=[
+            ("any", "Any", "", "", 0),
+            ("simp", "Simple", "", "", 1),
+            ("impl", "Implementation", "", "", 2),
+            ("base", "Base", "", "", 3),
+            ("simp_impl", "Simple, Implementation", "", "", 4),
+            ], name="")
+    select_id = IntVectorProperty(default=(0,0,0), min=0)
+    select_tags = CollectionProperty(type=OAModelTag)
+    
 def register():
-    # bpy.utils.register_class(OATagKeys)
     bpy.utils.register_class(OASettings)
     bpy.types.Scene.OASettings = bpy.props.PointerProperty(type=OASettings)
 
 def unregister():
     del bpy.types.Scene.OASettings
     bpy.utils.unregister_class(OASettings)
-    # bpy.utils.unregister_class(OATagKeys)
 
     
