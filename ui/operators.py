@@ -171,13 +171,6 @@ class OBJECT_OT_oa_order_models(bpy.types.Operator):
         return all((settings.order_models_start != '', settings.order_models_end != ''))
     
     def invoke(self, context, event):
-        def linear(x):
-            ''' this is linear '''
-            return x
-
-        def hard(x):
-            return x**(1/0.5)
-        
         settings = context.scene.OASettings
         models = settings.models.simps_impls
         
