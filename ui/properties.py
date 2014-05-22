@@ -33,17 +33,16 @@ class OASettings(bpy.types.PropertyGroup):
             ("x**(1/0.2)", "Hard", "", "", 1),
             ("x**(1/0.5)", "Soft", "", "", 2),
             ("x", "Linear", "", "", 3),
-            ], name="")
+            ], name="Function", default="x")
     order_tags = CollectionProperty(type=OAModelTag)
 
-    select_type = EnumProperty(items=[
-            ("any", "Any", "", "", 0),
-            ("simp", "Simple", "", "", 1),
-            ("impl", "Implementation", "", "", 2),
-            ("base", "Base", "", "", 3),
-            ("simp_impl", "Simple, Implementation", "", "", 4),
-            ], name="")
+    select_oa_type = EnumProperty(items=[
+            ("IMPL", "Implementation", "", "", 0),
+            ("SIMP", "Simple", "", "", 1),
+            ("SIMP_IMPL", "Simple, Implementation", "", "", 2),
+            ], name="OA-Type", default="SIMP_IMPL")
     select_id = IntVectorProperty(default=(0,0,0), min=0)
+    select_use_id = BoolProperty(default=False)
     select_tags = CollectionProperty(type=OAModelTag)
     
 def register():

@@ -164,7 +164,7 @@ class OAOrderModels(bpy.types.Panel):
         layout = self.layout
 
         layout.prop_search(settings, "order_models_start", bpy.context.scene, "objects", text="Start")
-        layout.operator("oa.order_add_tag")
+        layout.operator("oa.order_add_tag", icon="ZOOMIN")
         for idx, tag in enumerate(settings.order_tags):
             row = layout.row(align=True)
             row.prop_search(tag, "key", settings, "tags", text="")
@@ -178,16 +178,53 @@ class OAOrderModels(bpy.types.Panel):
         layout.prop(settings, "order_function")
         layout.operator("oa.order_models")
 
+class OASelectModels(bpy.types.Panel):
+    bl_label = "Select Models"
+    bl_idname = "OBJECT_PT_OA_SELECT_MODELS"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'TOOLS'
+    bl_category = "Object Assembler"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context):
+        settings = context.scene.OASettings
+        layout = self.layout
+        
+        layout.prop(settings, "select_oa_type")
+        row = layout.row()
+        subrow = row.row()
+        subrow.prop(settings, "select_id", text="Id")
+        subrow.enabled = settings.select_use_id
+        row.prop(settings, "select_use_id", text="")
+
+        layout.operator("oa.select_add_tag", icon="ZOOMIN")
+        for idx, tag in enumerate(settings.select_tags):
+            row = layout.row(align=True)
+            row.prop_search(tag, "key", settings, "tags", text="")
+            if tag.key != '':
+                row.prop_search(tag, "value", settings.tags[tag.key], "values", text="")
+            else:
+                row.label("")
+            row.operator("oa.select_remove_tag", icon="ZOOMOUT", text="").tag_idx = idx
+        
+        col = layout.column(align=True)
+        row = col.row(align=True)
+        row.operator("oa.select", text="Select").select_type = "Select"
+        row.operator("oa.select", text="Add to Selection").select_type = "Add to Selection"
+        col.operator("oa.select", text="Deselect").select_type = "Deselect"
+        
 def register():
     bpy.utils.register_class(OALoad)
-    bpy.utils.register_class(OAModelSettings)
     bpy.utils.register_class(OAModelDefaults)
+    bpy.utils.register_class(OAModelSettings)
     bpy.utils.register_class(OAOrderModels)
+    bpy.utils.register_class(OASelectModels)
 
 def unregister():
+    bpy.utils.register_class(OASelectModels)
     bpy.utils.unregister_class(OAOrderModels)
-    bpy.utils.unregister_class(OAModelDefaults)
     bpy.utils.unregister_class(OAModelSettings)
+    bpy.utils.unregister_class(OAModelDefaults)
     bpy.utils.unregister_class(OALoad)
 
 

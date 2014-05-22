@@ -33,6 +33,101 @@ def get_best_match(variations, current_variation, key, value, scene_tags):
 def get_current_variation(variations, obj):
     return next((var for var in variations if var.group_name == obj.dupli_group.name), None)
 
+class OBJECT_OT_oa_select(bpy.types.Operator):
+    bl_description = bl_label = "Select"
+    bl_idname = "oa.select"
+    bl_options = {'INTERNAL'}
+
+    select_type = StringProperty(default="Select")
+    
+    @classmethod
+    def poll(cls, context):
+        settings = context.scene.OASettings
+        return settings.models.simps_impls or settings.models.bases
+
+    def invoke(self, context, event):
+        def check_tags(oa_group):
+            oa_group_tags = {tag.key:tag.value for tag in oa_group.tags}
+            for key, value in select_tags.items():
+                if key not in oa_group_tags:
+                    return False
+                else:
+                    if select_tags[key] != '':
+                        if oa_group_tags[key] != value:
+                            return False
+            return True
+
+        def check_id(oa_group):
+            if not settings.select_use_id:
+                return True
+            else:
+                if tuple(settings.select_id) == tuple(oa_group.oa_id):
+                    return True
+            return False
+
+        settings = context.scene.OASettings
+        select_tags = {tag.key:tag.value for tag in settings.select_tags}
+        
+        oa_models = set()
+        for obj in context.scene.objects:
+            if not obj.OAModel.marked:
+                continue
+            
+            oa_group = obj.dupli_group.OAGroup
+            if settings.select_oa_type in ('SIMP', 'SIMP_IMPL'):
+                if oa_group.oa_type == 'SIMP':
+                    if check_id(oa_group) and check_tags(oa_group):
+                        oa_models.update({obj})
+
+            if settings.select_oa_type in ('IMPL', 'SIMP_IMPL'):
+                if oa_group.oa_type == 'IMPL':
+                    if check_id(oa_group) and check_tags(oa_group):
+                        oa_models.update({obj})
+
+        if self.select_type == 'Select':
+            for obj in context.scene.objects:
+                obj.select = False
+
+        for obj in oa_models:
+            if self.select_type in ('Select', 'Add to Selection'):
+                obj.select = True
+            else:
+                obj.select = False
+                
+        return {'FINISHED'}
+
+class OBJECT_OT_oa_select_add_tag(bpy.types.Operator):
+    bl_description = bl_label = "Add Tag"
+    bl_idname = "oa.select_add_tag"
+    bl_options = {'INTERNAL'}
+
+    @classmethod
+    def poll(cls, context):
+        settings = context.scene.OASettings
+        return settings.models.simps_impls
+
+    def invoke(self, context, event):
+        settings = context.scene.OASettings
+        settings.select_tags.add()
+        return {'FINISHED'}
+
+class OBJECT_OT_oa_select_remove_tag(bpy.types.Operator):
+    bl_description = bl_label = "Remove Tag"
+    bl_idname = "oa.select_remove_tag"
+    bl_options = {'INTERNAL'}
+
+    tag_idx = IntProperty(default=0, min=0)
+
+    @classmethod
+    def poll(cls, context):
+        settings = context.scene.OASettings
+        return settings.models.simps_impls
+
+    def invoke(self, context, event):
+        settings = context.scene.OASettings
+        settings.select_tags.remove(self.tag_idx)
+        return {'FINISHED'}
+
 class OBJECT_OT_oa_order_add_tag(bpy.types.Operator):
     bl_description = bl_label = "Add Tag"
     bl_idname = "oa.order_add_tag"
@@ -343,6 +438,9 @@ class OBJECT_OT_oa_load_models(bpy.types.Operator):
         return {'FINISHED'}
 
 def register():
+    bpy.utils.register_class(OBJECT_OT_oa_select)
+    bpy.utils.register_class(OBJECT_OT_oa_select_remove_tag)
+    bpy.utils.register_class(OBJECT_OT_oa_select_add_tag)
     bpy.utils.register_class(OBJECT_OT_oa_order_remove_tag)
     bpy.utils.register_class(OBJECT_OT_oa_order_add_tag)
     bpy.utils.register_class(OBJECT_OT_oa_order_models)
@@ -361,3 +459,6 @@ def unregister():
     bpy.utils.unregister_class(OBJECT_OT_oa_order_models)
     bpy.utils.unregister_class(OBJECT_OT_oa_order_add_tag)
     bpy.utils.unregister_class(OBJECT_OT_oa_order_remove_tag)
+    bpy.utils.unregister_class(OBJECT_OT_oa_select_add_tag)
+    bpy.utils.unregister_class(OBJECT_OT_oa_select_remove_tag)
+    bpy.utils.unregister_class(OBJECT_OT_oa_select)
