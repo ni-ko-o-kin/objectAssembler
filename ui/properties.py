@@ -23,6 +23,7 @@ class OASettings(bpy.types.PropertyGroup):
     menu_columns = IntProperty(default=4, min=1, max=100)
     menu_icon_display_size = IntProperty(default=40, min=10, max=200)
     menu_icon_size = IntProperty(default=40, min=10, max=200)
+    draw_snap_points = BoolProperty(default=True)
 
     insert_at_cursor_pos = BoolProperty(default=False)
 

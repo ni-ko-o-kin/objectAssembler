@@ -35,8 +35,12 @@ class OALoad(bpy.types.Panel):
         row.label("Columns:")
         row.prop(settings, 'menu_columns', text="")
 
+        row = main_col.row().split(0.7)
+        # row.label("Columns:")
+        row.prop(settings, 'draw_snap_points', text="Draw Snap Points")
+
         row = main_col.row()
-        row.prop(settings, 'insert_at_cursor_pos', text="Insert at Cursor")
+        row.prop(settings, 'insert_at_cursor_pos', text="Insert at Cursor Position")
         
 
         # layout.prop(settings, 'more_objects')

@@ -168,7 +168,10 @@ def draw_callback_add(self, context):
 
     # draw add-mode-title
     mode_title.mode_title(False, "Add")
-    
+
+    if not context.scene.OASettings.draw_snap_points:
+        return
+
     if self.snap_list:
         hue = 0
         old_obj_snap_points = [sp for sp in self.snap_list if sp[0] == self.old_obj]
