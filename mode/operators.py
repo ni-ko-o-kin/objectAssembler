@@ -119,9 +119,10 @@ class OAEnterOAMode(bpy.types.Operator):
             context.area.tag_redraw()
         
         settings = bpy.context.scene.OASettings
-
         if not settings.oa_mode_started and self._handle is not None:
             bpy.types.SpaceView3D.draw_handler_remove(self._handle, 'WINDOW')
+            if settings.valid_icon_file:
+                self.img.gl_free()
             return {'CANCELLED'}
 
         if settings.more_objects == True:
