@@ -36,6 +36,9 @@ def get_best_match_inside_model(variations, current_variation, key, value, scene
     # switch form one variation to an other in the same model
     # while trying to keep as many tags unchanged as possible
     
+    if len(variations) == 1:
+        return current_variation.group_name
+
     current_tags = {tag.key:tag.value for tag in current_variation.tags}
     if key not in current_tags:
         return current_variation.group_name
@@ -243,6 +246,7 @@ class OBJECT_OT_oa_order_models(bpy.types.Operator):
                     value = settings.order_tags[v-1].value
                     if key == '' or value == '':
                         break
+                    
                     best_var_group_name = get_best_match_inside_model(variations, current_variation, key, value, settings.tags)
                     obj.dupli_group = bpy.data.groups.get(best_var_group_name, settings.oa_file)
                     break
