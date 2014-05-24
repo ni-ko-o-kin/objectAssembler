@@ -228,6 +228,7 @@ class OAAdd(bpy.types.Operator):
         some_point_in_polygon = False
         
         for sp in self.snap_list:
+            print("sp[5]:", sp[5])
             # if cursor is not over a snap point -> next sp
             if not point_in_polygon(self.mouse[0], self.mouse[1], sp[5]):
                 continue
@@ -420,7 +421,6 @@ class OAAdd(bpy.types.Operator):
         else:
             variation = next((var for var in model.variations if var.default), model.variations[0])
         
-        # test whether any model with snap_points exists in scene
         # add all oa-groups to list
         self.oa_objects = list()
         for obj in context.scene.objects:
