@@ -202,7 +202,8 @@ def draw_callback_add(self, context):
                 #bgl.glColor3f(0.9,0.9,0.9)
                 bgl.glVertex2f(x, y)
             bgl.glEnd()
-            hue += 1/l
+            if l > 0:
+                hue += 1/l
     
     # restore opengl defaults
     bgl.glDisable(bgl.GL_LINE_SMOOTH)
