@@ -138,6 +138,7 @@ class OAEnterOAMode(bpy.types.Operator):
                 if mouse_over_icon(icon[1], self.mouse):
                     self.value_last = 'PRESS'
                     self.icon_last = icon[0]
+                    break
 
         elif event.type == 'LEFTMOUSE' and event.value == 'RELEASE':
             for icon in self.menu:
