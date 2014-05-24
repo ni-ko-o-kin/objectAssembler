@@ -177,9 +177,11 @@ def draw_callback_add(self, context):
     if self.snap_list:
         hue = 0
         old_obj_snap_points = [sp for sp in self.snap_list if sp[0] == self.old_obj]
-        l = len(old_obj_snap_points) - 1
-        for sp in reversed(old_obj_snap_points):
-            
+        l = len(old_obj_snap_points)
+        for idx, sp in enumerate(reversed(old_obj_snap_points)):
+            if l > 1:
+                hue = idx/(l - 1)
+                
             # # filled
             # bgl.glBegin(bgl.GL_POLYGON)
             # for x,y in sp[5]:
@@ -204,8 +206,6 @@ def draw_callback_add(self, context):
                 #bgl.glColor3f(0.9,0.9,0.9)
                 bgl.glVertex2f(x, y)
             bgl.glEnd()
-            if l > 0:
-                hue += 1/l
     
     # restore opengl defaults
     bgl.glDisable(bgl.GL_LINE_SMOOTH)
