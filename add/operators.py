@@ -409,7 +409,8 @@ class OAAdd(bpy.types.Operator):
         self.viewport_changed = True
         self.old_obj = None
         self.last_snapped_to = (None, None)
-        
+        self.last_active_snap_point = 0
+
         model = next((model for model in settings.models.simps_impls if tuple(model.oa_id) ==  tuple(self.oa_id)), None)
         if not model: return {'CANCELLED'}
         
