@@ -108,12 +108,6 @@ def get_tags_as_dict(tags):
     return {key.name: {val.name
                        for val in key.values} 
             for key in tags}
-    # tags = dict()
-    # for tag in settings.tags:
-    #     tags.update({tag.name: list()})
-    #     for value in tag.values:
-    #         tags[tag.name].append(value.name)
-    return tags
 
 def add_tag_value_none(scene_tags, tags):
     for key in scene_tags:

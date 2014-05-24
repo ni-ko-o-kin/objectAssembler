@@ -9,14 +9,40 @@ from ..common.common import collect_models, get_collected_models_as_printables, 
 DEBUG = True
 
 
-def get_best_match(variations, current_variation, key, value, scene_tags):
+def get_best_match_outside_model(old_model, old_variation, new_model):
+    # switch from the variation of the old_model to the variatioin of the new model
+    # while trying to keep as many tags unchanged as possible
+
+    old_tags = {tag.key:tag.value for tag in old_variation.tags}
+    
+    best_var_group_name = ""
+    best_var_count = -1
+    for var in new_model.variations:
+        new_tags = {tag.key:tag.value for tag in var.tags}
+        intersection_count = len(set(old_tags.items()) & set(new_tags.items()))
+        if intersection_count > best_var_count:
+            best_var_count = intersection_count
+            best_var_group_name = var.group_name
+
+    if best_var_count < 1:
+        if new_model.random:
+            best_var_group_name = choice(new_model.variations).group_name
+        else:
+            best_var_group_name = next((var for var in new_model.variations if var.default), new_model.variations[0]).group_name
+        
+    return best_var_group_name
+        
+def get_best_match_inside_model(variations, current_variation, key, value, scene_tags):
+    # switch form one variation to an other in the same model
+    # while trying to keep as many tags unchanged as possible
+    
     current_tags = {tag.key:tag.value for tag in current_variation.tags}
     if key not in current_tags:
         return current_variation.group_name
     
     add_tag_value_none(scene_tags, current_tags)
 
-    best_var_group_name = None
+    best_var_group_name = ""
     best_var_count = -1
     for var in variations:
         tags = {tag.key:tag.value for tag in var.tags}
@@ -217,7 +243,7 @@ class OBJECT_OT_oa_order_models(bpy.types.Operator):
                     value = settings.order_tags[v-1].value
                     if key == '' or value == '':
                         break
-                    best_var_group_name = get_best_match(variations, current_variation, key, value, settings.tags)
+                    best_var_group_name = get_best_match_inside_model(variations, current_variation, key, value, settings.tags)
                     obj.dupli_group = bpy.data.groups.get(best_var_group_name, settings.oa_file)
                     break
             
@@ -264,7 +290,7 @@ class OBJECT_OT_oa_random_tag_value(bpy.types.Operator):
                         values.update({tag.value})
             random_value = choice(tuple(values))
 
-            best_match = get_best_match(
+            best_match = get_best_match_inside_model(
                 model.variations,
                 get_current_variation(model.variations, obj),
                 self.key,
@@ -320,7 +346,7 @@ class OBJECT_OT_oa_change_variation(bpy.types.Operator):
             if not model:
                 continue
 
-            best_match = get_best_match(
+            best_match = get_best_match_inside_model(
                 model.variations,
                 get_current_variation(model.variations, obj),
                 self.key,

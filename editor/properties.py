@@ -65,8 +65,8 @@ class OAEditorSettings(PropertyGroup):
     tags = CollectionProperty(type=OATagKey)
     icon_size = IntProperty(default=40, min=4, subtype='PIXEL')
     icon_display_size = IntProperty(default=40, min=4, subtype='PIXEL')
-    draw_sp_idx = BoolProperty(default=False)
     models = PointerProperty(type=OACollectModels)
+    draw_sp_idx = BoolProperty(default=False)
 
 ################
 # Register

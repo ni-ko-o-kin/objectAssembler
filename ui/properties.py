@@ -26,7 +26,8 @@ class OASettings(bpy.types.PropertyGroup):
     draw_snap_points = BoolProperty(default=True)
 
     insert_at_cursor_pos = BoolProperty(default=False)
-
+    replace_model = BoolProperty(default=False)
+    
     order_models_start = StringProperty(default="")
     order_models_end = StringProperty(default="")
     order_function = EnumProperty(items=[

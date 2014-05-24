@@ -6,8 +6,33 @@ from bpy.props import IntVectorProperty
 from .menu import construct_menu
 from .mode_title import mode_title
 from ..common.common import ALLOWED_NAVIGATION
+from ..ui.operators import get_best_match_outside_model, get_current_variation
 
 DEBUG = True
+
+
+def replace_models(context, objs, new_oa_id):
+    settings = context.scene.OASettings
+    
+    for obj in objs:
+        if not obj.OAModel.marked:
+            continue
+
+        old_oa_id = obj.dupli_group.OAGroup.oa_id
+        old_model = next((model for model in settings.models.simps_impls if tuple(model.oa_id) ==  tuple(old_oa_id)), None)
+        if not old_model:
+            continue
+
+        old_variation = get_current_variation(old_model.variations, obj)
+        if not old_variation:
+            continue
+
+        new_model = next((model for model in settings.models.simps_impls if tuple(model.oa_id) ==  tuple(new_oa_id)), None)
+        if not new_model:
+            continue
+        
+        best_match = get_best_match_outside_model(old_model, old_variation, new_model)
+        obj.dupli_group = bpy.data.groups.get(best_match, settings.oa_file)
 
 def mouse_over_icon(icon, mouse):
     if mouse[0] <= icon[2] and mouse[0] >= icon[0]:
@@ -103,7 +128,7 @@ def draw_callback_mode(self, context):
 
 class OAEnterOAMode(bpy.types.Operator):
     bl_idname = "oa.enteroamode"
-    bl_label = "Object Assembler Mode"
+    bl_label = "Start Object Assembler Mode"
 
     _handle = None
     last_oa_id = IntVectorProperty(default=(0,0,0), min=0)
@@ -148,12 +173,13 @@ class OAEnterOAMode(bpy.types.Operator):
                     if self.value_last == 'PRESS':
                         # if mouse has been pressed over the same icon were it was released
                         if icon[0] == self.icon_last:
-                            bpy.ops.oa.add('INVOKE_DEFAULT', oa_id=icon[0])
+                            if settings.replace_model:
+                                replace_models(context, context.selected_objects, icon[0])
+                            else:
+                                bpy.ops.oa.add('INVOKE_DEFAULT', oa_id=icon[0])
 
                             settings.shift = event.shift
                             settings.more_objects = False
-
-                            # settings.more_objects = event.shift
                             self.last_oa_id = icon[0]
                             
                         self.value_last = ''
