@@ -670,7 +670,20 @@ def draw_callback_abc(self, context):
         normal_end_2d = tuple(map(ceil, view3d_utils.location_3d_to_region_2d(region, rv3d, normal_end_3d )))
         
         draw_line(normal_start_2d, normal_end_2d)
-        
+
+        if context.scene.OAEditorSettings.draw_sp_idx:
+            # sp-index
+            sp_idx_2d = (int((a_2d[0] + b_2d[0])/2),
+                           a_2d[1] + b_2d[1] - normal_start_2d[1]) # is short for ((a_2d[1] + b_2d[1])/2) + ((a_2d[1] + b_2d[1])/2) - normal_start_2d[1],
+            # black background
+            draw_point(sp_idx_2d[0], sp_idx_2d[1], 20, (0,0,0))
+            # white background
+            draw_point(sp_idx_2d[0], sp_idx_2d[1], 18, (1,1,1))
+            draw_letter(
+                sp_idx_2d[0],
+                sp_idx_2d[1],  
+                str(sp_idx))
+
     # restore opengl defaults
     bgl.glPointSize(1)
     bgl.glLineWidth(1)

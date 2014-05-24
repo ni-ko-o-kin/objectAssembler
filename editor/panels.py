@@ -30,6 +30,9 @@ class OBJECT_PT_oa_editor_settings(bpy.types.Panel):
         layout.prop(settings, "icon_size", text="Icon Size")
         layout.prop(settings, "icon_display_size", text="Icon Display Size")
 
+        # snap point index
+        layout.prop(settings, "draw_sp_idx", text="Draw Snap Point Index")
+
         # tags
         layout.label("Tags:")
         
