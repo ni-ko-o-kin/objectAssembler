@@ -18,32 +18,34 @@ class OALoad(bpy.types.Panel):
         layout.prop(settings, 'oa_file')
 
         if settings.models.simps_impls:
-            layout.operator("oa.load_models", text="Reload Models")
+            layout.operator("oa.load_models", text="Reload Models", icon='FILE_REFRESH')
         else:
-            layout.operator("oa.load_models")
+            layout.operator("oa.load_models", icon='LOAD_FACTORY')
 
-        layout.operator("oa.enteroamode")
+        if settings.oa_mode_started:
+            layout.operator("oa.enteroamode", text="Stop Object Assembler Mode", icon='PAUSE')
+        else:
+            layout.operator("oa.enteroamode", icon='PLAY')
 
-        main_col = layout.column()
-        main_col.enabled = bool(settings.models.simps_impls)
+        col = layout.column()
+        col.enabled = bool(settings.models.simps_impls)
 
-        row = main_col.row().split(0.65)
+        row = col.row().split(0.65)
         row.label("Icon Display Size:")
         row.prop(settings, 'menu_icon_display_size', text="")
 
-        row = main_col.row().split(0.65)
+        row = col.row().split(0.65)
         row.label("Columns:")
         row.prop(settings, 'menu_columns', text="")
 
-        row = main_col.row().split(0.65)
+        row = col.row().split(0.65)
         row.label("Rotation Angle")
         row.prop(settings, 'rotation_angle', text="")
 
-        row = main_col.row().split(0.7)
-        row.prop(settings, 'draw_snap_points', text="Draw Snap Points")
+        col.prop(settings, 'draw_snap_points', text="Draw Snap Points")
+        col.prop(settings, 'insert_at_cursor_pos', text="Insert at Cursor Position")
+        col.prop(settings, 'replace_model', text="Replace Selected Model(s)")
 
-        row = main_col.row()
-        row.prop(settings, 'insert_at_cursor_pos', text="Insert at Cursor Position")
         
 class OAModelSettings(bpy.types.Panel):
     bl_label = "Model Settings"
