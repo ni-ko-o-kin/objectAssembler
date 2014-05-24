@@ -148,7 +148,12 @@ class OBJECT_PT_oa_editor_oa_group(bpy.types.Panel):
                     snap_points = sp_obj.OASnapPoints.snap_points
                     
                     if sp_obj and snap_points:
-                        box.label("Show Snap Points:")
+                        row = box.row()
+                        row.label("Show Snap Points:")
+                        op = row.operator("oa.show_snap_point_from_base", text="Show all Snap Points")
+                        op.group_index = group_index
+                        op.show_all_sp = True
+
         
                         for i, sp in enumerate(snap_points):
                             if i % 4 == 0:
@@ -159,7 +164,7 @@ class OBJECT_PT_oa_editor_oa_group(bpy.types.Panel):
                             if i == len(snap_points) - 1:
                                 for j in range(3 - i % 4):
                                     row.label("")
-                            
+
                     else:
                         box.label("No Snap Points found")
 
@@ -194,8 +199,15 @@ class OBJECT_PT_oa_editor_oa_group(bpy.types.Panel):
         
                     col.separator()
         
+                    row = box.row(align=True)
+                    op = row.operator("oa.show_snap_point")
+                    op.group_index = group_index
+                    op.show_all_sp = False
+                    op = row.operator("oa.show_snap_point", text="Show all Snap Points")
+                    op.group_index = group_index
+                    op.show_all_sp = True
+
                     row = box.row()
-                    row.operator("oa.show_snap_point").group_index = group_index
                     row.operator("oa.switch_ab")
                     
                 elif sp_obj is None:

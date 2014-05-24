@@ -3,7 +3,7 @@ from math import pi, ceil
 import bpy, bmesh, blf, bgl
 from bpy_extras import view3d_utils
 from mathutils import Matrix, Vector, Euler
-from bpy.props import IntProperty, CollectionProperty, StringProperty
+from bpy.props import IntProperty, CollectionProperty, StringProperty, BoolProperty
 
 from ..common.common import (toggle, double_toggle, select_and_active, move_origin_to_geometry,
                              ALLOWED_NAVIGATION, powerset_without_empty_set, collect_models,
@@ -536,49 +536,6 @@ class OBJECT_OT_oa_switch_ab(bpy.types.Operator):
         return {'FINISHED'}
 
 def draw_callback_abc(self, context):
-    font_id = 0
-    
-    base_dupli_offset = next((group.dupli_offset for group in self.sp_obj.users_group if group.OAGroup.oa_type in ('BASE','SIMP')))
-    impl_dupli_offset = context.object.users_group[self.group_index].dupli_offset
-    oa_type = context.object.users_group[self.group_index].OAGroup.oa_type
-    
-    scene = context.scene
-    region = context.region
-    rv3d = context.region_data
-    
-    sp_obj_matrix_world = self.sp_obj.matrix_world
-    
-    a = self.sp_obj.data.vertices[self.snap_points[self.index].a].co
-    b = self.sp_obj.data.vertices[self.snap_points[self.index].b].co
-    c = self.sp_obj.data.vertices[self.snap_points[self.index].c].co
-    
-    factor = 1.5
-    a_norm = c - (c - a).normalized() / factor
-    b_norm = c - (c - b).normalized() / factor
-    c_norm = c
-    
-    a_3d = (sp_obj_matrix_world * a_norm)
-    b_3d = (sp_obj_matrix_world * b_norm)
-    c_3d = (sp_obj_matrix_world * c_norm)
-    
-    if oa_type == 'IMPL':
-        offset = (impl_dupli_offset - base_dupli_offset)
-        a_3d += offset
-        b_3d += offset
-        c_3d += offset
-
-    a_3d_to_region_2d = view3d_utils.location_3d_to_region_2d(region, rv3d, a_3d)
-    b_3d_to_region_2d = view3d_utils.location_3d_to_region_2d(region, rv3d, b_3d)
-    c_3d_to_region_2d = view3d_utils.location_3d_to_region_2d(region, rv3d, c_3d)
-
-    # abort when viewport is to close or outside the 3d-view because location_3d_to_region_2d() returns None
-    if not all((a_3d_to_region_2d, b_3d_to_region_2d, c_3d_to_region_2d)):
-        return
-
-    a_2d = tuple(map(ceil, a_3d_to_region_2d))
-    b_2d = tuple(map(ceil, b_3d_to_region_2d))
-    c_2d = tuple(map(ceil, c_3d_to_region_2d))
-
     def draw_letter(x=10, y=10, letter="-"):
         bgl.glColor3f(0.1,0.1,0.1)
         blf.position(0, x-7 , y-7, 0)
@@ -608,65 +565,112 @@ def draw_callback_abc(self, context):
         bgl.glVertex2i(start[0], start[1])
         bgl.glVertex2i(end[0], end[1])
         bgl.glEnd()
+
+    font_id = 0
+    
+    base_dupli_offset = next((group.dupli_offset for group in self.sp_obj.users_group if group.OAGroup.oa_type in ('BASE','SIMP')))
+    impl_dupli_offset = context.object.users_group[self.group_index].dupli_offset
+    oa_type = context.object.users_group[self.group_index].OAGroup.oa_type
+    
+    scene = context.scene
+    region = context.region
+    rv3d = context.region_data
+    
+    sp_obj_matrix_world = self.sp_obj.matrix_world
+
+    for sp_idx in range(len(self.snap_points)):
+        if not self.show_all_sp:
+            if self.index != sp_idx:
+                continue
+
+        a = self.sp_obj.data.vertices[self.snap_points[sp_idx].a].co
+        b = self.sp_obj.data.vertices[self.snap_points[sp_idx].b].co
+        c = self.sp_obj.data.vertices[self.snap_points[sp_idx].c].co
         
-
-    # draw triangle
-    # filled
-    bgl.glEnable(bgl.GL_BLEND)
-    bgl.glBegin(bgl.GL_POLYGON)
-    bgl.glColor4f(0.8,0.5,0.5, 0.2)
-    for x, y in (a_2d, b_2d, c_2d):
-        bgl.glVertex2i(x, y)
-    bgl.glEnd()
-    bgl.glDisable(bgl.GL_BLEND)
-            
-    bgl.glEnable(bgl.GL_LINE_SMOOTH)
-    bgl.glHint(bgl.GL_POLYGON_SMOOTH_HINT, bgl.GL_NICEST)
+        factor = 1.5
+        a_norm = c - (c - a).normalized() / factor
+        b_norm = c - (c - b).normalized() / factor
+        c_norm = c
+        
+        a_3d = (sp_obj_matrix_world * a_norm)
+        b_3d = (sp_obj_matrix_world * b_norm)
+        c_3d = (sp_obj_matrix_world * c_norm)
+        
+        if oa_type == 'IMPL':
+            offset = (impl_dupli_offset - base_dupli_offset)
+            a_3d += offset
+            b_3d += offset
+            c_3d += offset
     
-    # outer
-    bgl.glLineWidth(3)
-    bgl.glBegin(bgl.GL_LINE_LOOP)
-    bgl.glColor3f(0.1,0.1,0.1)
-    for x, y in (a_2d, b_2d, c_2d):
-        bgl.glVertex2i(x, y)
-    bgl.glEnd()
-    # inner
-    bgl.glLineWidth(1)
-    bgl.glBegin(bgl.GL_LINE_LOOP)
-    bgl.glColor3f(0.9,0.9,0.9)
-    for x, y in (a_2d, b_2d, c_2d):
-        bgl.glVertex2i(x, y)
-    bgl.glEnd()
-
-    bgl.glDisable(bgl.GL_LINE_SMOOTH)
-
-    # abc-points/letters
-    # black background
-    for x, y in (a_2d, b_2d, c_2d):
-        draw_point(x, y, 20, (0,0,0))
-
-    # white background
-    for x, y in (a_2d, b_2d, c_2d):
-        draw_point(x, y, 18, (1,1,1))
-
-    #draw_point(a_2d[0], a_2d[1], 4, (0.9, 0.1, 0.1))
-    draw_letter(a_2d[0], a_2d[1], 'A')
-
-    # draw_point(b_2d[0], b_2d[1], 4, (0.1, 0.9, 0.1))
-    draw_letter(b_2d[0], b_2d[1], 'B')
+        a_3d_to_region_2d = view3d_utils.location_3d_to_region_2d(region, rv3d, a_3d)
+        b_3d_to_region_2d = view3d_utils.location_3d_to_region_2d(region, rv3d, b_3d)
+        c_3d_to_region_2d = view3d_utils.location_3d_to_region_2d(region, rv3d, c_3d)
     
-    # draw_point(c_2d[0], c_2d[1], 4, (0.3, 0.3, 0.9))
-    draw_letter(c_2d[0], c_2d[1], 'C')
-
-    # normal-line
-    normal_start_3d = (a_3d + b_3d + c_3d)/3
-    normal_end_3d = normal_start_3d + (c_3d - a_3d).cross(c_3d - b_3d) # /1.5 # scale normal
+        # abort when viewport is to close or outside the 3d-view because location_3d_to_region_2d() returns None
+        if not all((a_3d_to_region_2d, b_3d_to_region_2d, c_3d_to_region_2d)):
+            return
     
-    normal_start_2d = tuple(map(ceil, view3d_utils.location_3d_to_region_2d(region, rv3d, normal_start_3d )))
-    normal_end_2d = tuple(map(ceil, view3d_utils.location_3d_to_region_2d(region, rv3d, normal_end_3d )))
+        a_2d = tuple(map(ceil, a_3d_to_region_2d))
+        b_2d = tuple(map(ceil, b_3d_to_region_2d))
+        c_2d = tuple(map(ceil, c_3d_to_region_2d))
     
-    draw_line(normal_start_2d, normal_end_2d)
+        # draw triangle
+        # filled
+        bgl.glEnable(bgl.GL_BLEND)
+        bgl.glBegin(bgl.GL_POLYGON)
+        bgl.glColor4f(0.8,0.5,0.5, 0.2)
+        for x, y in (a_2d, b_2d, c_2d):
+            bgl.glVertex2i(x, y)
+        bgl.glEnd()
+        bgl.glDisable(bgl.GL_BLEND)
+                
+        bgl.glEnable(bgl.GL_LINE_SMOOTH)
+        bgl.glHint(bgl.GL_POLYGON_SMOOTH_HINT, bgl.GL_NICEST)
+        
+        # outer
+        bgl.glLineWidth(3)
+        bgl.glBegin(bgl.GL_LINE_LOOP)
+        bgl.glColor3f(0.1,0.1,0.1)
+        for x, y in (a_2d, b_2d, c_2d):
+            bgl.glVertex2i(x, y)
+        bgl.glEnd()
+        # inner
+        bgl.glLineWidth(1)
+        bgl.glBegin(bgl.GL_LINE_LOOP)
+        bgl.glColor3f(0.9,0.9,0.9)
+        for x, y in (a_2d, b_2d, c_2d):
+            bgl.glVertex2i(x, y)
+        bgl.glEnd()
     
+        bgl.glDisable(bgl.GL_LINE_SMOOTH)
+    
+        # abc-points/letters
+        # black background
+        for x, y in (a_2d, b_2d, c_2d):
+            draw_point(x, y, 20, (0,0,0))
+    
+        # white background
+        for x, y in (a_2d, b_2d, c_2d):
+            draw_point(x, y, 18, (1,1,1))
+    
+        #draw_point(a_2d[0], a_2d[1], 4, (0.9, 0.1, 0.1))
+        draw_letter(a_2d[0], a_2d[1], 'A')
+    
+        # draw_point(b_2d[0], b_2d[1], 4, (0.1, 0.9, 0.1))
+        draw_letter(b_2d[0], b_2d[1], 'B')
+        
+        # draw_point(c_2d[0], c_2d[1], 4, (0.3, 0.3, 0.9))
+        draw_letter(c_2d[0], c_2d[1], 'C')
+    
+        # normal-line
+        normal_start_3d = (a_3d + b_3d + c_3d)/3
+        normal_end_3d = normal_start_3d + (c_3d - a_3d).cross(c_3d - b_3d) # /1.5 # scale normal
+        
+        normal_start_2d = tuple(map(ceil, view3d_utils.location_3d_to_region_2d(region, rv3d, normal_start_3d )))
+        normal_end_2d = tuple(map(ceil, view3d_utils.location_3d_to_region_2d(region, rv3d, normal_end_3d )))
+        
+        draw_line(normal_start_2d, normal_end_2d)
+        
     # restore opengl defaults
     bgl.glPointSize(1)
     bgl.glLineWidth(1)
@@ -677,7 +681,8 @@ class OBJECT_OT_oa_show_snap_point(bpy.types.Operator):
     bl_idname = "oa.show_snap_point"
     
     group_index = IntProperty(default=0)
-    
+    show_all_sp = BoolProperty(default=False)
+
     @classmethod
     def poll(cls, context):
         sp_obj = get_sp_obj(context.object)
@@ -723,7 +728,8 @@ class OBJECT_OT_oa_show_snap_point_from_base(bpy.types.Operator):
     
     group_index = IntProperty(default=0)
     sp_index = IntProperty(default=0)
-    
+    show_all_sp = BoolProperty(default=False)
+
     def modal(self, context, event):
         context.area.tag_redraw()
         
