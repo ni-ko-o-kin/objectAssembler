@@ -176,8 +176,11 @@ def draw_callback_add(self, context):
 
     if self.snap_list:
         hue = 0
-        old_obj_snap_points = [sp for sp in self.snap_list if sp[0] == self.old_obj]
+        old_obj_snap_points = [sp for sp in self.snap_list
+                               if sp[0] == self.old_obj and 
+                               sp[5] is not None] # ignore sp outside the viewport
         l = len(old_obj_snap_points)
+        
         for idx, sp in enumerate(reversed(old_obj_snap_points)):
             if l > 1:
                 hue = idx/(l - 1)
