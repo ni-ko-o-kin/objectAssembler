@@ -132,9 +132,11 @@ def order_snap_list(self, context):
         ray_origin = view3d_utils.region_2d_to_origin_3d(region, rv3d, coord)
     
     for sp in self.snap_list:
-        # try to get center_x and center_y; if None move on to next snap point
+        # if the sp is outside the 3d-view: move on to the next sp
         center_x_center_y = view3d_utils.location_3d_to_region_2d(region, rv3d, sp[2])
         if not center_x_center_y:
+            sp[4] = 0
+            sp[5] = None
             continue
         else:
             center_x, center_y = center_x_center_y
@@ -228,7 +230,10 @@ class OAAdd(bpy.types.Operator):
         some_point_in_polygon = False
         
         for sp in self.snap_list:
-            print("sp[5]:", sp[5])
+            # ignore sp ouside the 3d-view
+            if not sp[5]:
+                continue
+            
             # if cursor is not over a snap point -> next sp
             if not point_in_polygon(self.mouse[0], self.mouse[1], sp[5]):
                 continue
