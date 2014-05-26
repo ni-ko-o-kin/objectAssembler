@@ -179,19 +179,19 @@ class OBJECT_PT_oa_editor_oa_group(bpy.types.Panel):
                                     
                     row = box.row()
                     row.template_list(
-                        "OBJECT_UL_oa_snap_points_list",
-                        'OA_SNAP_POINT_EDITOR_TEMPLATE_LIST' + str(group_index), #unique id
-                        sp_obj_params,
-                        "snap_points",
-                        sp_obj_params,
-                        "snap_points_index",
-                        4,
+                        listtype_name="OBJECT_UL_oa_snap_points_list", # todo BUG - frozen UIList
+                        # listtype_name="UI_UL_list", # works
+                        list_id="OA_SNAP_POINT_EDITOR_TEMPLATE_LIST" + str(group_index), #unique id
+                        dataptr=sp_obj_params,
+                        propname="snap_points",
+                        active_dataptr=sp_obj_params,
+                        active_propname="snap_points_index",
                         )
                     
                     col = row.column(align=True)
                     col.operator("oa.construct_abc", icon="EDITMODE_VEC_DEHLT", text="")
                     col.operator("view3d.snap_cursor_to_selected", icon='CURSOR', text="")
-        
+                    
                     col.separator()
                     
                     col.operator("oa.move_snap_point_up", icon="TRIA_UP", text="")
@@ -199,9 +199,9 @@ class OBJECT_PT_oa_editor_oa_group(bpy.types.Panel):
                     
                     col.separator()
                     col.operator("oa.remove_snap_point", icon="ZOOMOUT", text="")
-        
+                    
                     col.separator()
-        
+                    
                     row = box.row(align=True)
                     op = row.operator("oa.show_snap_point")
                     op.group_index = group_index
@@ -209,7 +209,7 @@ class OBJECT_PT_oa_editor_oa_group(bpy.types.Panel):
                     op = row.operator("oa.show_snap_point", text="Show all Snap Points")
                     op.group_index = group_index
                     op.show_all_sp = True
-
+                    
                     row = box.row()
                     row.operator("oa.switch_ab")
                     

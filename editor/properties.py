@@ -45,7 +45,7 @@ class OASnapPointsItem(PropertyGroup):
     b = IntProperty(name="", default=0, min=0)
     c = IntProperty(name="", default=0, min=0)
     
-    snap_size = FloatProperty(name="", default=1, min=0.01, max=10, step=0.1, subtype='FACTOR')
+    snap_size = FloatProperty(name="", default=1, min=0.1, max=10, step=0.1, subtype='FACTOR')
     index = IntProperty(name="", default=0, min=0)
 
 class OASnapPoints(PropertyGroup):
