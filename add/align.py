@@ -165,11 +165,11 @@ def rotate(obj, snap_point_nr, ang, context):
     axis = (Bb - cursor).cross(Ba - cursor).normalized()
     
     # rotate
-    # if ang:
-    #     bpy.ops.transform.rotate(value=ang, axis=axis)
-    # else:
-    #     bpy.ops.transform.rotate('INVOKE_DEFAULT', axis=-axis)
-    bpy.ops.transform.rotate(value=ang, axis=axis)
+    if ang:
+        bpy.ops.transform.rotate(value=ang, axis=axis)
+    else:
+        bpy.ops.transform.rotate('INVOKE_DEFAULT', axis=-axis)
+    # bpy.ops.transform.rotate(value=ang, axis=axis)
     
     set_cursor_info(context, cursor_info)
 

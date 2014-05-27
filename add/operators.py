@@ -310,15 +310,7 @@ class OAAdd(bpy.types.Operator):
                     self.old_obj, sp[1],
                     self.new_obj, self.last_active_snap_point,
                     context)
-            
-            # last_active_snap_point = [i.last_active_snap_point for i in settings.valid_groups if \
-            #                               list(i.oa_id) == list(self.current_oa_id)][0]
- 
-            # align_groups(
-            #     self.old_obj, sp[1],
-            #     self.new_obj, last_active_snap_point,
-            #     context
-            #     )
+
             self.last_snapped_to = (self.old_obj, sp[1])
             break # use only the first (nearest)
 
@@ -352,18 +344,6 @@ class OAAdd(bpy.types.Operator):
         
         elif event.type == 'S' and event.value == 'RELEASE':
             if self.new_obj is not None and not self.new_obj.hide:
-                # snap_points = [i.OASnapPoints.snap_points for i in self.new_obj.dupli_group.objects if i.OASnapPoints.marked][0]
-                # self.current_oa_id = [i.OASnapPoints.oa_id for i in self.new_obj.dupli_group.objects if i.OASnapPoints.marked][0]
-
-                # last_active_snap_point = [i.last_active_snap_point for i in settings.valid_groups if list(i.oa_id) == list(self.current_oa_id)][0]
-
-                # # set last_active_snap_points for all groups of a oa_id
-                # for i in settings.valid_groups:
-                #     if list(i.oa_id) == list(self.current_oa_id):
-                #         i.last_active_snap_point = (i.last_active_snap_point + 1) % len(snap_points)
-
-                # snap()
-                
                 sp_obj_group, new_sp_obj = get_group_with_its_sp_obj(self.new_obj.dupli_group, settings)
                 
                 self.new_last_snap_point_index += 1
@@ -378,20 +358,10 @@ class OAAdd(bpy.types.Operator):
             return {'RUNNING_MODAL'}
 
         elif event.type == 'R' and event.value == 'RELEASE':
-            
-            
-            # rotate(self.new_obj, i.last_active_snap_point, settings.rotation_angle, context) 
-            rotate(self.new_obj, self.new_last_snap_point_index, settings.rotation_angle, context) 
-
-            # for i in settings.valid_groups:
-            #     if list(i.oa_id) == list(self.current_oa_id):
-            #         # if event.shift:
-            #         #     rotate(self.new_obj, i.last_active_snap_point, None, context)
-            #         # else:
-            #         #     rotate(self.new_obj, i.last_active_snap_point, settings.rotation_angle, context)
-            #         rotate(self.new_obj, i.last_active_snap_point, settings.rotation_angle, context)              
-                        
-                        
+            if event.shift:
+                rotate(self.new_obj, self.new_last_snap_point_index, 0, context) 
+            else:
+                rotate(self.new_obj, self.new_last_snap_point_index, settings.rotation_angle, context) 
             return {'RUNNING_MODAL'}
 
         elif event.type in {'RIGHTMOUSE', 'ESC'}:
