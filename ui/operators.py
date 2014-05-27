@@ -35,21 +35,18 @@ def get_best_match_outside_model(old_model, old_variation, new_model):
 def get_best_match_inside_model(variations, current_variation, key, value, scene_tags):
     # switch form one variation to an other in the same model
     # while trying to keep as many tags unchanged as possible
+    # - consider only variations where the key-value pair occures
+    # - return the current group_name if none is found
     
     if len(variations) == 1:
         return current_variation.group_name
 
     current_tags = {tag.key:tag.value for tag in current_variation.tags}
-    if key not in current_tags:
-        return current_variation.group_name
     
-    add_tag_value_none(scene_tags, current_tags)
-
-    best_var_group_name = ""
+    best_var_group_name = current_variation.group_name
     best_var_count = -1
     for var in variations:
         tags = {tag.key:tag.value for tag in var.tags}
-        add_tag_value_none(scene_tags, tags)
 
         if (key, value) in tags.items():
             intersection_count = len(set(current_tags.items()) & set(tags.items()))
@@ -357,7 +354,7 @@ class OBJECT_OT_oa_change_variation(bpy.types.Operator):
                 self.value,
                 settings.tags
                 )
-            
+            print("best match: ", best_match, str(len(best_match)))
             obj.dupli_group = bpy.data.groups.get(best_match, settings.oa_file)
         
         return {'FINISHED'}
