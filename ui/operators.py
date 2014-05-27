@@ -460,28 +460,26 @@ class OBJECT_OT_oa_load_models(bpy.types.Operator):
 
         return {'FINISHED'}
 
+################
+# Register
+################
+oa_classes= (
+    OBJECT_OT_oa_select,
+    OBJECT_OT_oa_select_remove_tag,
+    OBJECT_OT_oa_select_add_tag,
+    OBJECT_OT_oa_order_remove_tag,
+    OBJECT_OT_oa_order_add_tag,
+    OBJECT_OT_oa_order_models,
+    OBJECT_OT_oa_random_tag_value,
+    OBJECT_OT_oa_random_variation,
+    OBJECT_OT_oa_change_variation,
+    OBJECT_OT_oa_change_default_variation,
+    OBJECT_OT_oa_load_models,
+)
 def register():
-    bpy.utils.register_class(OBJECT_OT_oa_select)
-    bpy.utils.register_class(OBJECT_OT_oa_select_remove_tag)
-    bpy.utils.register_class(OBJECT_OT_oa_select_add_tag)
-    bpy.utils.register_class(OBJECT_OT_oa_order_remove_tag)
-    bpy.utils.register_class(OBJECT_OT_oa_order_add_tag)
-    bpy.utils.register_class(OBJECT_OT_oa_order_models)
-    bpy.utils.register_class(OBJECT_OT_oa_random_tag_value)
-    bpy.utils.register_class(OBJECT_OT_oa_random_variation)
-    bpy.utils.register_class(OBJECT_OT_oa_change_variation)
-    bpy.utils.register_class(OBJECT_OT_oa_change_default_variation)
-    bpy.utils.register_class(OBJECT_OT_oa_load_models)
+    for oa_class in oa_classes:
+        bpy.utils.register_class(oa_class)
 
 def unregister():
-    bpy.utils.unregister_class(OBJECT_OT_oa_load_models)
-    bpy.utils.unregister_class(OBJECT_OT_oa_change_default_variation)
-    bpy.utils.unregister_class(OBJECT_OT_oa_change_variation)
-    bpy.utils.unregister_class(OBJECT_OT_oa_random_variation)
-    bpy.utils.unregister_class(OBJECT_OT_oa_random_tag_value)
-    bpy.utils.unregister_class(OBJECT_OT_oa_order_models)
-    bpy.utils.unregister_class(OBJECT_OT_oa_order_add_tag)
-    bpy.utils.unregister_class(OBJECT_OT_oa_order_remove_tag)
-    bpy.utils.unregister_class(OBJECT_OT_oa_select_add_tag)
-    bpy.utils.unregister_class(OBJECT_OT_oa_select_remove_tag)
-    bpy.utils.unregister_class(OBJECT_OT_oa_select)
+    for oa_class in reversed(oa_classes):
+        bpy.utils.unregister_class(oa_class)

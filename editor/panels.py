@@ -242,12 +242,17 @@ class OBJECT_PT_oa_editor_oa_group(bpy.types.Panel):
 ################
 # Register
 ################
+oa_classes = (
+    OBJECT_PT_oa_editor_settings,
+    OBJECT_PT_oa_editor_oa_group,
+    OBJECT_PT_oa_editor_error_checking,
+    )
+
 def register():
-    bpy.utils.register_class(OBJECT_PT_oa_editor_settings)
-    bpy.utils.register_class(OBJECT_PT_oa_editor_oa_group)
-    bpy.utils.register_class(OBJECT_PT_oa_editor_error_checking)
+    for oa_class in oa_classes:
+        bpy.utils.register_class(oa_class)
 
 def unregister():
-    bpy.utils.unregister_class(OBJECT_PT_oa_editor_error_checking)
-    bpy.utils.unregister_class(OBJECT_PT_oa_editor_oa_group)
-    bpy.utils.unregister_class(OBJECT_PT_oa_editor_settings)
+    for oa_class in reversed(oa_classes):
+        bpy.utils.unregister_class(oa_class)
+

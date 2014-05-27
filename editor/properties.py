@@ -71,30 +71,31 @@ class OAEditorSettings(PropertyGroup):
 ################
 # Register
 ################
-def register():
-    bpy.utils.register_class(OAModelTag)
-    bpy.utils.register_class(OAGroup)
-    bpy.utils.register_class(OASnapPointsItem)
-    bpy.utils.register_class(OASnapPoints)
+oa_classes = (
+    OAModelTag,
+    OAGroup,
+    OASnapPointsItem,
+    OASnapPoints,
+    
+    OATagValue,
+    OATagKey,
+    OAEditorSettings,
+    )
 
-    bpy.utils.register_class(OATagValue)
-    bpy.utils.register_class(OATagKey)
-    bpy.utils.register_class(OAEditorSettings)
+def register():
+    for oa_class in oa_classes:
+        bpy.utils.register_class(oa_class)
 
     bpy.types.Group.OAGroup = PointerProperty(type=OAGroup)
     bpy.types.Object.OASnapPoints = PointerProperty(type=OASnapPoints)
     bpy.types.Scene.OAEditorSettings = PointerProperty(type=OAEditorSettings)
 
+
 def unregister():
+    for oa_class in reversed(oa_classes):
+        bpy.utils.unregister_class(oa_class)
+
     del bpy.types.Scene.OAEditorSettings
     del bpy.types.Object.OASnapPoints
     del bpy.types.Group.OAGroup
 
-    bpy.utils.unregister_class(OAEditorSettings)
-    bpy.utils.unregister_class(OATagKey)
-    bpy.utils.unregister_class(OATagValue)
-
-    bpy.utils.unregister_class(OASnapPoints)
-    bpy.utils.unregister_class(OASnapPointsItem)
-    bpy.utils.unregister_class(OAGroup)
-    bpy.utils.unregister_class(OAModelTag)

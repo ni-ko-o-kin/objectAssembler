@@ -775,52 +775,37 @@ class OBJECT_OT_oa_show_snap_point_from_base(bpy.types.Operator):
 ################
 # Register
 ################
+oa_classes = (
+    OBJECT_OT_oa_editor_collect_models,
+    OBJECT_OT_oa_editor_add_model_tag,
+    OBJECT_OT_oa_editor_remove_model_tag,
+    OBJECT_OT_oa_editor_add_tag_value,
+    OBJECT_OT_oa_editor_add_tag_key,
+    OBJECT_OT_oa_editor_remove_tag_key,
+    OBJECT_OT_oa_editor_remove_tag_value,
+    OBJECT_OT_oa_editor_next_unused_category_id,
+    OBJECT_OT_oa_editor_next_unused_model_id,
+    OBJECT_OT_oa_set_vertical_false,
+    OBJECT_OT_oa_set_horizontal_false,
+    OBJECT_OT_oa_set_downside,
+    OBJECT_OT_oa_set_upside,
+    OBJECT_OT_oa_set_inside,
+    OBJECT_OT_oa_set_outside,
+    OBJECT_OT_oa_add_sp_obj,
+    OBJECT_OT_oa_remove_snap_point,
+    OBJECT_OT_oa_move_snap_point_down,
+    OBJECT_OT_oa_move_snap_point_up,
+    OBJECT_OT_oa_ConstructAbc,
+    OBJECT_OT_oa_switch_ab,
+    OBJECT_OT_oa_show_snap_point,
+    OBJECT_OT_oa_show_snap_point_from_base,
+    )
+
 def register():
-    bpy.utils.register_class(OBJECT_OT_oa_editor_collect_models)
-    bpy.utils.register_class(OBJECT_OT_oa_editor_add_model_tag)
-    bpy.utils.register_class(OBJECT_OT_oa_editor_remove_model_tag)
-    bpy.utils.register_class(OBJECT_OT_oa_editor_add_tag_value)
-    bpy.utils.register_class(OBJECT_OT_oa_editor_add_tag_key)
-    bpy.utils.register_class(OBJECT_OT_oa_editor_remove_tag_key)
-    bpy.utils.register_class(OBJECT_OT_oa_editor_remove_tag_value)
-    bpy.utils.register_class(OBJECT_OT_oa_editor_next_unused_category_id)
-    bpy.utils.register_class(OBJECT_OT_oa_editor_next_unused_model_id)
-    bpy.utils.register_class(OBJECT_OT_oa_set_vertical_false)
-    bpy.utils.register_class(OBJECT_OT_oa_set_horizontal_false)
-    bpy.utils.register_class(OBJECT_OT_oa_set_downside)
-    bpy.utils.register_class(OBJECT_OT_oa_set_upside)
-    bpy.utils.register_class(OBJECT_OT_oa_set_inside)
-    bpy.utils.register_class(OBJECT_OT_oa_set_outside)
-    bpy.utils.register_class(OBJECT_OT_oa_add_sp_obj)
-    bpy.utils.register_class(OBJECT_OT_oa_remove_snap_point)
-    bpy.utils.register_class(OBJECT_OT_oa_move_snap_point_down)
-    bpy.utils.register_class(OBJECT_OT_oa_move_snap_point_up)
-    bpy.utils.register_class(OBJECT_OT_oa_ConstructAbc)
-    bpy.utils.register_class(OBJECT_OT_oa_switch_ab)
-    bpy.utils.register_class(OBJECT_OT_oa_show_snap_point)
-    bpy.utils.register_class(OBJECT_OT_oa_show_snap_point_from_base)
+    for oa_class in oa_classes:
+        bpy.utils.register_class(oa_class)
 
 def unregister():
-    bpy.utils.unregister_class(OBJECT_OT_oa_show_snap_point_from_base)
-    bpy.utils.unregister_class(OBJECT_OT_oa_remove_snap_point)
-    bpy.utils.unregister_class(OBJECT_OT_oa_move_snap_point_down)
-    bpy.utils.unregister_class(OBJECT_OT_oa_move_snap_point_up)
-    bpy.utils.unregister_class(OBJECT_OT_oa_ConstructAbc)
-    bpy.utils.unregister_class(OBJECT_OT_oa_switch_ab)
-    bpy.utils.unregister_class(OBJECT_OT_oa_show_snap_point)
-    bpy.utils.unregister_class(OBJECT_OT_oa_add_sp_obj)
-    bpy.utils.unregister_class(OBJECT_OT_oa_set_outside)
-    bpy.utils.unregister_class(OBJECT_OT_oa_set_inside)
-    bpy.utils.unregister_class(OBJECT_OT_oa_set_upside)
-    bpy.utils.unregister_class(OBJECT_OT_oa_set_downside)
-    bpy.utils.unregister_class(OBJECT_OT_oa_set_horizontal_false)
-    bpy.utils.unregister_class(OBJECT_OT_oa_set_vertical_false)
-    bpy.utils.unregister_class(OBJECT_OT_oa_editor_next_unused_model_id)
-    bpy.utils.unregister_class(OBJECT_OT_oa_editor_next_unused_category_id)
-    bpy.utils.unregister_class(OBJECT_OT_oa_editor_remove_tag_value)
-    bpy.utils.unregister_class(OBJECT_OT_oa_editor_remove_tag_key)
-    bpy.utils.unregister_class(OBJECT_OT_oa_editor_add_tag_key)
-    bpy.utils.unregister_class(OBJECT_OT_oa_editor_add_tag_value)
-    bpy.utils.unregister_class(OBJECT_OT_oa_editor_remove_model_tag)
-    bpy.utils.unregister_class(OBJECT_OT_oa_editor_add_model_tag)
-    bpy.utils.unregister_class(OBJECT_OT_oa_editor_collect_models)
+    for oa_class in reversed(oa_classes):
+        bpy.utils.unregister_class(oa_class)
+    

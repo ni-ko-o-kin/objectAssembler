@@ -35,20 +35,27 @@ class OACollectModels(PropertyGroup):
     bases = CollectionProperty(type=OACollectBase)
     simps_impls = CollectionProperty(type=OACollectSimpImpl)
 
-def register():
-    bpy.utils.register_class(OAModel)
-    bpy.types.Object.OAModel = bpy.props.PointerProperty(type=OAModel)
-    bpy.utils.register_class(OACollectTag)
-    bpy.utils.register_class(OACollectVariation)
-    bpy.utils.register_class(OACollectSimpImpl)
-    bpy.utils.register_class(OACollectBase)
-    bpy.utils.register_class(OACollectModels)
 
+################
+# Register
+################
+oa_classes = (
+    OAModel,
+    OACollectTag,
+    OACollectVariation,
+    OACollectSimpImpl,
+    OACollectBase,
+    OACollectModels,
+)
+
+def register():
+    for oa_class in oa_classes:
+        bpy.utils.register_class(oa_class)
+    
+    bpy.types.Object.OAModel = bpy.props.PointerProperty(type=OAModel)
+    
 def unregister():
-    bpy.utils.unregister_class(OACollectModels)
-    bpy.utils.unregister_class(OACollectBase)
-    bpy.utils.unregister_class(OACollectSimpImpl)
-    bpy.utils.unregister_class(OACollectVariation)
-    bpy.utils.unregister_class(OACollectTag)
+    for oa_class in reversed(oa_classes):
+        bpy.utils.unregister_class(oa_class)
+        
     del bpy.types.Object.OAModel
-    bpy.utils.unregister_class(OAModel)

@@ -213,19 +213,23 @@ class OASelectModels(bpy.types.Panel):
         row.operator("oa.select", text="Select").select_type = "Select"
         row.operator("oa.select", text="Add to Selection").select_type = "Add to Selection"
         col.operator("oa.select", text="Deselect").select_type = "Deselect"
-        
+
+################
+# Register
+################
+oa_classes = (
+    OALoad,
+    OAModelDefaults,
+    OAModelSettings,
+    OAOrderModels,
+    OASelectModels,
+)
+
 def register():
-    bpy.utils.register_class(OALoad)
-    bpy.utils.register_class(OAModelDefaults)
-    bpy.utils.register_class(OAModelSettings)
-    bpy.utils.register_class(OAOrderModels)
-    bpy.utils.register_class(OASelectModels)
+    for oa_class in oa_classes:
+        bpy.utils.register_class(oa_class)
 
 def unregister():
-    bpy.utils.register_class(OASelectModels)
-    bpy.utils.unregister_class(OAOrderModels)
-    bpy.utils.unregister_class(OAModelSettings)
-    bpy.utils.unregister_class(OAModelDefaults)
-    bpy.utils.unregister_class(OALoad)
-
-
+    for oa_class in reversed(oa_classes):
+        bpy.utils.unregister_class(oa_class)
+        
