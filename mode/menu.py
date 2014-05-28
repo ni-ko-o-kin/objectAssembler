@@ -1,5 +1,4 @@
 import bpy
-from ..common.common import get_tool_shelf_width
 
 DEBUG = False
 
@@ -43,13 +42,13 @@ def construct_menu(settings):
         subdivisions = 2048 / icon_pixel
 
     # get the tool shelf width
-    tool_shelf_width = get_tool_shelf_width(bpy.context)
+    # tool_shelf_width = get_tool_shelf_width(bpy.context)
             
     # calculate all x-positions: at col_max==3 these would be 3 values
-    pos_x = [tool_shelf_width + MC.PAD_LEFT + i * (icon_display + MC.PAD) for i in range(col_max)]
+    pos_x = [MC.PAD_LEFT + i * (icon_display + MC.PAD) for i in range(col_max)]
 
     # calculate startvalues for y-positions
-    pos_y = bpy.context.region.height - MC.PAD_TOP - icon_display
+    pos_y = -MC.PAD_TOP - icon_display
     
     # list of all icon-relevant information
     # [
@@ -100,13 +99,13 @@ def construct_menu(settings):
                 )
             
             icons.append(
-                (
+                [
                     oa_id,
                     icon,
                     frame,
                     hover,
                     uv
-                    )
+                    ]
                 )
 
             col += 1
@@ -116,5 +115,5 @@ def construct_menu(settings):
                         
         if DEBUG: print("oa_ids: " + oa_ids_for_debug + "}")
 
-    return icons # (pos_xy, frame)
+    return icons
 

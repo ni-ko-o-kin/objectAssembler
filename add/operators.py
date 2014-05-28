@@ -11,7 +11,7 @@ from .align import rotate, align_groups
 from ..common.common import (point_in_polygon, get_cursor_info, set_cursor_info,
                              ALLOWED_NAVIGATION, MAX_ERROR_EQL, get_group_with_its_sp_obj)
 
-DEBUG = True
+DEBUG = False
 
 def switch_to_base_group(oa_obj, settings):
     original_group = oa_obj.dupli_group

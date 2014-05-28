@@ -5,7 +5,7 @@ from bpy.props import IntVectorProperty
 
 from .menu import construct_menu
 from .mode_title import mode_title
-from ..common.common import ALLOWED_NAVIGATION
+from ..common.common import ALLOWED_NAVIGATION, get_tool_shelf_width
 from ..ui.operators import get_best_match_outside_model, get_current_variation
 
 DEBUG = True
@@ -35,8 +35,11 @@ def replace_models(context, objs, new_oa_id):
         obj.dupli_group = bpy.data.groups.get(best_match, settings.oa_file)
 
 def mouse_over_icon(icon, mouse):
-    if mouse[0] <= icon[2] and mouse[0] >= icon[0]:
-        if mouse[1] <= icon[3] and mouse[1] >= icon[1]:
+    h = bpy.context.region.height # current region-height
+    w = get_tool_shelf_width(bpy.context) # current tool-shelf-width
+    
+    if mouse[0] <= icon[2] + w and mouse[0] >= icon[0] + w:
+        if mouse[1] <= icon[3] + h and mouse[1] >= icon[1] + h:
             return True
     return False
 
@@ -63,13 +66,25 @@ def draw_callback_mode(self, context):
     settings = context.scene.OASettings
     bgl.glLineWidth(1)
 
+    # # add current region-height and tool-shelf-width
+    # if not self.added_current_region_height_and_tool_shelf_width:
+    #     self.added_current_region_height_and_tool_shelf_width = True
+    #     tool_shelf_width = get_tool_shelf_width(bpy.context)
+    #     for icon in self.menu:
+    #         # iterate over icon, frame and hover
+    #         for i in (1,2,3):
+    #             icon[i][0] += tool_shelf_width
+    #             icon[i][1] += bpy.context.region.height
+    h = bpy.context.region.height # current region-height
+    w = get_tool_shelf_width(bpy.context) # current tool-shelf-width
+
     # draw frame
     bgl.glColor3f(0.1, 0.1, 0.1)
     for icon in self.menu:
         bgl.glRecti(
-            icon[2][0],icon[2][1],icon[2][2],icon[2][3]
+            icon[2][0] + w, icon[2][1] + h, icon[2][2] + w, icon[2][3] + h
             )
-
+    
     # draw icons
     if settings.valid_icon_file:
         bgl.glBindTexture(bgl.GL_TEXTURE_2D, self.img.bindcode)
@@ -83,16 +98,16 @@ def draw_callback_mode(self, context):
             bgl.glBegin(bgl.GL_QUADS)
     
             bgl.glTexCoord2f(icon[4][0][0], icon[4][0][1])
-            bgl.glVertex2f(icon[1][0], icon[1][1])
+            bgl.glVertex2f(icon[1][0] + w, icon[1][1] + h)
             
             bgl.glTexCoord2f(icon[4][1][0], icon[4][1][1])
-            bgl.glVertex2f(icon[1][0], icon[1][3])
+            bgl.glVertex2f(icon[1][0] + w, icon[1][3] + h)
             
             bgl.glTexCoord2f(icon[4][2][0], icon[4][2][1])
-            bgl.glVertex2f(icon[1][2], icon[1][3])
+            bgl.glVertex2f(icon[1][2] + w, icon[1][3] + h)
     
             bgl.glTexCoord2f(icon[4][3][0], icon[4][3][1])
-            bgl.glVertex2f(icon[1][2], icon[1][1])
+            bgl.glVertex2f(icon[1][2] + w, icon[1][1] + h)
     
             bgl.glEnd()
     
@@ -104,13 +119,13 @@ def draw_callback_mode(self, context):
         bgl.glColor3f(0.2, 0.2, 0.2)
         for icon in self.menu:
             bgl.glRecti(
-                icon[2][0] + 2, icon[2][1] + 2, icon[2][2] - 2, icon[2][3] - 2
+                icon[2][0] + w + 2, icon[2][1] + h + 2, icon[2][2] + w - 2, icon[2][3] + h - 2
                 )
 
         font_id = 0
         bgl.glColor4f(1,1,1,1)
         for icon in self.menu:
-            blf.position(font_id, icon[1][0] + 1 , icon[1][1] + 8, 0)
+            blf.position(font_id, icon[1][0] + w + 1 , icon[1][1] + h + 8, 0)
             blf.size(font_id, int(settings.menu_icon_display_size / 3) ,72)
             blf.draw(font_id, "{0: >2}".format(icon[0][1]) + "," + "{0: >2}".format(icon[0][2]))
 
@@ -120,7 +135,7 @@ def draw_callback_mode(self, context):
         if mouse_over_icon(icon[1], self.mouse):
             bgl.glColor3f(0.4, 0.4, 0.4)
             bgl.glLineWidth(2)
-            rect_round_corners(icon[3][0], icon[3][1], icon[3][2], icon[3][3])
+            rect_round_corners(icon[3][0] + w, icon[3][1] + h, icon[3][2] + w, icon[3][3] + h)
 
     # restore opengl defaults
     bgl.glLineWidth(1)
