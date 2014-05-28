@@ -207,7 +207,7 @@ class OAEnterOAMode(bpy.types.Operator):
                     if self.value_last == 'PRESS':
                         # if mouse has been pressed over the same icon were it was released
                         if icon[0] == self.icon_last:
-                            if settings.replace_model:
+                            if settings.replace_model or event.ctrl:
                                 replace_models(context, context.selected_objects, icon[0])
                             else:
                                 bpy.ops.oa.add('INVOKE_DEFAULT', oa_id=icon[0])
