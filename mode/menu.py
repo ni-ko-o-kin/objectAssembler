@@ -48,7 +48,7 @@ def construct_menu(settings):
     pos_x = [MC.PAD_LEFT + i * (icon_display + MC.PAD) for i in range(col_max)]
 
     # calculate startvalues for y-positions
-    pos_y = -MC.PAD_TOP - icon_display
+    pos_y = - MC.PAD_TOP - icon_display
     
     # list of all icon-relevant information
     # [
@@ -87,10 +87,10 @@ def construct_menu(settings):
                 pos_y -= (icon_display + MC.PAD)
                 col = 0
 
-            icon = (pos_x[col], pos_y, pos_x[col] + icon_display, pos_y + icon_display)
-            frame = (icon[0] - MC.PAD, icon[1] - MC.PAD, icon[2] + \
-                         MC.PAD, icon[3] + MC.PAD)
-            hover = (icon[0] - MC.HOVER, icon[1] - MC.HOVER, icon[2] + MC.HOVER, icon[3] + MC.HOVER)
+            icon = [pos_x[col], pos_y, pos_x[col] + icon_display, pos_y + icon_display]
+            frame = [icon[0] - MC.PAD, icon[1] - MC.PAD, icon[2] + \
+                         MC.PAD, icon[3] + MC.PAD]
+            hover = [icon[0] - MC.HOVER, icon[1] - MC.HOVER, icon[2] + MC.HOVER, icon[3] + MC.HOVER]
             uv = (
                 (oa_id[2] * 1/subdivisions, oa_id[1] * 1/subdivisions),
                 (oa_id[2] * 1/subdivisions, (oa_id[1] + 1) * 1/subdivisions),
