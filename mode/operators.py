@@ -138,7 +138,14 @@ class OAEnterOAMode(bpy.types.Operator):
         settings = context.scene.OASettings
         
         return settings.file_valid
-    
+
+    def cancel(self, context):
+        if self._handle is not None:
+            bpy.types.SpaceView3D.draw_handler_remove(self._handle, 'WINDOW')
+            if context.scene.OASettings.valid_icon_file:
+                self.img.gl_free()
+        return
+
     def modal(self, context, event):
         if context.area:
             context.area.tag_redraw()
