@@ -59,6 +59,60 @@ def get_best_match_inside_model(variations, current_variation, key, value, scene
 def get_current_variation(variations, obj):
     return next((var for var in variations if var.group_name == obj.dupli_group.name), None)
 
+class OBJECT_OT_oa_convert(bpy.types.Operator):
+    bl_description = bl_label = "Convert Models"
+    bl_idname = "oa.convert"
+    bl_options = {'INTERNAL'}
+    
+    # @classmethod
+    # def poll(cls, context):
+    #     settings = context.scene.OASettings
+    #     return any((o.OAModel.marked for o in context.selected_objects)) and \
+    #         all((bool(settings.file_valid),
+    #              settings.oa_file == settings.loaded_oa_file,
+    #              bool(settings.models.simps_impls)))
+    
+    def invoke(self, context, event):
+        settings = context.scene.OASettings
+        models = settings.models.simps_impls
+
+        # real
+        if settings.convert_real:
+            bpy.ops.object.duplicates_make_real()
+        
+        # local
+        if settings.convert_local_all:
+            bpy.ops.object.make_local(type='ALL')
+        else:
+            if settings.convert_local_sel_obj:
+                bpy.ops.object.make_local(type='SELECT_OBJECT')
+            if settings.convert_local_sel_objdata:
+                bpy.ops.object.make_local(type='SELECT_OBDATA')
+            if settings.convert_local_sel_objdata_mat:
+                bpy.ops.object.make_local(type='SELECT_OBDATA_MATERIAL')
+
+        # single
+        if settings.convert_single_obj_data_mat_tex:
+            bpy.ops.object.make_single_user(object=True, obdata=True, material=True, texture=True, animation=False)
+        else:
+            if settings.convert_single_obj_data:
+                bpy.ops.object.make_single_user(object=True, obdata=True, material=False, texture=False, animation=False)
+            else:
+                bpy.ops.object.make_single_user(object=True, obdata=False, material=False, texture=False, animation=False)
+            if settings.convert_single_mat_tex:
+                bpy.ops.object.make_single_user(object=False, obdata=False, material=True, texture=True, animation=False)
+        if settings.convert_single_anim:
+            bpy.ops.object.make_single_user(object=False, obdata=False, material=False, texture=False, animation=True)
+
+        # rm sp
+        if settings.convert_rm_sp:
+            for obj in context.selected_objects:
+                if obj.OASnapPoints.marked:
+                    context.scene.objects.unlink(obj)
+                obj.OAModel.marked = False
+        return {'FINISHED'}
+
+
 class OBJECT_OT_oa_random_model(bpy.types.Operator):
     bl_description = bl_label = "Random Model"
     bl_idname = "oa.random_model"
@@ -504,6 +558,7 @@ class OBJECT_OT_oa_load_models(bpy.types.Operator):
 # Register
 ################
 oa_classes= (
+    OBJECT_OT_oa_convert,
     OBJECT_OT_oa_random_model,
     OBJECT_OT_oa_select,
     OBJECT_OT_oa_select_remove_tag,

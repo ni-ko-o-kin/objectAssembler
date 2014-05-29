@@ -49,6 +49,21 @@ class OASettings(bpy.types.PropertyGroup):
     select_tags = CollectionProperty(type=OAModelTag)
 
     snap_point_limit = IntProperty(default=1000)
+
+    convert_real = BoolProperty(default=True)
+    convert_rm_sp = BoolProperty(default=True)
+    convert_local_sel_obj = BoolProperty(default=False)
+    convert_local_sel_objdata = BoolProperty(default=False)
+    convert_local_sel_objdata_mat = BoolProperty(default=True)
+    convert_local_all = BoolProperty(default=False)
+    convert_single_obj = BoolProperty(default=False)
+    convert_single_obj_data = BoolProperty(default=False)
+    convert_single_obj_data_mat_tex = BoolProperty(default=False)
+    convert_single_mat_tex = BoolProperty(default=False)
+    convert_single_anim = BoolProperty(default=False)
+    
+
+
     
 def register():
     bpy.utils.register_class(OASettings)

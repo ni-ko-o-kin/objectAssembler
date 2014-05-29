@@ -42,7 +42,7 @@ class OALoad(bpy.types.Panel):
         col.prop(settings, 'insert_at_cursor_pos', text="Insert at Cursor Position")
         col.prop(settings, 'replace_model', text="Replace Selected Model(s)")
 
-        
+       
 class OAModelSettings(bpy.types.Panel):
     bl_label = "Model Settings"
     bl_idname = "OBJECT_PT_OA_MODEL_SETTINGS"
@@ -226,6 +226,47 @@ class OASelectModels(bpy.types.Panel):
         row.operator("oa.select", text="Add to Selection").select_type = "Add to Selection"
         col.operator("oa.select", text="Deselect").select_type = "Deselect"
 
+class OAConvert(bpy.types.Panel):
+    bl_label = "Convert Models"
+    bl_idname = "OBJECT_PT_OA_CONVERT"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'TOOLS'
+    bl_category = "Object Assembler"
+    bl_options = {'DEFAULT_CLOSED'}
+
+
+    def draw(self, context):
+        settings = context.scene.OASettings
+        layout = self.layout
+
+        layout.operator('oa.convert')
+
+        # real and rm sp
+        col = layout.column(align=True)        
+        col.prop(settings, "convert_real", text="Make Duplicates Real")
+        row = col.row()
+        row.prop(settings, "convert_rm_sp", text="Delete Snap Point Objects")
+        row.enabled = settings.convert_real
+
+        # local
+        col = layout.column(align=True)
+        col.enabled = settings.convert_real
+        col.label("Make Local:")
+        col.prop(settings, "convert_local_sel_obj", text="Selected Objects")
+        col.prop(settings, "convert_local_sel_objdata", text="Selected Objects and Data")
+        col.prop(settings, "convert_local_sel_objdata_mat", text="Selected Objects, Data and Materials")
+        col.prop(settings, "convert_local_all", text="All")
+
+        # single
+        col = layout.column(align=True)
+        col.enabled = settings.convert_real
+        col.label("Make Single User:")
+        col.prop(settings, "convert_single_obj", text="Object")
+        col.prop(settings, "convert_single_obj_data", text="Object & Data")
+        col.prop(settings, "convert_single_obj_data_mat_tex", text="Object & Data & Materials + Textures")
+        col.prop(settings, "convert_single_mat_tex", text="Materials + Textures")
+        col.prop(settings, "convert_single_anim", text="Object Animation")
+
 ################
 # Register
 ################
@@ -235,6 +276,7 @@ oa_classes = (
     OAModelSettings,
     OAOrderModels,
     OASelectModels,
+    OAConvert,
 )
 
 def register():
