@@ -21,7 +21,7 @@ def switch_to_base_group(oa_obj, settings):
     if oa_obj.dupli_group.OAGroup.oa_type == 'IMPL':
         base = next(base for base in settings.models.bases
                     if tuple(base.oa_id) == tuple(oa_obj.dupli_group.OAGroup.base_id))
-        oa_obj.dupli_group = bpy.data.groups.get((base.group_name, settings.oa_file))
+        oa_obj.dupli_group = bpy.data.groups.get((base.group_name, original_group.library.filepath)) # todo settings.oa_file))
     
     return original_group
 
@@ -409,6 +409,10 @@ class OAAdd(bpy.types.Operator):
                 continue
             
             if obj.OAModel.marked:
+                # todo until 1.2 were sessions are going to be introduced: IMPLs get ignored
+                if obj.dupli_group.OAGroup.oa_type == 'IMPL' and obj.dupli_group.library.filepath != settings.loaded_oa_file:
+                    continue
+                
                 if bool(get_group_with_its_sp_obj(obj.dupli_group, settings)[1]):
                     self.oa_objects.append(obj)
                     
