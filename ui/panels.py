@@ -13,36 +13,32 @@ class OALoad(bpy.types.Panel):
     def draw(self, context):
         settings = context.scene.OASettings
         layout = self.layout
-        
-        layout.label("OA-File:")
-        layout.prop(settings, 'oa_file')
 
+        layout.prop(settings, 'oa_file', text="OA-File")
+
+        col = layout.column(align=True)
         if settings.models.simps_impls:
-            layout.operator("oa.load_models", text="Reload Models", icon='FILE_REFRESH')
+            col.operator("oa.load_models", text="Reload Models", icon='FILE_REFRESH')
         else:
-            layout.operator("oa.load_models", icon='LOAD_FACTORY')
+            col.operator("oa.load_models", icon='LOAD_FACTORY')
 
         if settings.oa_mode_started:
-            layout.operator("oa.enteroamode", text="Stop Object Assembler Mode", icon='PAUSE')
+            col.operator("oa.enteroamode", text="Stop Object Assembler Mode", icon='PAUSE')
         else:
-            layout.operator("oa.enteroamode", icon='PLAY')
+            col.operator("oa.enteroamode", icon='PLAY')
 
         col = layout.column()
         col.enabled = bool(settings.models.simps_impls)
 
-        row = col.row().split(0.65)
-        row.label("Icon Display Size:")
-        row.prop(settings, 'menu_icon_display_size', text="")
+        subcol = col.column(align=True)
+        subcol.prop(settings, 'menu_icon_display_size', text="Icon Size")
+        subcol.prop(settings, 'menu_columns', text="Columns")
 
-        row = col.row().split(0.65)
-        row.label("Columns:")
-        row.prop(settings, 'menu_columns', text="")
-
-        row = col.row().split(0.65)
-        row.label("Rotation Angle")
-        row.prop(settings, 'rotation_angle', text="")
-
+        col.prop(settings, 'snap_point_limit', text="Snap Point Limit")
         col.prop(settings, 'draw_snap_points', text="Draw Snap Points")
+
+        col.prop(settings, 'rotation_angle', text="Rotation Angle")
+
         col.prop(settings, 'insert_at_cursor_pos', text="Insert at Cursor Position")
         col.prop(settings, 'replace_model', text="Replace Selected Model(s)")
 

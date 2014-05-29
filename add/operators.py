@@ -11,7 +11,8 @@ from .align import rotate, align_groups
 from ..common.common import (point_in_polygon, get_cursor_info, set_cursor_info,
                              ALLOWED_NAVIGATION, MAX_ERROR_EQL, get_group_with_its_sp_obj)
 
-DEBUG = True
+DEBUG = False
+
 
 def switch_to_base_group(oa_obj, settings):
     original_group = oa_obj.dupli_group
@@ -167,22 +168,24 @@ def order_snap_list(self, context):
     if DEBUG: print("Snap list ordered")
 
 def draw_callback_add(self, context):
+    settings = context.scene.OASettings
+    
     bgl.glLineWidth(1)
     bgl.glColor3f(0.1, 0.1, 0.1)
     bgl.glEnable(bgl.GL_LINE_SMOOTH)
 
-    if context.scene.OASettings.shift:
+    if settings.shift:
         mode_title.mode_title(context, "Add ...")
     else:
         mode_title.mode_title(context, "Add")
         
 
-    if not context.scene.OASettings.draw_snap_points:
+    if not settings.draw_snap_points:
         return
 
     if self.snap_list:
         hue = 0
-        old_obj_snap_points = [sp for sp in self.snap_list
+        old_obj_snap_points = [sp for sp in self.snap_list[:settings.snap_point_limit]
                                if sp[0] == self.old_obj and 
                                sp[5] is not None] # ignore sp outside the viewport
         l = len(old_obj_snap_points)
@@ -230,7 +233,7 @@ class OAAdd(bpy.types.Operator):
         some_point_in_polygon = False
         
         if DEBUG: print("checking snap points...")
-        for sp in self.snap_list:
+        for sp in self.snap_list[:settings.snap_point_limit]:
             # ignore sp ouside the 3d-view
             if not sp[5]:
                 continue

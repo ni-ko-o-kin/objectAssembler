@@ -46,6 +46,8 @@ class OASettings(bpy.types.PropertyGroup):
     select_id = IntVectorProperty(default=(0,0,0), min=0)
     select_use_id = BoolProperty(default=False)
     select_tags = CollectionProperty(type=OAModelTag)
+
+    snap_point_limit = IntProperty(default=1000)
     
 def register():
     bpy.utils.register_class(OASettings)
