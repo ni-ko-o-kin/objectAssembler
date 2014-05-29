@@ -11,7 +11,7 @@ from .align import rotate, align_groups
 from ..common.common import (point_in_polygon, get_cursor_info, set_cursor_info,
                              ALLOWED_NAVIGATION, MAX_ERROR_EQL, get_group_with_its_sp_obj)
 
-DEBUG = False
+DEBUG = True
 
 def switch_to_base_group(oa_obj, settings):
     original_group = oa_obj.dupli_group
@@ -149,14 +149,15 @@ def order_snap_list(self, context):
         
         radius = radius * sp[3] / 10
         
-        points = 24
+        points = 6 #24
         polygon = []
         
+
         for i in range(0,points):
             x = center_x + radius * sin(2.0*pi*i/points)
             y = center_y + radius * cos(2.0*pi*i/points)
-            polygon.append((x,y))
-            
+            polygon.append((int(x),int(y)))
+        
         dist_squared = round((sp[2] - ray_origin).length_squared)
 
         sp[4] = dist_squared
@@ -185,7 +186,6 @@ def draw_callback_add(self, context):
                                if sp[0] == self.old_obj and 
                                sp[5] is not None] # ignore sp outside the viewport
         l = len(old_obj_snap_points)
-        
         for idx, sp in enumerate(reversed(old_obj_snap_points)):
             if l > 1:
                 hue = idx/(l - 1)
