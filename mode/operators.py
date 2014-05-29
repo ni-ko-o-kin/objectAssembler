@@ -17,20 +17,25 @@ def replace_models(context, objs, new_oa_id):
         if not obj.OAModel.marked:
             continue
 
-        old_oa_id = obj.dupli_group.OAGroup.oa_id
-        old_model = next((model for model in settings.models.simps_impls if tuple(model.oa_id) ==  tuple(old_oa_id)), None)
-        if not old_model:
-            continue
-
-        old_variation = get_current_variation(old_model.variations, obj)
-        if not old_variation:
-            continue
-
         new_model = next((model for model in settings.models.simps_impls if tuple(model.oa_id) ==  tuple(new_oa_id)), None)
         if not new_model:
             continue
-        
-        best_match = get_best_match_outside_model(old_model, old_variation, new_model)
+
+        # if the model is not from the currently loaded series then replace it otherwise try to get the best match
+        if obj.dupli_group.library.filepath != settings.loaded_oa_file:
+            best_match = next(var.group_name for var in new_model.variations if var.default)
+        else:
+            old_oa_id = obj.dupli_group.OAGroup.oa_id
+            old_model = next((model for model in settings.models.simps_impls if tuple(model.oa_id) ==  tuple(old_oa_id)), None)
+            if not old_model:
+                continue
+    
+            old_variation = get_current_variation(old_model.variations, obj)
+            if not old_variation:
+                continue
+    
+            best_match = get_best_match_outside_model(old_model, old_variation, new_model)
+
         obj.dupli_group = bpy.data.groups.get((best_match, settings.oa_file))
 
 def mouse_over_icon(icon, mouse):

@@ -244,7 +244,12 @@ def collect_models(groups, models, scene_tags):
                 new_tag = new_variation.tags.add()
                 new_tag.key = key
                 new_tag.value = value
-            new_variation.default = variation[4]
+            # if there is another variation other then the first one which was set to
+            # the default variation then set this new variation as default and the
+            # first one not
+            if variation[4] == True and idx != 0:
+                new_model.variations[0].default = False
+                new_variation.default = variation[4]
     return 'INFO', "OA-Models successfully loaded."
 
 def get_collected_models_as_printables(models):

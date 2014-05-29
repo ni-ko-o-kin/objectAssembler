@@ -66,14 +66,15 @@ class OBJECT_OT_oa_random_model(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return any((o.OAModel.marked for o in context.selected_objects))
+        settings = context.scene.OASettings
+        return any((o.OAModel.marked for o in context.selected_objects)) and \
+            all((bool(settings.file_valid),
+                 settings.oa_file == settings.loaded_oa_file,
+                 bool(settings.models.simps_impls)))
     
     def invoke(self, context, event):
         settings = context.scene.OASettings
         models = settings.models.simps_impls
-
-        if len(models) < 2:
-            return {'FINISHED'}
 
         all_variations_as_group_names = set()
         for model in models:
@@ -83,7 +84,7 @@ class OBJECT_OT_oa_random_model(bpy.types.Operator):
         for obj in context.selected_objects:
             if not obj.OAModel.marked:
                 continue
-    
+            
             variation = choice(tuple(all_variations_as_group_names))
             obj.dupli_group = bpy.data.groups.get((variation, settings.oa_file))
         
@@ -298,7 +299,9 @@ class OBJECT_OT_oa_random_tag_value(bpy.types.Operator):
         for obj in context.selected_objects:
             if not obj.OAModel.marked:
                 continue
-
+            if obj.dupli_group.library.filepath != settings.loaded_oa_file:
+                continue
+            
             model = next((model for model in models if tuple(model.oa_id) == tuple(obj.dupli_group.OAGroup.oa_id)), None)
             if not model:
                 continue
@@ -348,8 +351,11 @@ class OBJECT_OT_oa_random_variation(bpy.types.Operator):
         for obj in context.selected_objects:
             if not obj.OAModel.marked:
                 continue
+            if obj.dupli_group.library.filepath != settings.loaded_oa_file:
+                continue
+            
             model = next((model for model in models if tuple(model.oa_id) == tuple(obj.dupli_group.OAGroup.oa_id)), None)
-            if not model or len(model.variations) < 2:
+            if not model:
                 continue
     
             variation = choice(model.variations)
@@ -371,6 +377,8 @@ class OBJECT_OT_oa_change_variation(bpy.types.Operator):
         
         for obj in context.selected_objects:
             if not obj.OAModel.marked:
+                continue
+            if obj.dupli_group.library.filepath != settings.loaded_oa_file:
                 continue
 
             model = next((model for model in models if tuple(model.oa_id) == tuple(obj.dupli_group.OAGroup.oa_id)), None)
@@ -414,7 +422,8 @@ class OBJECT_OT_oa_load_models(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.scene.OASettings.oa_file != ''
+        settings = context.scene.OASettings
+        return settings.oa_file != '' and not settings.oa_mode_started
 
     def invoke(self, context, event):
         settings = context.scene.OASettings

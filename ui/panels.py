@@ -71,14 +71,22 @@ class OAModelSettings(bpy.types.Panel):
             for obj in context.selected_objects:
                 if not obj.OAModel.marked:
                     continue
+                if obj.dupli_group.library.filepath != settings.loaded_oa_file:
+                    continue
+
                 model = next((model for model in settings.models.simps_impls
                               if tuple(model.oa_id) == tuple(obj.dupli_group.OAGroup.oa_id)), None)
-
+                if not model:
+                    continue
                 for var in model.variations:
                     for tag in var.tags:
                         if tag.key not in tags:
                             tags.update({tag.key:set()})
                         tags[tag.key].add(tag.value)
+            
+            # in case no model has any key from the currently loaded series
+            if not tags:
+                return
 
             # convert tag-values to list (for sorting 'None' to last position)
             for k,v in tags.items():
