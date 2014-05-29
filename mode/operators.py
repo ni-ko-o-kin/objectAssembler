@@ -151,6 +151,7 @@ def draw_callback_mode(self, context):
             bgl.glLineWidth(2)
             rect_round_corners(icon[3][0], icon[3][1], icon[3][2], icon[3][3])
 
+
     # restore opengl defaults
     bgl.glLineWidth(1)
     bgl.glColor4f(0.0, 0.0, 0.0, 1.0)

@@ -115,6 +115,7 @@ def create_snap_list(self, context):
                 
         oa_obj.dupli_list_clear()
         switch_to_original_group(oa_obj, original_group)
+    if DEBUG: print("Snap list created")
         
 def order_snap_list(self, context):
     if DEBUG: print("Order snap list ...")
@@ -162,6 +163,7 @@ def order_snap_list(self, context):
         sp[5] = polygon
 
     self.snap_list.sort(key=lambda k: k[4], reverse=False)
+    if DEBUG: print("Snap list ordered")
 
 def draw_callback_add(self, context):
     bgl.glLineWidth(1)
@@ -227,6 +229,7 @@ class OAAdd(bpy.types.Operator):
         last_index = -1
         some_point_in_polygon = False
         
+        if DEBUG: print("checking snap points...")
         for sp in self.snap_list:
             # ignore sp ouside the 3d-view
             if not sp[5]:
@@ -308,6 +311,7 @@ class OAAdd(bpy.types.Operator):
 
             self.last_snapped_to = (self.old_obj, sp[1])
             break # use only the first (nearest)
+        if DEBUG: print("Snap points checked")
 
         if event.type in ALLOWED_NAVIGATION and event.value == 'PRESS':
             self.viewport_changed = True
