@@ -30,6 +30,7 @@ if "bpy" in locals():
 
     imp.reload(mode_operators)
     imp.reload(mode_menu)
+    imp.reload(mode_mode_title)
 
     imp.reload(add_operators)
     imp.reload(add_align)
@@ -49,7 +50,8 @@ else:
                      operators as ui_operators,
                      )
     from .mode import (operators as mode_operators,
-                       menu as mode_menu
+                       menu as mode_menu,
+                       mode_title as mode_mode_title,
                        )
     from .add import (operators as add_operators,
                       align as add_align)

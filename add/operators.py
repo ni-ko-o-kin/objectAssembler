@@ -168,8 +168,11 @@ def draw_callback_add(self, context):
     bgl.glColor3f(0.1, 0.1, 0.1)
     bgl.glEnable(bgl.GL_LINE_SMOOTH)
 
-    # draw add-mode-title
-    mode_title.mode_title(False, "Add")
+    if context.scene.OASettings.shift:
+        mode_title.mode_title(context, "Add ...")
+    else:
+        mode_title.mode_title(context, "Add")
+        
 
     if not context.scene.OASettings.draw_snap_points:
         return
@@ -185,14 +188,6 @@ def draw_callback_add(self, context):
             if l > 1:
                 hue = idx/(l - 1)
                 
-            # # filled
-            # bgl.glBegin(bgl.GL_POLYGON)
-            # for x,y in sp[5]:
-            #     bgl.glColor3f(hue,hue,hue)
-            #     bgl.glVertex2f(x, y)
-
-            # bgl.glEnd()
-
             # outer border
             bgl.glLineWidth(3)
             bgl.glBegin(bgl.GL_LINE_LOOP)

@@ -57,9 +57,9 @@ def rect_round_corners(x1,y1, x2,y2):
     bgl.glEnd()
     
 def draw_callback_mode(self, context):
-    # draw mode_title
-    mode_title(True, "Object Assembler Mode")
     settings = context.scene.OASettings
+    if self.ctrl and not settings.shift:
+        mode_title(context, "Replace")
     bgl.glLineWidth(1)
 
     tool_shelf_width = get_tool_shelf_width(bpy.context)
@@ -176,7 +176,7 @@ class OAEnterOAMode(bpy.types.Operator):
     def modal(self, context, event):
         if context.area:
             context.area.tag_redraw()
-        
+        self.ctrl = event.ctrl
         settings = bpy.context.scene.OASettings
         if not settings.oa_mode_started and self._handle is not None:
             bpy.types.SpaceView3D.draw_handler_remove(self._handle, 'WINDOW')
@@ -207,7 +207,7 @@ class OAEnterOAMode(bpy.types.Operator):
                     if self.value_last == 'PRESS':
                         # if mouse has been pressed over the same icon were it was released
                         if icon[0] == self.icon_last:
-                            if settings.replace_model or event.ctrl:
+                            if not settings.shift and (settings.replace_model or event.ctrl):
                                 replace_models(context, context.selected_objects, icon[0])
                             else:
                                 bpy.ops.oa.add('INVOKE_DEFAULT', oa_id=icon[0])
@@ -246,6 +246,7 @@ class OAEnterOAMode(bpy.types.Operator):
                                 'width': get_tool_shelf_width(bpy.context), 
                                 'height': bpy.context.region.height, 
                                 'region_overlap': bool(bpy.context.user_preferences.system.use_region_overlap)}
+            self.ctrl = False
             # handler
             self._handle = bpy.types.SpaceView3D.draw_handler_add(draw_callback_mode, (self, context), 'WINDOW', 'POST_PIXEL')
             context.window_manager.modal_handler_add(self)
