@@ -466,6 +466,7 @@ class OBJECT_OT_oa_load_models(bpy.types.Operator):
 
         if settings_scene_found and settings.models.simps_impls:
             settings.file_valid = True
+            settings.loaded_oa_file = settings.oa_file
     
         # unlink scenes after settings saved to current file 
         for scene in data_to.scenes:

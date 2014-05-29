@@ -167,7 +167,9 @@ class OAEnterOAMode(bpy.types.Operator):
     def poll(cls, context):
         settings = context.scene.OASettings
         
-        return settings.file_valid
+        return all((bool(settings.file_valid),
+                    settings.oa_file == settings.loaded_oa_file,
+                    bool(settings.models.simps_impls)))
 
     def cancel(self, context):
         if self._handle is not None:

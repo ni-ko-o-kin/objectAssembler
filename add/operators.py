@@ -416,10 +416,17 @@ class OAAdd(bpy.types.Operator):
         bpy.ops.object.empty_add()
         new_obj = context.scene.objects.active
         new_obj.dupli_type = 'GROUP'
-        new_obj.dupli_group = bpy.data.groups.get((variation.group_name, settings.oa_file))
-        new_obj.OAModel.marked = True
-        new_obj.empty_draw_size = 0.001            
 
+        new_obj.dupli_group = bpy.data.groups.get((variation.group_name, settings.oa_file))
+        if new_obj.dupli_group is None:
+            new_obj.dupli_group = bpy.data.groups.get((variation.group_name, bpy.path.relpath(settings.oa_file)))
+        new_obj.OAModel.marked = True
+        new_obj.empty_draw_size = 0.001
+
+        if new_obj.dupli_group is None:
+            context.scene.objects.unlink(new_obj)
+            return {'CANCELLED'}
+            
         sp_obj_exists = bool(get_group_with_its_sp_obj(new_obj.dupli_group, settings)[1])
         
         if any((settings.insert_at_cursor_pos, not self.oa_objects, not sp_obj_exists)):

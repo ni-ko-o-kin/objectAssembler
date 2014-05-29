@@ -10,6 +10,7 @@ from ..editor.properties import OAModelTag, OATagKey
 
 class OASettings(bpy.types.PropertyGroup):
     oa_file = StringProperty(name = "", default = "", subtype = 'FILE_PATH')
+    loaded_oa_file = StringProperty(name = "", default = "", subtype = 'FILE_PATH')
     oa_mode_started = BoolProperty(default=False)
     models = PointerProperty(type=OACollectModels)
     tags = CollectionProperty(type=OATagKey)
