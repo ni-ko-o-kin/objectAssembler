@@ -90,7 +90,7 @@ def get_group_with_its_sp_obj(group, settings):
     elif group.OAGroup.oa_type == 'IMPL':
         base = next(base for base in settings.models.bases
                     if tuple(base.oa_id) == tuple(group.OAGroup.base_id))
-        base_group = bpy.data.groups.get(base.group_name, settings.oa_file)
+        base_group = bpy.data.groups.get((base.group_name, settings.oa_file))
         return base_group, next((obj for obj in base_group.objects if obj.OASnapPoints.marked), None)
     return None, None
 

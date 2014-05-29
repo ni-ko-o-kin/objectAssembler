@@ -15,7 +15,7 @@ def get_snap_points(context, oa_obj, snap_point_nr):
             original_group = oa_obj.dupli_group
             base = next(base for base in settings.models.bases
                         if tuple(base.oa_id) == tuple(oa_obj.dupli_group.OAGroup.base_id))
-            oa_obj.dupli_group = bpy.data.groups.get(base.group_name, settings.oa_file)
+            oa_obj.dupli_group = bpy.data.groups.get((base.group_name, settings.oa_file))
     
     oa_obj.dupli_list_create(context.scene)
     

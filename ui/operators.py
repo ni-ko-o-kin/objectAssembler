@@ -85,7 +85,7 @@ class OBJECT_OT_oa_random_model(bpy.types.Operator):
                 continue
     
             variation = choice(tuple(all_variations_as_group_names))
-            obj.dupli_group = bpy.data.groups.get(variation, settings.oa_file)
+            obj.dupli_group = bpy.data.groups.get((variation, settings.oa_file))
         
         return {'FINISHED'}
 
@@ -275,7 +275,7 @@ class OBJECT_OT_oa_order_models(bpy.types.Operator):
                         break
                     
                     best_var_group_name = get_best_match_inside_model(variations, current_variation, key, value, settings.tags)
-                    obj.dupli_group = bpy.data.groups.get(best_var_group_name, settings.oa_file)
+                    obj.dupli_group = bpy.data.groups.get((best_var_group_name, settings.oa_file))
                     break
             
         return {'FINISHED'}
@@ -329,7 +329,7 @@ class OBJECT_OT_oa_random_tag_value(bpy.types.Operator):
                 settings.tags
                 )
     
-            obj.dupli_group = bpy.data.groups.get(best_match, settings.oa_file)
+            obj.dupli_group = bpy.data.groups.get((best_match, settings.oa_file))
         return {'FINISHED'}
 
 class OBJECT_OT_oa_random_variation(bpy.types.Operator):
@@ -353,7 +353,7 @@ class OBJECT_OT_oa_random_variation(bpy.types.Operator):
                 continue
     
             variation = choice(model.variations)
-            obj.dupli_group = bpy.data.groups.get(variation.group_name, settings.oa_file)
+            obj.dupli_group = bpy.data.groups.get((variation.group_name, settings.oa_file))
         
         return {'FINISHED'}
 
@@ -384,7 +384,7 @@ class OBJECT_OT_oa_change_variation(bpy.types.Operator):
                 self.value,
                 settings.tags
                 )
-            obj.dupli_group = bpy.data.groups.get(best_match, settings.oa_file)
+            obj.dupli_group = bpy.data.groups.get((best_match, settings.oa_file))
         
         return {'FINISHED'}
 

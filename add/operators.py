@@ -21,7 +21,7 @@ def switch_to_base_group(oa_obj, settings):
     if oa_obj.dupli_group.OAGroup.oa_type == 'IMPL':
         base = next(base for base in settings.models.bases
                     if tuple(base.oa_id) == tuple(oa_obj.dupli_group.OAGroup.base_id))
-        oa_obj.dupli_group = bpy.data.groups.get(base.group_name, settings.oa_file)
+        oa_obj.dupli_group = bpy.data.groups.get((base.group_name, settings.oa_file))
     
     return original_group
 
@@ -416,7 +416,7 @@ class OAAdd(bpy.types.Operator):
         bpy.ops.object.empty_add()
         new_obj = context.scene.objects.active
         new_obj.dupli_type = 'GROUP'
-        new_obj.dupli_group = bpy.data.groups.get(variation.group_name, settings.oa_file)
+        new_obj.dupli_group = bpy.data.groups.get((variation.group_name, settings.oa_file))
         new_obj.OAModel.marked = True
         new_obj.empty_draw_size = 0.001            
 

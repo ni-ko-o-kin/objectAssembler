@@ -31,7 +31,7 @@ def replace_models(context, objs, new_oa_id):
             continue
         
         best_match = get_best_match_outside_model(old_model, old_variation, new_model)
-        obj.dupli_group = bpy.data.groups.get(best_match, settings.oa_file)
+        obj.dupli_group = bpy.data.groups.get((best_match, settings.oa_file))
 
 def mouse_over_icon(icon, mouse):
     if mouse[0] <= icon[2] and mouse[0] >= icon[0]:
