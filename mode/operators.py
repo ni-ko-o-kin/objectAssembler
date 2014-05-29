@@ -63,6 +63,7 @@ def draw_callback_mode(self, context):
     bgl.glLineWidth(1)
 
     tool_shelf_width = get_tool_shelf_width(bpy.context)
+    # add the offset-width and offset-height for the first time
     if self.menu_offset['first_iteration']:
         for icon in self.menu:
             # iterate over icon, frame and hover
@@ -73,8 +74,9 @@ def draw_callback_mode(self, context):
                     icon[i][1 + j] += bpy.context.region.height
         self.menu_offset['first_iteration'] = False
 
-    # add current region-height and tool-shelf-width
-    if any((self.menu_offset['width'] != tool_shelf_width,
+    # add current offset-region-height and offset-tool-shelf-width
+    # when the user altered the size of the 3d-view or toggled region_overlap
+    elif any((self.menu_offset['width'] != tool_shelf_width,
             self.menu_offset['height'] != bpy.context.region.height,
             self.menu_offset['region_overlap'] != bool(bpy.context.user_preferences.system.use_region_overlap),
             )):
@@ -145,7 +147,7 @@ def draw_callback_mode(self, context):
     for icon in self.menu:
         # mouse hover icon
         if mouse_over_icon(icon[1], self.mouse):
-            bgl.glColor3f(0.4, 0.4, 0.4)
+            bgl.glColor3f(0.6, 0.6, 0.6)
             bgl.glLineWidth(2)
             rect_round_corners(icon[3][0], icon[3][1], icon[3][2], icon[3][3])
 
