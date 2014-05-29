@@ -59,6 +59,36 @@ def get_best_match_inside_model(variations, current_variation, key, value, scene
 def get_current_variation(variations, obj):
     return next((var for var in variations if var.group_name == obj.dupli_group.name), None)
 
+class OBJECT_OT_oa_random_model(bpy.types.Operator):
+    bl_description = bl_label = "Random Model"
+    bl_idname = "oa.random_model"
+    bl_options = {'INTERNAL'}
+
+    @classmethod
+    def poll(cls, context):
+        return any((o.OAModel.marked for o in context.selected_objects))
+    
+    def invoke(self, context, event):
+        settings = context.scene.OASettings
+        models = settings.models.simps_impls
+
+        if len(models) < 2:
+            return {'FINISHED'}
+
+        all_variations_as_group_names = set()
+        for model in models:
+            for var in model.variations:
+                all_variations_as_group_names.update({var.group_name})
+
+        for obj in context.selected_objects:
+            if not obj.OAModel.marked:
+                continue
+    
+            variation = choice(tuple(all_variations_as_group_names))
+            obj.dupli_group = bpy.data.groups.get(variation, settings.oa_file)
+        
+        return {'FINISHED'}
+
 class OBJECT_OT_oa_select(bpy.types.Operator):
     bl_description = bl_label = "Select"
     bl_idname = "oa.select"
@@ -354,7 +384,6 @@ class OBJECT_OT_oa_change_variation(bpy.types.Operator):
                 self.value,
                 settings.tags
                 )
-            print("best match: ", best_match, str(len(best_match)))
             obj.dupli_group = bpy.data.groups.get(best_match, settings.oa_file)
         
         return {'FINISHED'}
@@ -461,6 +490,7 @@ class OBJECT_OT_oa_load_models(bpy.types.Operator):
 # Register
 ################
 oa_classes= (
+    OBJECT_OT_oa_random_model,
     OBJECT_OT_oa_select,
     OBJECT_OT_oa_select_remove_tag,
     OBJECT_OT_oa_select_add_tag,

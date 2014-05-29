@@ -63,7 +63,9 @@ class OAModelSettings(bpy.types.Panel):
         if not any((m.OAModel.marked for m in context.selected_objects)):
             return
         
-        layout.operator("oa.random_variation")
+        col = layout.column(align=True)
+        col.operator("oa.random_model")
+        col.operator("oa.random_variation")
                 
         if context.selected_objects:
             # collect tags from all variations of all selected objects
