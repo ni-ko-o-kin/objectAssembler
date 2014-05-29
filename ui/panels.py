@@ -176,7 +176,10 @@ class OAOrderModels(bpy.types.Panel):
             row = layout.row(align=True)
             row.prop_search(tag, "key", settings, "tags", text="")
             if tag.key != '':
-                row.prop_search(tag, "value", settings.tags[tag.key], "values", text="")
+                try:
+                    row.prop_search(tag, "value", settings.tags[tag.key], "values", text="")
+                except:
+                    row.label("")
             else:
                 row.label("")
             row.operator("oa.order_remove_tag", icon="ZOOMOUT", text="").tag_idx = idx
@@ -209,7 +212,10 @@ class OASelectModels(bpy.types.Panel):
             row = layout.row(align=True)
             row.prop_search(tag, "key", settings, "tags", text="")
             if tag.key != '':
-                row.prop_search(tag, "value", settings.tags[tag.key], "values", text="")
+                try:
+                    row.prop_search(tag, "value", settings.tags[tag.key], "values", text="")
+                except:
+                    row.label("")
             else:
                 row.label("")
             row.operator("oa.select_remove_tag", icon="ZOOMOUT", text="").tag_idx = idx

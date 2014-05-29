@@ -129,7 +129,9 @@ class OBJECT_OT_oa_select(bpy.types.Operator):
         for obj in context.scene.objects:
             if not obj.OAModel.marked:
                 continue
-            
+            if obj.dupli_group.library.filepath != settings.loaded_oa_file:
+                continue
+
             oa_group = obj.dupli_group.OAGroup
             if settings.select_oa_type in ('SIMP', 'SIMP_IMPL'):
                 if oa_group.oa_type == 'SIMP':
@@ -252,7 +254,9 @@ class OBJECT_OT_oa_order_models(bpy.types.Operator):
         for obj in context.selected_objects:
             if not obj.OAModel.marked:
                 continue
-            
+            if obj.dupli_group.library.filepath != settings.loaded_oa_file:
+                continue
+
             # map between 0 to 1; 0 is at the start-objects and 1 is at the end-object
             obj_distance = (start - obj.location).length / distance
             
