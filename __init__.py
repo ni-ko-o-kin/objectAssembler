@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Object Assembler",
-    "author": "Nikolaus Morawitz (ni-ko-o-kin), www.emptygraphics.com",
-    "version": (1,0),
+    "author": "Nikolaus Wettstein (ni-ko-o-kin), www.emptygraphics.com",
+    "version": (1,1),
     "blender": (2, 6, 9),
     "api": 60991,
     "location": "3D View > Tool Shelf > Object Assembler",
